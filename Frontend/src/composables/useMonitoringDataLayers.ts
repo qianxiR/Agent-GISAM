@@ -76,6 +76,18 @@ export function useMonitoringDataLayers() {
     }
 
     try {
+      // 检查是否已存在懒加载图层容器
+      const existingLayerInfo = mapStore.vectorlayers.find(l => 
+        l.name === siteInfo.layerName && 
+        l.source === 'local' && 
+        l.layer.get('sourceType') === 'upload'
+      )
+      
+      if (existingLayerInfo && existingLayerInfo.layer) {
+        // 图层已存在，直接返回
+        return
+      }
+
       // 创建GeoJSON要素
       const feature = new ol.Feature({
         geometry: new ol.geom.Point(siteInfo.coordinates)
@@ -114,19 +126,7 @@ export function useMonitoringDataLayers() {
       // 添加到地图
       mapStore.map.addLayer(vectorLayer)
 
-      // 检查是否已存在同名图层，避免重复添加
-      const existingLayer = mapStore.vectorlayers.find(layer => 
-        layer.name === siteInfo.layerName && 
-        layer.source === 'local' && 
-        layer.layer.get('sourceType') === 'upload'
-      )
-      
-      if (existingLayer) {
-        console.log(`图层 "${siteInfo.layerName}" 已存在，不重复添加`)
-        return
-      }
-      
-      // 直接添加到mapStore的vectorlayers中，使其在图层管理面板中显示
+      // 添加到mapStore的vectorlayers中，使其在图层管理面板中显示
       const layerInfo = {
         id: siteInfo.id,
         name: siteInfo.layerName,
@@ -162,8 +162,6 @@ export function useMonitoringDataLayers() {
       
       layerDataStore.setLayerAttributes(siteInfo.layerName, [featureData])
 
-      console.log(`监测点图层已加载并注册到图层管理器: ${siteInfo.layerName}`)
-
     } catch (error) {
       console.error(`加载监测点图层失败: ${siteInfo.layerName}`, error)
     }
@@ -182,8 +180,6 @@ export function useMonitoringDataLayers() {
     sites.forEach(site => {
       loadMonitoringSiteLayer(site)
     })
-
-    console.log(`已加载 ${sites.length} 个监测点图层`)
   }
 
   /**
@@ -211,7 +207,6 @@ export function useMonitoringDataLayers() {
       }
       
       monitoringLayers.value.delete(siteId)
-      console.log(`监测点图层已卸载并从图层管理器移除: ${siteId}`)
     }
   }
 
@@ -240,7 +235,6 @@ export function useMonitoringDataLayers() {
       // 强制触发响应式更新
       mapStore.vectorlayers = [...mapStore.vectorlayers]
       monitoringLayers.value.clear()
-      console.log('所有监测点图层已卸载并从图层管理器移除')
     }
   }
 
@@ -253,7 +247,6 @@ export function useMonitoringDataLayers() {
     const layer = monitoringLayers.value.get(siteId)
     if (layer) {
       layer.setVisible(visible)
-      console.log(`监测点图层可见性已切换: ${siteId} -> ${visible}`)
     }
   }
 
@@ -269,7 +262,6 @@ export function useMonitoringDataLayers() {
     if (layer && siteInfo) {
       const newStyle = createMonitoringPointStyle(newWaterQualityClass, siteInfo.location)
       layer.setStyle(newStyle)
-      console.log(`监测点样式已更新: ${siteId} -> ${newWaterQualityClass}`)
     }
   }
 

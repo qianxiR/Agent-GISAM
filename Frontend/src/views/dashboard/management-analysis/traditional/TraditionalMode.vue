@@ -54,7 +54,6 @@ import { useLayerUIStore } from '@/stores/layerUIStore'
 import { useMonitoringDataLayers } from '@/composables/useMonitoringDataLayers'
 import { useYangtzeWaterLayers } from '@/composables/useYangtzeWaterLayers'
 import { useMonitoringThreshold } from '@/composables/useMonitoringThreshold'
-import { registerGlobalAutoAnalysisListener, unregisterGlobalAutoAnalysisListener } from '@/utils/globalAutoAnalysisHandler'
 import FeatureQueryPanel from '@/views/dashboard/management-analysis/traditional/tools/FeatureQueryPanel.vue'
 import AreaSelectionTools from '@/views/dashboard/management-analysis/traditional/tools/AreaSelectionTools.vue'
 import ShortestPathAnalysisPanel from '@/views/dashboard/management-analysis/traditional/tools/ShortestPathAnalysisPanel.vue'
@@ -204,7 +203,6 @@ watch(() => route.path, (newPath) => {
   if (newPath.includes('/traditional/') && mapStore.isMapReady) {
     setTimeout(() => {
       monitoringLayers.loadAllMonitoringLayers()
-      console.log('传统模式路由切换：监测点图层已重新加载')
     }, 300)
   }
 }, { immediate: true })
@@ -236,7 +234,6 @@ onMounted(() => {
       setTimeout(() => {
         monitoringLayers.loadAllMonitoringLayers()
         yangtzeLayers.loadAllYangtzeLayers()
-        console.log('传统模式：监测点图层和长江水系图层已加载')
       }, 500)
     } else {
       // 监听地图就绪状态
@@ -246,7 +243,6 @@ onMounted(() => {
           setTimeout(() => {
             monitoringLayers.loadAllMonitoringLayers()
             yangtzeLayers.loadAllYangtzeLayers()
-            console.log('传统模式：监测点图层和长江水系图层已加载（延迟）')
           }, 500)
           unwatch() // 取消监听
         }
@@ -256,12 +252,7 @@ onMounted(() => {
   
   loadMonitoringLayers()
   
-  // 启动水质阈值监测（基于路由检测）
-  const { startMonitoringIfNeeded } = useMonitoringThreshold()
-  startMonitoringIfNeeded()
   
-  // 注册全局自动分析事件监听器
-  registerGlobalAutoAnalysisListener()
   
   // 延迟执行，确保组件已完全渲染
   setTimeout(() => {
@@ -281,8 +272,6 @@ onMounted(() => {
 
 // 组件卸载时清理监测点图层
 onUnmounted(() => {
-  // 注销全局自动分析事件监听器
-  unregisterGlobalAutoAnalysisListener()
   
   monitoringLayers.unloadAllMonitoringLayers()
   yangtzeLayers.unloadAllYangtzeLayers()

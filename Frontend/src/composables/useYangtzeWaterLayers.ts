@@ -88,6 +88,18 @@ export function useYangtzeWaterLayers() {
     }
 
     try {
+      // 检查是否已存在懒加载图层容器
+      const existingLayerInfo = mapStore.vectorlayers.find(l => 
+        l.name === '长江水系线' && 
+        l.source === 'local' && 
+        l.layer.get('sourceType') === 'upload'
+      )
+      
+      if (existingLayerInfo && existingLayerInfo.layer) {
+        // 图层已存在，直接返回
+        return
+      }
+
       // 获取长江线数据
       const response = await fetch('/src/views/dashboard/ViewPage/monitordata/长江线.geojson')
       const geojsonData = await response.json()
@@ -141,18 +153,6 @@ export function useYangtzeWaterLayers() {
       // 添加到地图
       mapStore.map.addLayer(vectorLayer)
 
-      // 检查是否已存在同名图层，避免重复添加
-      const existingLayer = mapStore.vectorlayers.find(layer => 
-        layer.name === '长江水系线' && 
-        layer.source === 'local' && 
-        layer.layer.get('sourceType') === 'upload'
-      )
-      
-      if (existingLayer) {
-        console.log(`图层 "长江水系线" 已存在，不重复添加`)
-        return
-      }
-      
       // 添加到图层管理列表
       const layerInfo = {
         id: 'yangtze-line',
@@ -186,8 +186,6 @@ export function useYangtzeWaterLayers() {
       
       layerDataStore.setLayerAttributes('长江水系线', featureDataArray)
 
-      console.log(`长江水系线图层已加载并注册到图层管理器: 包含${features.length}个要素`)
-
     } catch (error) {
       console.error('加载长江水系线图层失败:', error)
     }
@@ -203,6 +201,18 @@ export function useYangtzeWaterLayers() {
     }
 
     try {
+      // 检查是否已存在懒加载图层容器
+      const existingLayerInfo = mapStore.vectorlayers.find(l => 
+        l.name === '长江水系面' && 
+        l.source === 'local' && 
+        l.layer.get('sourceType') === 'upload'
+      )
+      
+      if (existingLayerInfo && existingLayerInfo.layer) {
+        // 图层已存在，直接返回
+        return
+      }
+
       // 获取长江面数据
       const response = await fetch('/src/views/dashboard/ViewPage/monitordata/长江面.geojson')
       const geojsonData = await response.json()
@@ -256,18 +266,6 @@ export function useYangtzeWaterLayers() {
       // 添加到地图
       mapStore.map.addLayer(vectorLayer)
 
-      // 检查是否已存在同名图层，避免重复添加
-      const existingLayer = mapStore.vectorlayers.find(layer => 
-        layer.name === '长江水系面' && 
-        layer.source === 'local' && 
-        layer.layer.get('sourceType') === 'upload'
-      )
-      
-      if (existingLayer) {
-        console.log(`图层 "长江水系面" 已存在，不重复添加`)
-        return
-      }
-      
       // 添加到图层管理列表
       const layerInfo = {
         id: 'yangtze-polygon',
@@ -301,8 +299,6 @@ export function useYangtzeWaterLayers() {
       
       layerDataStore.setLayerAttributes('长江水系面', featureDataArray)
 
-      console.log(`长江水系面图层已加载并注册到图层管理器: 包含${features.length}个要素`)
-
     } catch (error) {
       console.error('加载长江水系面图层失败:', error)
     }
@@ -314,7 +310,6 @@ export function useYangtzeWaterLayers() {
   const loadAllYangtzeLayers = async () => {
     await loadYangtzePolygonLayer() // 先加载面图层（底层）
     await loadYangtzeLineLayer()    // 再加载线图层（上层）
-    console.log('所有长江水系图层已加载')
   }
 
   /**
@@ -340,7 +335,6 @@ export function useYangtzeWaterLayers() {
       // 从地图中移除
       mapStore.map.removeLayer(layer)
       yangtzeLayers.value.delete(layerId)
-      console.log(`长江水系图层已卸载并从图层管理器移除: ${layerId}`)
     }
   }
 
@@ -368,7 +362,6 @@ export function useYangtzeWaterLayers() {
       
       mapStore.vectorlayers = [...mapStore.vectorlayers]
       yangtzeLayers.value.clear()
-      console.log('所有长江水系图层已卸载并从图层管理器移除')
     }
   }
 
@@ -381,7 +374,6 @@ export function useYangtzeWaterLayers() {
     const layer = yangtzeLayers.value.get(layerId)
     if (layer) {
       layer.setVisible(visible)
-      console.log(`长江水系图层可见性已切换: ${layerId} -> ${visible}`)
     }
   }
 

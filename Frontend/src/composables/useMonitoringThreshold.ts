@@ -298,24 +298,6 @@ export function useMonitoringThreshold() {
     window.addEventListener('waterQuality:newData', handleNewWaterQualityData as EventListener)
   }
 
-  /**
-   * 检查当前路由是否应该启动阈值监测
-   */
-  const shouldStartMonitoring = (): boolean => {
-    const currentPath = window.location.pathname
-    return currentPath.includes('management-analysis') || 
-           currentPath.includes('view/home')
-  }
-
-  /**
-   * 基于路由的自动启动监测
-   */
-  const startMonitoringIfNeeded = () => {
-    if (shouldStartMonitoring() && !isMonitoring.value) {
-      startMonitoring()
-      console.log('[MonitoringThreshold] 基于路由自动启动阈值监测:', window.location.pathname)
-    }
-  }
 
 
   /**
@@ -357,8 +339,6 @@ export function useMonitoringThreshold() {
     checkAllThresholds,
     startMonitoring,
     stopMonitoring,
-    startMonitoringIfNeeded,
-    shouldStartMonitoring,
     clearViolationHistory,
     getLayerNameBySiteName,
     

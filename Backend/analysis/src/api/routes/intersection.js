@@ -99,4 +99,118 @@ router.post('/', validateIntersectionRequest, async (req, res) => {
   await intersectionAnalysisController.executeIntersectionAnalysis(req, res);
 });
 
+/**
+ * @swagger
+ * /api/v1/spatial-analysis/intersection/result/{resultId}:
+ *   get:
+ *     summary: 获取相交分析结果
+ *     description: 根据结果ID获取相交分析的结果数据
+ *     tags: [Intersection Analysis]
+ *     parameters:
+ *       - in: path
+ *         name: resultId
+ *         required: true
+ *         description: 分析结果ID
+ *         schema:
+ *           type: string
+ *           example: "intersection_result_2024-01-01T00:00:00-000Z"
+ *     responses:
+ *       200:
+ *         description: 获取分析结果成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AnalysisResultResponse'
+ *       400:
+ *         description: 请求参数错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/result/:resultId', async (req, res) => {
+  await intersectionAnalysisController.getAnalysisResult(req, res);
+});
+
+/**
+ * @swagger
+ * /api/v1/spatial-analysis/intersection/options:
+ *   get:
+ *     summary: 获取相交分析参数选项
+ *     description: 获取相交分析支持的参数选项、默认值和限制
+ *     tags: [Intersection Analysis]
+ *     responses:
+ *       200:
+ *         description: 获取参数选项成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     options:
+ *                       type: object
+ *                       properties:
+ *                         batchSize:
+ *                           type: object
+ *                           properties:
+ *                             type:
+ *                               type: string
+ *                               example: "number"
+ *                             default:
+ *                               type: number
+ *                               example: 100
+ *                             min:
+ *                               type: number
+ *                               example: 10
+ *                             max:
+ *                               type: number
+ *                               example: 1000
+ *                             description:
+ *                               type: string
+ *                               example: "批处理大小，控制每次处理的要素组合数量"
+ *                         enableProgress:
+ *                           type: object
+ *                           properties:
+ *                             type:
+ *                               type: string
+ *                               example: "boolean"
+ *                             default:
+ *                               type: boolean
+ *                               example: true
+ *                             description:
+ *                               type: string
+ *                               example: "是否启用进度显示"
+ *                         returnGeometry:
+ *                           type: object
+ *                           properties:
+ *                             type:
+ *                               type: string
+ *                               example: "boolean"
+ *                             default:
+ *                               type: boolean
+ *                               example: true
+ *                             description:
+ *                               type: string
+ *                               example: "是否返回几何数据"
+ *                     description:
+ *                       type: string
+ *                       example: "相交分析参数选项"
+ *                     version:
+ *                       type: string
+ *                       example: "1.0.0"
+ *                 message:
+ *                   type: string
+ *                   example: "获取相交分析选项成功"
+ */
+router.get('/options', async (req, res) => {
+  await intersectionAnalysisController.getAnalysisOptions(req, res);
+});
+
+
 module.exports = router;

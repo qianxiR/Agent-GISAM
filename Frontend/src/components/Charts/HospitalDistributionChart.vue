@@ -65,11 +65,11 @@ const pieOption = {
     left: 'center',
     textStyle: {
       color: '#1890ff',
-      fontSize: 12,
+      fontSize: 10,
       fontWeight: 'bold'
     },
-    itemWidth: 14,
-    itemHeight: 10
+    itemWidth: 12,
+    itemHeight: 8
   },
   color: ['#001529', '#002766', '#003a8c', '#0050b3', '#096dd9', '#1890ff', '#40a9ff', '#69c0ff', '#91d5ff', '#bae7ff', '#e6f7ff', '#1890ff', '#40a9ff'],
   series: [
@@ -96,7 +96,7 @@ const pieOption = {
         },
         label: {
           show: true,
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: 'bold',
           color: '#0078D4'
         }
@@ -106,7 +106,7 @@ const pieOption = {
         formatter: function(params: any) {
           return `${params.percent}%`
         },
-        fontSize: 12,
+        fontSize: 10,
         color: '#0078D4',
         fontWeight: 'bold'
       },
@@ -153,8 +153,9 @@ const barOption = {
     type: 'category',
     data: districtNames,
     axisLabel: {
-      color: '#0078D4',
-      fontSize: 10,
+      color: '#1890ff',
+      fontSize: 13,
+      fontWeight: 'bold',
       rotate: 45
     },
     axisLine: {
@@ -295,7 +296,7 @@ onUnmounted(() => {
   width: 400px;
   height: calc(50vh - 50px);
   background: transparent;
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
@@ -307,7 +308,7 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: none;
   background: transparent;
 }
 
@@ -316,13 +317,12 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 700;
   color: #1890ff;
-  text-shadow: 0 1px 2px rgba(24, 144, 255, 0.3);
 }
 
 .chart-container {
   width: 100%;
   height: calc(100% - 50px);
-  min-height: 230px;
+  min-height: 80px;
   cursor: pointer;
 }
 
@@ -330,13 +330,13 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .hospital-distribution-chart {
     width: 300px;
-    height: calc(50vh - 40px);
+    height: calc(50vh - 90px);
     top: 15px;
     right: 15px;
   }
   
   .chart-container {
-    min-height: calc(50vh - 90px);
+    min-height: calc(50vh - 40px);
   }
 }
 </style>

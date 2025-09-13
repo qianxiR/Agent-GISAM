@@ -37,7 +37,6 @@ import { useMap } from '@/composables/useMap'
 import { useMapStore } from '@/stores/mapStore'
 import { usePageStateStore } from '@/stores/pageStateStore'
 import { useMonitoringThreshold } from '@/composables/useMonitoringThreshold'
-import { registerGlobalAutoAnalysisListener, unregisterGlobalAutoAnalysisListener } from '@/utils/globalAutoAnalysisHandler'
 import FeaturePopup from '@/components/Map/FeaturePopup.vue'
 import CoordinateDisplay from '@/components/Map/CoordinateDisplay.vue'
 import ScaleBar from '@/components/Map/ScaleBar.vue'
@@ -97,21 +96,16 @@ watch(() => route.path, (newPath) => {
 onMounted(() => {
   // 确保外部库已加载
   if (window.ol && window.ol.supermap) {
-    initMap(8, ['武汉_市级', '武汉_县级', '公路', '铁路', '水系面', '水系线']) // 交通水系一体化显示武汉_市级、武汉_县级、道路、铁路、水系面、水系线
+    initMap(9, ['武汉_市级', '武汉_县级', '公路', '铁路', '水系面', '水系线']) // 交通水系一体化显示武汉_市级、武汉_县级、道路、铁路、水系面、水系线
   } else {
     // 如果库还未加载，等待一下再初始化
-    setTimeout(() => initMap(8, ['武汉_市级', '武汉_县级', '公路', '铁路', '水系面', '水系线']), 500)
+    setTimeout(() => initMap(9, ['武汉_市级', '武汉_县级', '公路', '铁路', '水系面', '水系线']), 500)
   }
 
   // 设置当前页面为视图页面
   pageStateStore.switchToPage('view')
   
-  // 启动水质阈值监测（基于路由检测）
-  const { startMonitoringIfNeeded } = useMonitoringThreshold()
-  startMonitoringIfNeeded()
   
-  // 注册全局自动分析事件监听器
-  registerGlobalAutoAnalysisListener()
 
   // 当容器尺寸变化时，强制更新地图尺寸
   const el = mapContainer.value
@@ -129,14 +123,12 @@ onUnmounted(() => {
     resizeObserver = null
   }
   
-  // 注销全局自动分析事件监听器
-  unregisterGlobalAutoAnalysisListener()
   
   // 清理地图生命周期资源
   cleanup()
 })
 </script>
-
+武汉年龄人口分布
 <style scoped>
 .view-sub-page {
   width: 100%;

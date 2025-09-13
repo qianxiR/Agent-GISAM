@@ -416,7 +416,7 @@ const emit = defineEmits<{
   flex-direction: column;
   gap: 4px;
   max-height: calc(100vh - 200px);
-  min-height: 200px;
+  min-height: 80px;
 }
 
 .layer-group {

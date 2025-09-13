@@ -15,7 +15,6 @@ import { useModeStateStore } from '@/stores/modeStateStore'
 import { useMonitoringDataLayers } from '@/composables/useMonitoringDataLayers'
 import { useYangtzeWaterLayers } from '@/composables/useYangtzeWaterLayers'
 import { useMonitoringThreshold } from '@/composables/useMonitoringThreshold'
-import { registerGlobalAutoAnalysisListener, unregisterGlobalAutoAnalysisListener } from '@/utils/globalAutoAnalysisHandler'
 import PanelContainer from '@/components/UI/PanelContainer.vue'
 
 const mapStore = useMapStore()
@@ -56,23 +55,12 @@ onMounted(() => {
   
   loadMonitoringLayers()
   
-  // 启动水质阈值监测（基于实时数据更新）
-  thresholdMonitoring.startMonitoringIfNeeded()
   
-  // 注册全局自动分析事件监听器
-  registerGlobalAutoAnalysisListener()
 })
 
 onUnmounted(() => {
   // 停止水质阈值监测
   thresholdMonitoring.stopMonitoring()
-  
-  // 注销全局自动分析事件监听器
-  unregisterGlobalAutoAnalysisListener()
-  
-  // 组件卸载时清理监测点图层和长江水系图层
-  monitoringLayers.unloadAllMonitoringLayers()
-  yangtzeLayers.unloadAllYangtzeLayers()
 })
 </script>
 

@@ -591,7 +591,7 @@ const handleExportGroup = async (source: string) => {
 .layer-list.empty {
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  min-height: 80px;
   overflow: hidden;
 }
 

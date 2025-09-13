@@ -47,7 +47,7 @@ const pieOption = {
     borderWidth: 1,
     textStyle: {
       color: '#fff',
-      fontSize: 12
+      fontSize: 10
     }
   },
   legend: {
@@ -56,11 +56,11 @@ const pieOption = {
     left: 'center',
     textStyle: {
       color: '#1890ff',
-      fontSize: 12,
+      fontSize: 10,
       fontWeight: 'bold'
     },
-    itemWidth: 14,
-    itemHeight: 10
+    itemWidth: 12,
+    itemHeight: 8
   },
   color: ['#001529', '#002766', '#003a8c', '#0050b3', '#096dd9', '#1890ff', '#40a9ff'],
   series: [
@@ -90,7 +90,7 @@ const pieOption = {
         },
         label: {
           show: true,
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: 'bold',
           color: '#0078D4'
         }
@@ -100,7 +100,7 @@ const pieOption = {
         formatter: function(params: any) {
           return `${params.percent}%`
         },
-        fontSize: 12,
+        fontSize: 10,
         color: '#0078D4',
         fontWeight: 'bold'
       }
@@ -127,7 +127,7 @@ const barOption = {
     borderWidth: 1,
     textStyle: {
       color: '#fff',
-      fontSize: 12
+      fontSize: 10
     }
   },
   legend: {
@@ -159,8 +159,9 @@ const barOption = {
   yAxis: {
     type: 'value',
     axisLabel: {
-      color: '#0078D4',
-      fontSize: 11,
+      color: '#1890ff',
+      fontSize: 13,
+      fontWeight: 'bold',
       formatter: function(value: number) {
         return value.toFixed(0) + '公里'
       }
@@ -273,7 +274,7 @@ onUnmounted(() => {
   width: 380px;
   height: calc(50vh - 50px);
   background: transparent;
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
@@ -285,7 +286,7 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: none;
   background: transparent;
 }
 
@@ -294,13 +295,12 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 700;
   color: #1890ff;
-  text-shadow: 0 1px 2px rgba(24, 144, 255, 0.3);
 }
 
 .chart-container {
   width: 100%;
   height: calc(100% - 50px);
-  min-height: 230px;
+  min-height: 150px;
   cursor: pointer;
 }
 
@@ -308,13 +308,13 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .water-line-chart {
     width: 300px;
-    height: calc(50vh - 40px);
+    height: calc(50vh - 90px);
     bottom: 30px;
     right: 15px;
   }
   
   .chart-container {
-    min-height: calc(50vh - 90px);
+    min-height: calc(50vh - 40px);
   }
 }
 </style>

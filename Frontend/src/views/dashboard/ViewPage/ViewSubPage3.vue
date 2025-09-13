@@ -36,7 +36,6 @@ import { useMap } from '@/composables/useMap'
 import { useMapStore } from '@/stores/mapStore'
 import { usePageStateStore } from '@/stores/pageStateStore'
 import { useMonitoringThreshold } from '@/composables/useMonitoringThreshold'
-import { registerGlobalAutoAnalysisListener, unregisterGlobalAutoAnalysisListener } from '@/utils/globalAutoAnalysisHandler'
 import { getHydrologyData, getHydrologyLayerInfo } from '@/api/hydrologyData'
 import { getYangtzeSurfaceData, getYangtzeLineData, getYangtzeSurfaceLayerInfo, getYangtzeLineLayerInfo } from '@/api/yangtzeData'
 import FeaturePopup from '@/components/Map/FeaturePopup.vue'
@@ -240,7 +239,6 @@ const loadYangtzeSurfaceLayer = async () => {
     )
     
     if (existingLayer) {
-      console.log(`图层 "长江面" 已存在，不重复添加`)
       return
     }
     
@@ -311,7 +309,6 @@ const loadYangtzeLineLayer = async () => {
     )
     
     if (existingLayer) {
-      console.log(`图层 "长江线" 已存在，不重复添加`)
       return
     }
     
@@ -339,7 +336,7 @@ const loadYangtzeLineLayer = async () => {
 onMounted(async () => {
   // 确保外部库已加载
   if (window.ol && window.ol.supermap) {
-    await initMap(8, ['武汉_市级', '武汉_县级']) // 监测预警一体化显示武汉_市级、武汉_县级
+    await initMap(9, ['武汉_市级', '武汉_县级']) // 监测预警一体化显示武汉_市级、武汉_县级
     // 加载长江数据图层
     await loadYangtzeSurfaceLayer()
     await loadYangtzeLineLayer()
@@ -348,7 +345,7 @@ onMounted(async () => {
   } else {
     // 如果库还未加载，等待一下再初始化
     setTimeout(async () => {
-      await initMap(8, ['武汉_市级', '武汉_县级'])
+      await initMap(9, ['武汉_市级', '武汉_县级'])
       await loadYangtzeSurfaceLayer()
       await loadYangtzeLineLayer()
       await loadHydrologyLayer()
@@ -358,12 +355,7 @@ onMounted(async () => {
   // 设置当前页面为视图页面
   pageStateStore.switchToPage('view')
   
-  // 启动水质阈值监测（基于路由检测）
-  const { startMonitoringIfNeeded } = useMonitoringThreshold()
-  startMonitoringIfNeeded()
   
-  // 注册全局自动分析事件监听器
-  registerGlobalAutoAnalysisListener()
 
   // 当容器尺寸变化时，强制更新地图尺寸
   const el = mapContainer.value
@@ -381,8 +373,6 @@ onUnmounted(() => {
     resizeObserver = null
   }
   
-  // 注销全局自动分析事件监听器
-  unregisterGlobalAutoAnalysisListener()
   
   // 清理地图生命周期资源
   cleanup()
