@@ -633,7 +633,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 # 阿里云通义千问配置
 DASHSCOPE_API_KEY=your-dashscope-api-key
 DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-DASHSCOPE_MODEL=qwen-max
+DASHSCOPE_MODEL=qwen-plus
 DASHSCOPE_TEMPERATURE=0.7
 DASHSCOPE_MAX_TOKENS=3000
 

@@ -5,7 +5,7 @@ import requests # pip install requests
 import json
 
 # --- 配置 ---
-MODEL = "qwen-plus" # 使用的模型，例如 "qwen-plus", "qwen-max", etc.
+MODEL = "qwen-plus" # 使用的模型，例如 "qwen-plus", "qwen-plus", etc.
 # 设置为 True 以尝试启用联网搜索 (需要模型和API支持, 可能需要调整参数传递方式)
 ENABLE_WEB_SEARCH = False
 # 如果需要JSON输出，取消注释此行并确保模型支持

@@ -51,7 +51,7 @@ import requests
 
 # 查询知识库
 response = requests.post("http://localhost:8089/agent/tool-chat", json={
-    "model": "qwen-max",
+    "model": "qwen-plus",
     "temperature": 0.7,
     "prompt": "请查询武汉市的基本概况信息",
     "conversation_id": "test"
@@ -78,7 +78,7 @@ curl -X POST http://localhost:8089/agent/knowledge/update
 # 通过工具调用
 curl -X POST http://localhost:8089/agent/tool-chat \
   -H "Content-Type: application/json" \
-  -d '{"model": "qwen-max", "prompt": "请更新知识库", "conversation_id": "update"}'
+  -d '{"model": "qwen-plus", "prompt": "请更新知识库", "conversation_id": "update"}'
 ```
 
 ## 🔧 配置说明
@@ -90,7 +90,7 @@ curl -X POST http://localhost:8089/agent/tool-chat \
 ```env
 DASHSCOPE_API_KEY=your_api_key
 DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-DASHSCOPE_MODEL=qwen-max
+DASHSCOPE_MODEL=qwen-plus
 ```
 
 ### 知识库路径

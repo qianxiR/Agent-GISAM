@@ -50,7 +50,7 @@ def test_multi_turn_conversation():
             response = requests.post(
                 f"{base_url}/agent/tool-chat",
                 json={
-                    "model": "qwen-max",
+                    "model": "qwen-plus",
                     "temperature": 0.7,
                     "prompt": turn['user_input'],
                     "conversation_id": conversation_id
@@ -153,7 +153,7 @@ def test_conversation_management():
             response = requests.post(
                 f"{base_url}/agent/tool-chat",
                 json={
-                    "model": "qwen-max",
+                    "model": "qwen-plus",
                     "temperature": 0.7,
                     "prompt": f"这是第{i+1}条测试消息",
                     "conversation_id": f"{test_conversation_id}_{i}"

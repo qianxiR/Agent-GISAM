@@ -49,7 +49,7 @@ def test_rag_integration():
     print("\n3️⃣ 测试知识库查询工具...")
     try:
         test_request = {
-            "model": "qwen-max",
+            "model": "qwen-plus",
             "temperature": 0.7,
             "prompt": "请查询武汉市的基本概况信息",
             "conversation_id": "test_rag"
@@ -88,7 +88,7 @@ def test_rag_integration():
     print("\n4️⃣ 测试知识库更新工具...")
     try:
         test_request = {
-            "model": "qwen-max",
+            "model": "qwen-plus",
             "temperature": 0.7,
             "prompt": "请更新知识库",
             "conversation_id": "test_update"

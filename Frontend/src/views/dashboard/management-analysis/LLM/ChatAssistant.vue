@@ -530,6 +530,14 @@ const handleBufferAnalysisResult = (event: CustomEvent) => {
   let resultMessage = ''
   if (success) {
     resultMessage = `缓冲区分析完成：${message}`
+    
+    // 添加工具调用信息到消息中
+    const toolInfoMessage = `工具调用：execute_buffer_analysis，参数：图层"${layerName}"，半径${radius}${unit}`
+    messages.value.push({ 
+      id: Date.now(), 
+      text: toolInfoMessage, 
+      sender: 'system' 
+    })
   } else {
     resultMessage = `缓冲区分析失败：${error || '未知错误'}`
   }
@@ -569,6 +577,14 @@ const handleIntersectionAnalysisResult = (event: CustomEvent) => {
   let resultMessage = ''
   if (success) {
     resultMessage = `相交分析完成：${message}`
+    
+    // 添加工具调用信息到消息中
+    const toolInfoMessage = `工具调用：execute_intersection_analysis，参数：目标图层"${targetLayerName}"，掩膜图层"${maskLayerName}"`
+    messages.value.push({ 
+      id: Date.now(), 
+      text: toolInfoMessage, 
+      sender: 'system' 
+    })
   } else {
     resultMessage = `相交分析失败：${error || '未知错误'}`
   }
@@ -608,6 +624,14 @@ const handleEraseAnalysisResult = (event: CustomEvent) => {
   let resultMessage = ''
   if (success) {
     resultMessage = `擦除分析完成：${message}`
+    
+    // 添加工具调用信息到消息中
+    const toolInfoMessage = `工具调用：execute_erase_analysis，参数：目标图层"${targetLayerName}"，擦除图层"${eraseLayerName}"`
+    messages.value.push({ 
+      id: Date.now(), 
+      text: toolInfoMessage, 
+      sender: 'system' 
+    })
   } else {
     resultMessage = `擦除分析失败：${error || '未知错误'}`
   }
@@ -647,6 +671,14 @@ const handlePathAnalysisResult = (event: CustomEvent) => {
   let resultMessage = ''
   if (success) {
     resultMessage = `最短路径分析完成：${message}`
+    
+    // 添加工具调用信息到消息中
+    const toolInfoMessage = `工具调用：execute_shortest_path_analysis，参数：起点图层"${startLayerName}"，终点图层"${endLayerName}"`
+    messages.value.push({ 
+      id: Date.now(), 
+      text: toolInfoMessage, 
+      sender: 'system' 
+    })
   } else {
     resultMessage = `最短路径分析失败：${error || '未知错误'}`
   }
@@ -936,7 +968,7 @@ onMounted(() => {
     window.addEventListener('agent:eraseAnalysisResult', handleEraseAnalysisResult as EventListener)
     window.addEventListener('agent:pathAnalysisResult', handlePathAnalysisResult as EventListener)
     window.addEventListener('agent:getOpenLayersResult', handleGetOpenLayersResult as EventListener)
-    // 新增：监听图层可见性变化事件
+    // 监听图层可见性变化事件，显示消息但不发送给AI
     window.addEventListener('agent:layerVisibilityChanged', ((e: any) => {
       const { layerName, visible } = e.detail || {}
       const msg = visible ? `打开图层：${layerName}` : `关闭图层：${layerName}`
@@ -944,7 +976,7 @@ onMounted(() => {
       nextTick(() => {
         messagesPanelRef.value?.scrollToBottom()
       })
-      // 移除自动发送LLM请求，避免频繁API调用
+      // 不发送给AI，避免占据端口
     }) as EventListener)
   }
 });
@@ -1215,10 +1247,6 @@ const sendMessage = async () => {
       body: JSON.stringify(payload)
     })
 
-    // 更新API状态
-    if (resp.ok) {
-      fetchApiStatus()
-    }
 
     if (!resp.ok) {
       const errText = await resp.text()
@@ -1246,13 +1274,15 @@ const sendMessage = async () => {
             JSON.stringify(data.data.tool_result, null, 2) : 
             String(data.data.tool_result)) : ''
         
-        // 知识库工具调用不显示工具调用结果
+        // 所有工具调用都不显示工具调用结果框
+        toolCallInfo.value = null
+        // 保存工具调用记录
+        saveToolRecord(name, argsStr, resultStr)
+        
+        // 对于知识库相关工具，不显示工具调用信息，直接等待AI回复
         if (name === 'query_knowledge_base' || name === 'update_knowledge_base') {
-          toolCallInfo.value = null
-        } else {
-          toolCallInfo.value = { name, argsStr, resultStr }
-          // 保存工具调用记录
-          saveToolRecord(name, argsStr, resultStr)
+          console.log(`[Agent] ${name}工具调用，等待AI回复，不显示工具调用信息`)
+          // 知识库工具不需要前端处理，直接等待AI的最终回复
         }
         
         // 调试：打印AI实际调用的工具名称
@@ -1572,6 +1602,26 @@ const sendMessage = async () => {
             console.error('[Agent] 处理导出最短路径分析结果工具调用时出错:', error)
           }
         }
+        
+        // 处理AI的最终回复（无论是否有工具调用）
+        const finalAnswer = data?.data?.final_answer
+        if (finalAnswer && finalAnswer.trim()) {
+          const systemMessage = { id: Date.now() + 1, text: finalAnswer, sender: 'system' as const }
+          messages.value.push(systemMessage)
+          console.log('[ChatAssistant] AI最终回复已添加到聊天记录:', finalAnswer.substring(0, 100) + '...')
+          
+          // 滚动到底部显示AI回复
+          nextTick(() => {
+            messagesPanelRef.value?.scrollToBottom()
+          })
+        } else {
+          console.warn('[ChatAssistant] AI没有生成最终回复或回复为空')
+        }
+        
+        // 重置任务状态（有工具调用时也需要重置）
+        currentTaskId.value = null
+        isLLMResponding.value = false
+        console.log('[ChatAssistant] 工具调用完成，任务状态已重置')
       } else {
         toolCallInfo.value = null
         // 没有工具调用，直接重置任务状态

@@ -49,7 +49,7 @@ export const sendAnalysisResultToLLM = async (
     const llm = getLLMApiConfig()
     
     const payload = {
-      model: 'qwen-max',
+      model: 'qwen-plus',
       temperature: typeof llm.temperature === 'number' ? llm.temperature : 0.7,
       prompt: analysisResultMessage,
       stream: false,

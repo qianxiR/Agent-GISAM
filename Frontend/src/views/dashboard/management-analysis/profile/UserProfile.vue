@@ -538,7 +538,7 @@ const toggleKeyStatus = async (id: number) => {
       return v
     })()
     const payload = {
-      model: 'qwen-max',
+      model: 'qwen-plus',
       temperature: Number((key as any).temperature ?? llm.temperature ?? 0.7),
       prompt: '测试连接',
       stream: false,
@@ -666,7 +666,7 @@ const handleSave = async (data: any) => {
         return v
       })()
       const payload = {
-        model: 'qwen-max',
+        model: 'qwen-plus',
         temperature: Number((current as any).temperature ?? llm.temperature ?? 0.7),
         prompt: '测试连接',
         stream: false,

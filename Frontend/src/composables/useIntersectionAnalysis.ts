@@ -339,6 +339,8 @@ export function useIntersectionAnalysis() {
 
   const clearState = (): void => {
     store.clearResults()
+    store.setLastFeatureCollection(null)
+    lastFeatureCollection.value = null
     removeIntersectionlayers()
   }
 
@@ -455,10 +457,11 @@ export function useIntersectionAnalysis() {
     })()
     const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'intersect')
     
-    // 保存成功后清除composable变量
+    // 保存成功后清除双重存储
     if (result) {
       lastFeatureCollection.value = null
-      console.log('[IntersectionAnalysis] 保存图层成功，已清除composable变量')
+      store.setLastFeatureCollection(null)
+      console.log('[IntersectionAnalysis] 保存图层成功，已清除composable变量和Store状态')
     }
     
     return result

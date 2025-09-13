@@ -419,7 +419,7 @@ const chatWithAgent = async (agent: any) => {
       return v
     })()
     const payload = {
-      model: 'qwen-max',
+      model: 'qwen-plus',
       temperature: llm.temperature,
       prompt: `你好，我是 ${agent.name}`,
       stream: false,

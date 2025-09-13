@@ -45,7 +45,7 @@ def demo_conversation():
             response = requests.post(
                 f"{base_url}/agent/tool-chat",
                 json={
-                    "model": "qwen-max",
+                    "model": "qwen-plus",
                     "temperature": 0.7,
                     "prompt": turn['user'],
                     "conversation_id": conversation_id

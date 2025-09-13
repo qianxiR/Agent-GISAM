@@ -65,6 +65,8 @@ export function useBufferAnalysis() {
   // 清理状态（工具切换时调用）
   const clearState = () => {
     bufferAnalysisStore.clearResults()
+    bufferAnalysisStore.setLastFeatureCollection(null)
+    lastFeatureCollection.value = null
     removeBufferlayers()
   }
   
@@ -455,10 +457,11 @@ export function useBufferAnalysis() {
     )
     console.log('[BufferAnalysis] 保存结果:', result)
     
-    // 保存成功后清除composable变量
+    // 保存成功后清除双重存储
     if (result) {
       lastFeatureCollection.value = null
-      console.log('[BufferAnalysis] 保存图层成功，已清除composable变量')
+      bufferAnalysisStore.setLastFeatureCollection(null)
+      console.log('[BufferAnalysis] 保存图层成功，已清除composable变量和Store状态')
     }
     
     return result

@@ -54,7 +54,7 @@ conversation_id = "my_conversation"
 
 # 第一轮对话
 response1 = requests.post("http://localhost:8086/agent/tool-chat", json={
-    "model": "qwen-max",
+    "model": "qwen-plus",
     "temperature": 0.7,
     "prompt": "请查询武汉市的基本概况信息",
     "conversation_id": conversation_id
@@ -62,7 +62,7 @@ response1 = requests.post("http://localhost:8086/agent/tool-chat", json={
 
 # 第二轮对话（基于上下文）
 response2 = requests.post("http://localhost:8086/agent/tool-chat", json={
-    "model": "qwen-max",
+    "model": "qwen-plus",
     "temperature": 0.7,
     "prompt": "刚才提到的长江和汉江，它们的水质情况如何？",
     "conversation_id": conversation_id  # 使用相同的conversation_id
@@ -70,7 +70,7 @@ response2 = requests.post("http://localhost:8086/agent/tool-chat", json={
 
 # 第三轮对话（询问历史操作）
 response3 = requests.post("http://localhost:8086/agent/tool-chat", json={
-    "model": "qwen-max",
+    "model": "qwen-plus",
     "temperature": 0.7,
     "prompt": "刚才做了什么操作？",
     "conversation_id": conversation_id

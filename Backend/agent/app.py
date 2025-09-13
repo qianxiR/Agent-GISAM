@@ -499,12 +499,24 @@ async def tool_chat(req: ToolChatRequest):
         
         tool_message = ToolMessage(content=str(tool_result), tool_call_id=tool_call["id"])
         
+        # 构建最终回复的系统提示词，特别强调知识库查询后的回复要求
+        final_system_prompt = full_system_prompt
+        if tool_name == "query_knowledge_base":
+            final_system_prompt += "\n\n重要：你刚刚查询了知识库，现在必须基于查询结果给用户一个完整、有用的回复。不要只是重复工具返回的内容，要结合用户的问题提供有价值的回答。"
+        
         final_ai: AIMessage = llm_with_tools.invoke([
-            SystemMessage(content=full_system_prompt),
+            SystemMessage(content=final_system_prompt),
             HumanMessage(content=req.prompt),
             first_ai,
             tool_message,
         ])
+        
+        # 确保AI有回复内容，如果没有则生成默认回复
+        if not final_ai.content or final_ai.content.strip() == "":
+            if tool_name == "query_knowledge_base":
+                final_ai.content = f"已查询知识库获取相关信息：\n\n{tool_result}"
+            else:
+                final_ai.content = f"操作已完成：{tool_result}"
         
         # 添加助手回复到对话历史
         add_to_conversation_history(req.conversation_id, "assistant", final_ai.content)
@@ -717,4 +729,4 @@ async def root():
 
 
 if __name__ == "__main__":
-    uvicorn.run("agent.app:app", host="0.0.0.0", port=8089, reload=True)
+    uvicorn.run("agent.app:app", host="0.0.0.0", port=8089, reload=False)

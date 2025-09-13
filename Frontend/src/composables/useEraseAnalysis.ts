@@ -328,6 +328,8 @@ export function useEraseAnalysis() {
 
   const clearState = (): void => {
     store.clearResults()
+    store.setLastFeatureCollection(null)
+    lastFeatureCollection.value = null
     removeEraselayers()
   }
 
@@ -423,10 +425,11 @@ export function useEraseAnalysis() {
     })()
     const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'erase')
     
-    // 保存成功后清除composable变量
+    // 保存成功后清除双重存储
     if (result) {
       lastFeatureCollection.value = null
-      console.log('[EraseAnalysis] 保存图层成功，已清除composable变量')
+      store.setLastFeatureCollection(null)
+      console.log('[EraseAnalysis] 保存图层成功，已清除composable变量和Store状态')
     }
     
     return result

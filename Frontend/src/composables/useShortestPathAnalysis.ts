@@ -237,10 +237,11 @@ export function useShortestPathAnalysis() {
     })()
     const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'path')
     
-    // 保存成功后清除composable变量
+    // 保存成功后清除双重存储
     if (result) {
       lastFeatureCollection.value = null
-      console.log('[ShortestPathAnalysis] 保存图层成功，已清除composable变量')
+      shortestPathStore.setLastFeatureCollection(null)
+      console.log('[ShortestPathAnalysis] 保存图层成功，已清除composable变量和Store状态')
     }
     
     return result
@@ -287,7 +288,7 @@ export function useShortestPathAnalysis() {
   const generatelayerNameFromAnalysis = (): string => {
     const startLayer = state.analysislayers.startPointlayer?.get('layerName') || '起点'
     const endLayer = state.analysislayers.endPointlayer?.get('layerName') || '终点'
-    const obstacleLayer = state.analysislayers.obstaclelayer?.get('layerName') || ''
+    const obstacleLayer = state.analysislayers.obstacleslayer?.get('layerName') || ''
     const obstacleParam = obstacleLayer ? `_障碍${obstacleLayer}` : ''
     return `最短路径分析结果_${startLayer}_到_${endLayer}${obstacleParam}`
   }
@@ -297,6 +298,14 @@ export function useShortestPathAnalysis() {
   const clearResults = () => {
     removeAnalysislayers()
     clearAll()
+  }
+
+  // 清理状态（工具切换时调用）
+  const clearState = () => {
+    clearResultsStore()
+    shortestPathStore.setLastFeatureCollection(null)
+    lastFeatureCollection.value = null
+    removeAnalysislayers()
   }
   
   const removePathlayersOnly = (): void => {
@@ -888,6 +897,7 @@ export function useShortestPathAnalysis() {
     executePathAnalysis,
     executeShortestPathAnalysisByAgent,
     clearResults,
+    clearState,
     exportGeoJSON,
     setObstaclelayer,
     updateAnalysisOptions: updateAnalysisOptionsLocal,
