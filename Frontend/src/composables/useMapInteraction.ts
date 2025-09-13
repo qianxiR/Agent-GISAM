@@ -175,6 +175,30 @@ export function useMapInteraction() {
           mapStore.selectlayer.changed();
         }
 
+        // 检查是否是监测点要素
+        const isMonitoringPoint = feature.get('monitor_type') === '水质监测' || 
+                                 feature.get('data_source') === '监测预警平台' ||
+                                 feature.get('layerType') === 'monitoring';
+        
+        if (isMonitoringPoint) {
+          // 触发监测点选择事件
+          const { useMonitoringDataStore } = await import('@/stores/monitoringDataStore')
+          const monitoringStore = useMonitoringDataStore()
+          
+          // 根据要素属性查找对应的监测点信息
+          const siteId = feature.get('id')
+          const siteName = feature.get('site_name')
+          const layerName = feature.get('layerName')
+          
+          if (siteId) {
+            monitoringStore.selectSiteById(siteId)
+          } else if (siteName) {
+            monitoringStore.selectSiteByName(siteName)
+          } else if (layerName) {
+            monitoringStore.selectSiteByLayerName(layerName)
+          }
+        }
+        
         // 直接从GeoJSON properties中获取数据
         const properties = feature.getProperties ? feature.getProperties() : {}
         

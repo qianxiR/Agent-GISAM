@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "name": "湖北省新洲县阳逻镇武湖泵站",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "wuhu-pump-station",
+        "site_name": "湖北省新洲县阳逻镇武湖泵站",
+        "location": "武湖泵站",
+        "water_quality_class": "Ⅱ",
+        "monitor_type": "水质监测",
+        "coordinates": [114.7856, 30.8456],
+        "description": "长江流域水质监测点 - 武湖泵站",
+        "data_source": "监测预警平台",
+        "last_update": "2024-01-01T00:00:00Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [114.7856, 30.8456]
+      }
+    }
+  ]
+}

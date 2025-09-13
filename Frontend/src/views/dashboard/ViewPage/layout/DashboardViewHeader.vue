@@ -6,7 +6,7 @@
         alt="Logo" 
         class="header-logo" 
       />
-      <div class="screen-title">基于EDA-Agent的多源信息综合可视化及监测预警一体化平台 </div>
+      <div class="screen-title">基于EDA-Agent的武汉市多源信息综合可视化及长江流域监测预警一体化平台 </div>
     </div>
     
     <div class="header-right">
@@ -232,15 +232,15 @@ const goToAIManagement = () => {
 
 const goToManagement = () => {
   try {
-    router.push('/dashboard/management-analysis').catch((error) => {
+    router.push('/dashboard/management-analysis/llm/chat').catch((error) => {
       console.error('路由跳转失败:', error)
       // 如果路由跳转失败，尝试使用window.location
-      window.location.href = '/dashboard/management-analysis'
+      window.location.href = '/dashboard/management-analysis/llm/chat'
     })
   } catch (error) {
     console.error('路由跳转异常:', error)
     // 如果出现异常，直接使用window.location
-    window.location.href = '/dashboard/management-analysis'
+    window.location.href = '/dashboard/management-analysis/llm/chat'
   }
 }
 

@@ -18,6 +18,14 @@
         <div class="legend-symbol admin-county"></div>
         <span class="legend-label">县级行政区</span>
       </div>
+      <div 
+        class="legend-item" 
+        @click="toggleLayer('建筑物面')" 
+        :class="{ disabled: !isLayerVisible('建筑物面') }"
+      >
+        <div class="legend-symbol building-polygon"></div>
+        <span class="legend-label">建筑物面</span>
+      </div>
     </div>
   </div>
 </template>
@@ -38,7 +46,8 @@ const layerColors = computed(() => getLegendColors())
 // 图层名称映射
 const layerNameMap: Record<string, string> = {
   '市级行政区': '武汉_市级',
-  '县级行政区': '武汉_县级'
+  '县级行政区': '武汉_县级',
+  '建筑物面': '建筑物面'
 }
 
 // 切换图层显示/隐藏
@@ -144,6 +153,11 @@ const isLayerVisible = (displayName: string) => {
 .legend-symbol.admin-county {
   background: v-bind('layerColors.武汉_县级?.fill || "rgba(0, 120, 212, 0.1)"');
   border-color: v-bind('layerColors.武汉_县级?.stroke || "#0078D4"');
+}
+
+.legend-symbol.building-polygon {
+  background: v-bind('layerColors.建筑物面?.fill || "rgba(255, 152, 0, 0.3)"');
+  border-color: v-bind('layerColors.建筑物面?.stroke || "#FF9800"');
 }
 
 .legend-label {

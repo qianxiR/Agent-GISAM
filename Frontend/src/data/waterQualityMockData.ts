@@ -59,13 +59,13 @@ export const monitoringSites: MonitoringSite[] = [
       water_temperature: 14.2,
       ph_value: 7.68,
       dissolved_oxygen: 9.2,
-      turbidity: 4.8,
-      permanganate_index: 3.2,
+      turbidity: 4.2, // 降低到正常范围
+      permanganate_index: 2.8, // 降低到正常范围
       ammonia_nitrogen: 0.028,
       total_phosphorus: 0.018,
       total_nitrogen: 1.35,
       chlorophyll_a: 0.004,
-      algae_density: 1800000
+      algae_density: 1200000 // 降低到正常范围
     }, '武湖泵站')
   },
   {
@@ -91,17 +91,17 @@ export const monitoringSites: MonitoringSite[] = [
     location: '吴家山',
     coordinates: [114.1456, 30.6234],
     data: generateMockData({
-      water_quality_class: 'Ⅲ',
-      water_temperature: 16.1,
+      water_quality_class: 'Ⅱ',
+      water_temperature: 15.8,
       ph_value: 7.45,
-      dissolved_oxygen: 7.8,
-      turbidity: 8.2,
-      permanganate_index: 4.1,
-      ammonia_nitrogen: 0.035,
-      total_phosphorus: 0.025,
-      total_nitrogen: 1.68,
-      chlorophyll_a: 0.006,
-      algae_density: 2200000
+      dissolved_oxygen: 8.2,
+      turbidity: 4.5, // 降低到正常范围
+      permanganate_index: 2.8, // 降低到正常范围
+      ammonia_nitrogen: 0.025,
+      total_phosphorus: 0.018,
+      total_nitrogen: 1.45,
+      chlorophyll_a: 0.004,
+      algae_density: 1200000 // 降低到正常范围
     }, '吴家山')
   },
   {
@@ -113,13 +113,13 @@ export const monitoringSites: MonitoringSite[] = [
       water_temperature: 15.3,
       ph_value: 7.72,
       dissolved_oxygen: 8.9,
-      turbidity: 5.5,
-      permanganate_index: 3.6,
+      turbidity: 4.2, // 降低到正常范围
+      permanganate_index: 2.8, // 降低到正常范围
       ammonia_nitrogen: 0.022,
       total_phosphorus: 0.012,
       total_nitrogen: 1.18,
       chlorophyll_a: 0.003,
-      algae_density: 1650000
+      algae_density: 1200000 // 降低到正常范围
     }, '金水闸')
   }
 ]

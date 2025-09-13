@@ -6,6 +6,7 @@ export interface Wuhanlayer {
   datasetName?: string
   dataService?: string
   lazyLoad?: boolean // 是否懒加载，默认false
+  maxFeatures?: number // 最大要素数量限制，用于性能优化
 }
 
 export interface BaseMapConfig {

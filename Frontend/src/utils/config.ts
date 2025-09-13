@@ -145,11 +145,12 @@ export const createAPIConfig = (): APIConfig => {
       { 
         name: `建筑物面@${workspace}@@${mapName}`, 
         type: 'polygon', 
-        visible: false, 
+        visible: true, 
         group: '城市基本信息',
-        datasetName: '建筑物面',
+        datasetName: '建筑物面（部分）',
         dataService: `${mapService}/maps/${mapName}`,
-        lazyLoad: true // 懒加载，点击显示时才加载
+        lazyLoad: false, // 城市综合态势默认显示
+        maxFeatures: 2000 // 限制最大要素数量
       },
       
       // 基础设施图层组 - 居民地信息

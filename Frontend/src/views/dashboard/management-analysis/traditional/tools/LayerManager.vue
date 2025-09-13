@@ -207,10 +207,16 @@ const toggleGroupCollapse = (source: string) => {
 }
 
 
-// 获取指定来源的图层列表
+// 获取指定来源的图层列表，已打开的图层置顶显示
 const getLayersBySource = (source: string): MaplayerItem[] => {
-  return alllayers.value
-    .filter(item => item.source === source)
+  const layers = alllayers.value.filter(item => item.source === source)
+  
+  // 按可见性排序：可见的图层在前，不可见的图层在后
+  return layers.sort((a, b) => {
+    if (a.visible && !b.visible) return -1
+    if (!a.visible && b.visible) return 1
+    return 0
+  })
 }
 
 

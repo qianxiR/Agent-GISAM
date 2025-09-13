@@ -48,6 +48,9 @@ export const getLegendColors = () => {
     '学校': getLayerColors('学校'),
     '居民地地名点': getLayerColors('居民地地名点'),
     
+    // 建筑物图层
+    '建筑物面': getLayerColors('建筑物面'),
+    
     // 水文监测点（特殊处理，使用固定颜色）
     '水文监测点': {
       stroke: '#0288d1',

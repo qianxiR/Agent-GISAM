@@ -273,11 +273,11 @@ export function useShortestPathAnalysis() {
   const getAnalysislayerStyle = () => {
     return new window.ol.style.Style({
       stroke: new window.ol.style.Stroke({
-        color: '#0078D4', // 蓝色
+        color: '#FFB6C1', // 淡粉红色
         width: 4
       }),
       fill: new window.ol.style.Fill({
-        color: '#0078D44D' // 蓝色，70%透明度
+        color: '#FFB6C14D' // 淡粉红色，70%透明度
       })
     })
   }
@@ -285,8 +285,11 @@ export function useShortestPathAnalysis() {
   
   // 生成图层名称
   const generatelayerNameFromAnalysis = (): string => {
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
-    return `分析及绘制图层_${timestamp}`
+    const startLayer = state.analysislayers.startPointlayer?.get('layerName') || '起点'
+    const endLayer = state.analysislayers.endPointlayer?.get('layerName') || '终点'
+    const obstacleLayer = state.analysislayers.obstaclelayer?.get('layerName') || ''
+    const obstacleParam = obstacleLayer ? `_障碍${obstacleLayer}` : ''
+    return `最短路径分析结果_${startLayer}_到_${endLayer}${obstacleParam}`
   }
   
   // ===== 清空图层方法 =====

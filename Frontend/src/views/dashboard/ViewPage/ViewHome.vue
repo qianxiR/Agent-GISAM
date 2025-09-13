@@ -51,6 +51,8 @@ import { useMap } from '@/composables/useMap'
 import { useMapStore } from '@/stores/mapStore'
 import { useGlobalModalStore } from '@/stores/modalStore'
 import { usePageStateStore } from '@/stores/pageStateStore'
+import { useMonitoringThreshold } from '@/composables/useMonitoringThreshold'
+import { registerGlobalAutoAnalysisListener, unregisterGlobalAutoAnalysisListener } from '@/utils/globalAutoAnalysisHandler'
 import DashboardViewHeader from '@/views/dashboard/ViewPage/layout/DashboardViewHeader.vue'
 import UserProfile from '@/views/dashboard/management-analysis/profile/UserProfile.vue'
 import AIManagement from '@/views/dashboard/management-analysis/management/AIManagement.vue'
@@ -130,6 +132,13 @@ onMounted(() => {
 
   // 设置当前页面为视图页面
   pageStateStore.switchToPage('view')
+  
+  // 启动水质阈值监测（基于路由检测）
+  const { startMonitoringIfNeeded } = useMonitoringThreshold()
+  startMonitoringIfNeeded()
+  
+  // 注册全局自动分析事件监听器
+  registerGlobalAutoAnalysisListener()
 
   // 当容器尺寸变化时，强制更新地图尺寸，避免容器初始为0导致"无地图可见"
   const el = mapContainer.value
@@ -146,6 +155,9 @@ onUnmounted(() => {
     try { resizeObserver.disconnect() } catch (_) {}
     resizeObserver = null
   }
+  
+  // 注销全局自动分析事件监听器
+  unregisterGlobalAutoAnalysisListener()
   
   // 清理地图生命周期资源
   cleanup()

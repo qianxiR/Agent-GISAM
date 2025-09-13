@@ -368,7 +368,7 @@ export function useEraseAnalysis() {
           const e = eId ? mapStore.vectorlayers.find(l => l.id === eId) : null
           const tn = t ? t.name : '目标'
           const en = e ? e.name : '擦除'
-          return `擦除分析结果_${tn}_MINUS_${en}`
+          return `擦除分析结果_${tn}_擦除${en}`
         })()
         await saveFeaturesAslayer(features as any[], defaultName, 'erase')
         console.log(`[Erase] Saved ${features.length} erase results as layer: ${defaultName}`)
@@ -419,7 +419,7 @@ export function useEraseAnalysis() {
       const e = eId ? mapStore.vectorlayers.find(l => l.id === eId) : null
       const tn = t ? t.name : '目标'
       const en = e ? e.name : '擦除'
-      return `擦除分析结果_${tn}_MINUS_${en}`
+      return `擦除分析结果_${tn}_擦除${en}`
     })()
     const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'erase')
     

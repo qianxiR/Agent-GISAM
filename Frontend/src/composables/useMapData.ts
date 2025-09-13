@@ -96,7 +96,13 @@ export function useMapData() {
     const metaUrlBounds = `${mapStore.mapConfig.dataUrl}/datasources/${datasource}/datasets/${dataset}/features.json`;
     const metaJsonBounds = await (await fetch(metaUrlBounds)).json();
     const startIndexDefaultBounds: number = (metaJsonBounds && typeof metaJsonBounds.startIndex === 'number') ? metaJsonBounds.startIndex : 0;
-    const featureCountBounds: number = (metaJsonBounds && typeof metaJsonBounds.featureCount === 'number') ? metaJsonBounds.featureCount : 20;
+    let featureCountBounds: number = (metaJsonBounds && typeof metaJsonBounds.featureCount === 'number') ? metaJsonBounds.featureCount : 20;
+    
+    // 如果图层配置了maxFeatures，则限制要素数量
+    if (layerConfig.maxFeatures && layerConfig.maxFeatures > 0) {
+      featureCountBounds = Math.min(featureCountBounds, layerConfig.maxFeatures);
+    }
+    
     const computedFromIndexBounds: number = startIndexDefaultBounds;
     const computedToIndexBounds: number = startIndexDefaultBounds + featureCountBounds - 1;
 

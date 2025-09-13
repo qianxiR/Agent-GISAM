@@ -369,7 +369,7 @@ export function useIntersectionAnalysis() {
           const m = mId ? mapStore.vectorlayers.find(l => l.id === mId) : null
           const tn = t ? t.name : '目标'
           const mn = m ? m.name : '掩膜'
-          return `相交分析结果_${tn}_AND_${mn}`
+          return `相交分析结果_${tn}_掩膜${mn}`
         })()
         await saveFeaturesAslayer(features as any[], defaultName, 'intersect')
         console.log(`[Intersection] Saved ${features.length} intersection results as layer: ${defaultName}`)
@@ -451,7 +451,7 @@ export function useIntersectionAnalysis() {
       const m = mId ? mapStore.vectorlayers.find(l => l.id === mId) : null
       const tn = t ? t.name : '目标'
       const mn = m ? m.name : '掩膜'
-      return `相交分析结果_${tn}_AND_${mn}`
+      return `相交分析结果_${tn}_掩膜${mn}`
     })()
     const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'intersect')
     

@@ -6,7 +6,7 @@
         alt="Logo" 
         class="header-logo" 
       />
-      <div class="screen-title">基于EDA-Agent的地理空间协同感知智能决策分析平台</div>
+      <div class="screen-title">基于EDA-Agent的武汉市长江流域地理空间实时势态实感知智能决策分析平台</div>
     </div>
     
           <div class="header-right">
@@ -344,6 +344,9 @@ watch(() => router.currentRoute.value.path, (newPath: string) => {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   font-family: "Segoe UI", PingFang SC, Microsoft YaHei, Arial, sans-serif;
   transition: color 0.2s ease;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .header-left {
@@ -352,6 +355,8 @@ watch(() => router.currentRoute.value.path, (newPath: string) => {
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
+  min-width: 0;
+  max-width: 70%;
 }
 
 .header-logo {

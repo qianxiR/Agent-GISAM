@@ -1,6 +1,6 @@
 # 🗺️ SuperMap 智能地理信息分析系统
-
-> 基于微服务架构的现代化 WebGIS 全栈应用，集成 AI 智能助手与传统 GIS 分析功能
+基于EDA事件驱动Agent的武汉市长江流域地理空间实时势态感知智能决策分析及多源信息综合可视化监测预警一体化平台
+> 基于微服务架构的现代化 WebGIS 全栈应用，集成 EDA 事件驱动 AI Agent 与传统 GIS 分析功能
 
 [![Vue](https://img.shields.io/badge/Vue-3.5.18-4FC08D?logo=vue.js)](https://vuejs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
@@ -32,12 +32,22 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 ┌─────────────────────────────────────────────────────────────────┐
 │                        前端应用层                                │
 │  Vue 3 + TypeScript + Openlayers + Pinia + Ant Design Vue     │
+│  ├── 事件驱动架构 (CustomEvent)                                │
+│  ├── 21个Pinia状态管理模块                                     │
+│  ├── 25个UI组件 + 14个地图组件 + 17个图表组件 + 3个Agent组件     │
+│  └── 25个组合式函数 (Composables)                              │
 └─────────────────┬───────────────────────────────────────────────┘
-                  │ HTTP/REST API
+                  │ HTTP/REST API + 事件驱动通信
 ┌─────────────────┴───────────────────────────────────────────────┐
 │                       后端服务层                                │
 ├─────────────────────────────────────────────────────────────────┤
-│  用户认证服务 (FastAPI + PostgreSQL)                           │
+│  EDA事件驱动Agent服务 (FastAPI + LangChain)                    │
+│  - 长江水域监测专业背景知识                                     │
+│  - 17个工具函数 (图层管理+空间分析+结果导出)                    │
+│  - 上下文记忆和会话管理                                         │
+│  - 工具调用和结果反馈机制                                       │
+├─────────────────────────────────────────────────────────────────┤
+│  用户认证服务 (FastAPI + PostgreSQL + DDD架构)                 │
 │  - 用户注册/登录/认证                                           │
 │  - JWT 令牌管理                                                │
 │  - 用户资料管理                                                │
@@ -52,14 +62,16 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 
 ### 核心特性
 
-- **微服务架构**: 用户服务 + 空间分析服务，独立部署和扩展
+- **EDA事件驱动架构**: 基于CustomEvent的前后端解耦通信机制
+- **微服务架构**: EDA Agent服务 + 用户服务 + 空间分析服务，独立部署和扩展
 - **双模式设计**: LLM 智能模式 + 传统 GIS 模式
 - **实时地图交互**: 基于 Openlayers 的高性能地图渲染
 - **完整分析工具**: 缓冲区、相交、擦除、最短路径等空间分析
-- **AI 助手集成**: 自然语言交互的地图操作
+- **智能AI助手**: 长江水域监测专业背景的AI Agent，支持17个工具函数
+- **事件驱动通信**: 前端事件监听器 + 后端工具调用 + 结果反馈机制
 - **用户管理系统**: 完整的用户认证、授权和资料管理
 - **响应式界面**: 现代化 UI 设计，支持主题切换
-- **状态持久化**: 完整的应用状态管理和本地存储
+- **状态持久化**: 17个Pinia状态模块的完整应用状态管理
 
 ## ✨ 功能特性
 
@@ -69,12 +81,14 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 - **权限控制**: 基于角色的访问控制
 - **会话管理**: 安全的用户会话和登出
 
-### 🧠 LLM 智能模式
-- **自然语言交互**: 通过聊天界面操作地图
-- **智能要素识别**: AI 辅助的要素查询与选择
-- **上下文感知**: 基于地图状态的智能建议
-- **多轮对话**: 支持复杂的地图分析任务
-- **聊天历史**: 对话记录保存和回放
+### 🧠 EDA事件驱动LLM智能模式
+- **自然语言交互**: 通过聊天界面操作地图，支持长江水域监测专业术语
+- **17个工具函数**: 图层管理、空间分析、结果导出的完整工具链
+- **事件驱动通信**: 前端CustomEvent监听 + 后端LangChain工具调用
+- **上下文记忆**: 会话历史管理和操作上下文自动识别
+- **专业背景知识**: 长江水系特征、水质监测标准、监测点布局等专业知识
+- **智能结果反馈**: 分析结果自动反馈和智能回应生成
+- **多轮对话**: 支持复杂的地图分析任务和连续操作
 
 ### 🛠️ 传统 GIS 模式
 - **图层管理**: 完整的图层控制与样式设置
@@ -102,8 +116,10 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 - **主题切换**: 明暗主题自动切换
 - **分割面板**: 可调整的布局分割
 - **通知系统**: 实时操作反馈
-- **状态管理**: 完整的应用状态持久化
-- **模块化组件**: 17个状态管理模块，19个UI组件
+- **状态管理**: 21个Pinia状态模块的完整应用状态持久化
+- **模块化组件**: 25个UI组件 + 14个地图组件 + 17个图表组件 + 3个Agent组件
+- **事件驱动UI**: 基于CustomEvent的组件间解耦通信
+- **路由驱动**: 每个功能面板独立路由，支持懒加载
 
 ## 🛠️ 技术栈
 
@@ -127,6 +143,15 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 
 ### 后端技术栈
 
+#### EDA事件驱动Agent服务 (Python)
+- **FastAPI 0.104**: 现代高性能 Web 框架
+- **LangChain**: AI Agent 框架和工具调用
+- **LangGraph**: 多智能体工作流管理
+- **通义千问 (Qwen)**: 阿里云大语言模型
+- **Tavily Search**: 联网搜索能力
+- **Pydantic**: 数据验证和序列化
+- **17个工具函数**: 图层管理、空间分析、结果导出
+
 #### 用户认证服务 (Python)
 - **FastAPI 0.104**: 现代高性能 Web 框架
 - **PostgreSQL 15**: 关系型数据库
@@ -134,6 +159,7 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 - **Pydantic**: 数据验证和序列化
 - **JWT**: JSON Web Token 认证
 - **Asyncpg**: 异步 PostgreSQL 驱动
+- **DDD 架构**: 领域驱动设计
 
 #### 空间分析服务 (Node.js)
 - **Node.js 18.0+**: JavaScript 运行时
@@ -157,9 +183,16 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 
 ```
 SuperMap/
-├── Frontend/                   # 前端应用 (Vue 3 + TypeScript)
+├── Frontend/                   # 前端应用 (Vue 3 + TypeScript + 事件驱动)
+│   ├── src/
+│   │   ├── components/         # 组件库 (19个UI + 8个地图 + 2个布局)
+│   │   ├── composables/        # 组合式函数 (12个)
+│   │   ├── stores/            # 状态管理 (17个Pinia模块)
+│   │   ├── views/             # 页面组件 (路由驱动)
+│   │   └── docs/              # 前端架构文档
 ├── Backend/                    # 后端服务
-│   ├── user/                   # 用户认证服务 (FastAPI + PostgreSQL)
+│   ├── agent/                  # EDA事件驱动Agent服务 (FastAPI + LangChain)
+│   ├── user/                   # 用户认证服务 (FastAPI + PostgreSQL + DDD)
 │   └── analysis/               # 空间分析服务 (Node.js + Express + DDD)
 ├── docs/                       # 项目文档
 └── README.md                   # 项目说明文档
@@ -170,68 +203,230 @@ SuperMap/
 ```
 Frontend/
 ├── src/
-│   ├── api/                    # API 接口层
+│   ├── api/                    # API 接口层 (5个文件)
 │   │   ├── config.ts           # Axios 配置和拦截器
 │   │   ├── supermap.ts         # SuperMap iServer 接口
-│   │   └── user.ts             # 用户认证接口
+│   │   ├── hydrologyData.ts    # 水文数据接口
+│   │   ├── waterQualityData.ts # 水质数据接口
+│   │   └── yangtzeData.ts      # 长江数据接口
 │   │
-│   ├── components/             # 组件库
-│   │   ├── Layout/             # 布局组件 (2个)
-│   │   ├── Map/                # 地图组件 (8个)
-│   │   └── UI/                 # UI组件 (19个)
+│   ├── components/             # 组件库 (4个分类)
+│   │   ├── Agent/              # AI Agent组件 (3个文件)
+│   │   │   ├── ChatMessagesPanel.vue
+│   │   │   ├── LLMInputWindow.vue
+│   │   │   └── prompt/         # 提示词文件
+│   │   ├── Charts/             # 图表组件 (17个文件)
+│   │   │   ├── AgeDistributionChart.vue
+│   │   │   ├── EducationLevelChart.vue
+│   │   │   ├── GenderRatioChart.vue
+│   │   │   ├── HospitalDistributionChart.vue
+│   │   │   ├── WaterQualityChart1-4.vue
+│   │   │   └── ...             # 其他统计图表
+│   │   ├── Map/                # 地图组件 (14个文件)
+│   │   │   ├── CoordinateDisplay.vue
+│   │   │   ├── ScaleBar.vue
+│   │   │   ├── OverviewMap.vue
+│   │   │   ├── FeaturePopup.vue
+│   │   │   ├── LayerAssistant.vue
+│   │   │   ├── DistanceMeasurePanel.vue
+│   │   │   ├── AreaMeasurePanel.vue
+│   │   │   └── ...             # 图例和控件组件
+│   │   └── UI/                 # UI组件 (25个文件)
+│   │       ├── PrimaryButton.vue
+│   │       ├── SecondaryButton.vue
+│   │       ├── IconButton.vue
+│   │       ├── PanelWindow.vue
+│   │       ├── NotificationManager.vue
+│   │       └── ...             # 其他UI组件
 │   │
-│   ├── composables/            # 组合式函数 (12个)
+│   ├── composables/            # 组合式函数 (25个文件)
 │   │   ├── useMap.ts           # 地图核心逻辑
-│   │   ├── uselayermanager.ts  # 图层管理
+│   │   ├── useLayerManager.ts  # 图层管理 (事件驱动)
 │   │   ├── useBufferAnalysis.ts # 缓冲区分析
 │   │   ├── useFeatureQuery.ts  # 要素查询
+│   │   ├── useIntersectionAnalysis.ts # 相交分析
+│   │   ├── useEraseAnalysis.ts # 擦除分析
+│   │   ├── useShortestPathAnalysis.ts # 最短路径分析
+│   │   ├── useRealTimeWaterQuality.ts # 实时水质监测
+│   │   ├── useMonitoringDataLayers.ts # 监测数据图层
+│   │   ├── useMonitoringThreshold.ts # 监测阈值管理
 │   │   └── ...                 # 其他业务逻辑
 │   │
-│   ├── stores/                 # 状态管理 (17个 Pinia stores)
+│   ├── stores/                 # 状态管理 (21个 Pinia stores)
 │   │   ├── mapStore.ts         # 地图状态
 │   │   ├── userStore.ts        # 用户状态
 │   │   ├── analysisStore.ts    # 分析工具状态
 │   │   ├── modeStateStore.ts   # 模式切换状态
+│   │   ├── bufferAnalysisStore.ts # 缓冲区分析状态
+│   │   ├── featureQueryStore.ts # 要素查询状态
+│   │   ├── intersectionAnalysisStore.ts # 相交分析状态
+│   │   ├── eraseAnalysisStore.ts # 擦除分析状态
+│   │   ├── shortestPathAnalysisStore.ts # 最短路径分析状态
+│   │   ├── monitoringDataStore.ts # 监测数据状态
+│   │   ├── layerDataStore.ts   # 图层数据状态
+│   │   ├── layerUIStore.ts     # 图层UI状态
+│   │   ├── pageStateStore.ts   # 页面状态
+│   │   ├── persistenceStore.ts # 持久化状态
 │   │   └── ...                 # 其他状态模块
 │   │
-│   ├── views/                  # 页面组件 (19个)
-│   │   ├── auth/               # 认证页面
+│   ├── views/                  # 页面组件 (路由驱动)
+│   │   ├── auth/               # 认证页面 (2个文件)
+│   │   │   ├── Login.vue
+│   │   │   └── Register.vue
 │   │   ├── dashboard/          # 主工作台
-│   │   │   ├── LLM/            # LLM 模式
-│   │   │   └── traditional/    # 传统 GIS 模式
-│   │   └── ...
+│   │   │   ├── management-analysis/ # 管理分析模块
+│   │   │   │   ├── layout/     # 布局组件 (2个文件)
+│   │   │   │   │   ├── DashboardManageHeader.vue
+│   │   │   │   │   └── DashboardManageLayout.vue
+│   │   │   │   ├── LLM/        # EDA事件驱动LLM模式 (3个文件)
+│   │   │   │   │   ├── LLMMode.vue
+│   │   │   │   │   ├── ChatAssistant.vue # 事件监听器
+│   │   │   │   │   └── ChatHistory.vue
+│   │   │   │   ├── traditional/ # 传统 GIS 模式
+│   │   │   │   │   ├── TraditionalMode.vue
+│   │   │   │   │   └── tools/  # 分析工具面板 (8个文件)
+│   │   │   │   │       ├── LayerManager.vue
+│   │   │   │   │       ├── FeatureQueryPanel.vue
+│   │   │   │   │       ├── AreaSelectionTools.vue
+│   │   │   │   │       ├── BufferAnalysisPanel.vue
+│   │   │   │   │       ├── IntersectionAnalysisPanel.vue
+│   │   │   │   │       ├── EraseAnalysisPanel.vue
+│   │   │   │   │       ├── ShortestPathAnalysisPanel.vue
+│   │   │   │   │       └── DataUploadPanel.vue
+│   │   │   │   ├── management/ # 系统管理 (1个文件)
+│   │   │   │   │   └── AIManagement.vue
+│   │   │   │   ├── profile/    # 用户管理 (1个文件)
+│   │   │   │   │   └── UserProfile.vue
+│   │   │   │   ├── ManagementAnalysis.vue
+│   │   │   │   ├── RightPanel.vue
+│   │   │   │   └── SuperMapViewer.vue
+│   │   │   └── ViewPage/       # 视图页面
+│   │   │       ├── layout/     # 视图布局 (1个文件)
+│   │   │       │   └── DashboardViewHeader.vue
+│   │   │       ├── data/       # 数据文件 (4个文件)
+│   │   │       ├── monitordata/ # 监测数据 (6个GeoJSON文件)
+│   │   │       ├── processed_data/ # 处理数据 (8个文件)
+│   │   │       ├── ViewHome.vue
+│   │   │       ├── ViewLayerManager.vue
+│   │   │       ├── ViewSubPage1-3.vue
+│   │   │       └── ...         # 长江数据文件
+│   │   └── Dashboard.vue
 │   │
-│   ├── router/                 # 路由配置
-│   ├── styles/                 # 全局样式
-│   ├── types/                  # TypeScript 类型定义
-│   ├── utils/                  # 工具函数
+│   ├── router/                 # 路由配置 (嵌套路由)
+│   ├── styles/                 # 全局样式 (主题系统)
+│   ├── types/                  # TypeScript 类型定义 (7个文件)
+│   ├── utils/                  # 工具函数 (13个文件)
+│   ├── data/                   # 数据文件
 │   └── main.js                 # 应用入口
 │
-├── docs/                       # 前端文档
+├── docs/                       # 前端架构文档 (21个文件)
+│   ├── 0.路由页面管理方式.md    # 路由架构设计
+│   ├── 1.页面布局及UI管理方式.md # 布局组件层级
+│   ├── 2.UI组件设置.md          # UI组件详细说明
+│   ├── 4.功能实现方法.md        # 组合式函数实现
+│   ├── 5.状态管理设计.md        # 21个Pinia状态模块
+│   ├── 9.图层管理与数据读取机制分析.md # 数据流转机制
+│   ├── 20.事件驱动分析.md       # EDA事件驱动架构
+│   └── ...                     # 其他架构文档
 ├── public/                     # 静态资源
 └── package.json                # 依赖配置
 ```
 
 ### 后端结构 (Backend/)
 
+#### EDA事件驱动Agent服务 (Backend/agent/)
+```
+agent/                          # FastAPI + LangChain + 通义千问
+├── app.py                      # FastAPI 应用入口 (919行)
+├── models/                     # 数据模型
+│   ├── __init__.py
+│   └── schemas.py              # Pydantic 模型定义
+├── study_ali/                  # 阿里云大模型研究
+│   ├── 1多轮对话.py            # 多轮对话示例
+│   ├── 2工具调用.py            # 工具调用示例
+│   ├── 3联网搜索.PY            # 联网搜索示例
+│   ├── 4运行工具函数.PY        # 工具函数运行示例
+│   ├── 5结构化输出.PY          # 结构化输出示例
+│   ├── integrated_llm_agent.py # 集成LLM Agent
+│   ├── 原理.md                 # 原理说明文档
+│   └── Langchain/              # LangChain 学习案例
+│       ├── 1.第一个LLM/        # 第一个LLM案例
+│       │   ├── 1.对话翻译.Ipynb
+│       │   ├── 2.工具调用.ipynb
+│       │   └── 工具调用完整指南.md
+│       └── readme.md
+└── 17个工具函数 (在app.py中)   # 长江水域监测专业工具
+    ├── toggle_layer_visibility # 图层可见性切换
+    ├── query_features_by_attribute # 属性查询
+    ├── execute_buffer_analysis # 缓冲区分析
+    ├── execute_intersection_analysis # 相交分析
+    ├── execute_erase_analysis  # 擦除分析
+    ├── execute_shortest_path_analysis # 最短路径分析
+    └── 保存/导出工具函数        # 结果保存和导出
+```
+
 #### 用户认证服务 (Backend/user/)
 ```
-user/                           # FastAPI + PostgreSQL
-├── api/v1/                     # API 路由层
-│   ├── health.py               # 健康检查
-│   └── user/auth.py            # 用户认证接口
+user/                           # FastAPI + PostgreSQL + DDD
+├── api/                        # API 路由层
+│   ├── __init__.py
+│   ├── dependencies.py         # 依赖注入
+│   └── v1/                     # API v1版本
+│       ├── __init__.py
+│       └── user/               # 用户相关API
+│           ├── __init__.py
+│           ├── auth.py         # 用户认证接口
+│           └── user_dto.py     # 用户DTO定义
 ├── application/                # 应用层
+│   ├── __init__.py
 │   ├── dto/                    # 数据传输对象
+│   │   ├── __init__.py
+│   │   └── user_dto.py         # 用户DTO
 │   └── use_cases/              # 用例实现
+│       ├── __init__.py
+│       └── user/               # 用户用例
+│           ├── __init__.py
+│           └── auth_use_case.py # 认证用例
 ├── domains/                    # 领域层
+│   ├── __init__.py
+│   ├── llm/                    # LLM领域
+│   ├── spatial/                # 空间领域
 │   └── user/                   # 用户领域模型
+│       ├── __init__.py
+│       ├── entities.py         # 用户实体
+│       ├── repositories.py     # 仓储接口
+│       ├── services.py         # 领域服务
+│       └── value_objects.py    # 值对象
 ├── infrastructure/             # 基础设施层
-│   └── database/               # 数据库实现
+│   ├── __init__.py
+│   ├── database/               # 数据库实现
+│   │   ├── __init__.py
+│   │   ├── postgres/           # PostgreSQL实现
+│   │   │   ├── __init__.py
+│   │   │   ├── models.py       # SQLAlchemy模型
+│   │   │   └── repositories.py # 仓储实现
+│   │   └── redis/              # Redis缓存
+│   │       ├── __init__.py
+│   │       ├── cache_service.py
+│   │       └── connection.py
+│   ├── external/               # 外部服务
+│   └── monitoring/             # 监控模块
+│       ├── __init__.py
+│       ├── health_check.py     # 健康检查
+│       ├── metrics.py          # 指标监控
+│       └── tracing.py          # 链路追踪
 ├── core/                       # 核心模块
+│   ├── __init__.py
+│   ├── cache.py                # 缓存配置
 │   ├── config.py               # 配置管理
+│   ├── container.py            # 依赖注入容器
 │   ├── database.py             # 数据库连接
-│   ├── security.py             # 安全认证
-│   └── container.py            # 依赖注入
+│   └── security.py             # 安全认证
+├── docs/                       # 文档
+│   ├── user-auth-api.md        # API文档
+│   └── user-auth-quick-reference.md # 快速参考
+├── utils/                      # 工具函数
+│   └── test_userapi.py         # API测试
 └── main.py                     # FastAPI 应用入口
 ```
 
@@ -240,34 +435,78 @@ user/                           # FastAPI + PostgreSQL
 analysis/                       # Node.js + Express + DDD
 ├── src/
 │   ├── api/                    # API 层
-│   │   ├── controllers/        # 控制器
-│   │   └── routes/             # 路由定义
+│   │   ├── controllers/        # 控制器 (4个文件)
+│   │   │   ├── BufferAnalysisController.js
+│   │   │   ├── EraseAnalysisController.js
+│   │   │   ├── IntersectionAnalysisController.js
+│   │   │   └── ShortestPathAnalysisController.js
+│   │   ├── routes/             # 路由定义 (5个文件)
+│   │   │   ├── buffer.js
+│   │   │   ├── erase.js
+│   │   │   ├── intersection.js
+│   │   │   ├── shortestPath.js
+│   │   │   └── download.js
+│   │   └── geometryConverter.ts # 几何转换器
 │   ├── application/            # 应用层
-│   │   ├── dtos/               # 数据传输对象
-│   │   └── useCases/           # 用例实现
+│   │   ├── dtos/               # 数据传输对象 (4个文件)
+│   │   │   ├── BufferAnalysisDTO.js
+│   │   │   ├── EraseAnalysisDTO.js
+│   │   │   ├── IntersectionAnalysisDTO.js
+│   │   │   └── ShortestPathAnalysisDTO.js
+│   │   └── useCases/           # 用例实现 (4个文件)
+│   │       ├── BufferAnalysisUseCase.js
+│   │       ├── EraseAnalysisUseCase.js
+│   │       ├── IntersectionAnalysisUseCase.js
+│   │       └── ShortestPathAnalysisUseCase.js
 │   ├── domain/                 # 领域层
 │   │   ├── entities/           # 实体
+│   │   │   └── Geometry.js
 │   │   ├── valueObjects/       # 值对象
-│   │   └── services/           # 领域服务
+│   │   │   └── BufferSettings.js
+│   │   └── services/           # 领域服务 (5个文件)
+│   │       ├── BufferAnalysisService.js
+│   │       ├── EraseAnalysisService.js
+│   │       ├── GeometryProcessingService.js
+│   │       ├── IntersectionAnalysisService.js
+│   │       └── ShortestPathAnalysisService.js
 │   ├── infrastructure/         # 基础设施层
+│   │   ├── geometryConverter.js # 几何转换实现
 │   │   └── repositories/       # 数据仓库
-│   └── app.js                  # Express 应用入口
+│   │       └── LayerRepository.js
+│   ├── middleware/             # 中间件 (4个文件)
+│   │   ├── errorHandler.js     # 错误处理
+│   │   ├── llmResponseFormatter.js # LLM响应格式化
+│   │   ├── requestLogger.js    # 请求日志
+│   │   └── validation.js       # 请求验证
+│   ├── config/                 # 配置
+│   │   ├── dify-openapi-schema.json
+│   │   └── swagger.js          # Swagger配置
+│   ├── app.js                  # Express 应用入口
+│   └── readme.md               # 服务说明文档
 ├── config/                     # 配置文件
-└── package.json                # 依赖配置
+│   └── index.js
+├── downloads/                  # 下载文件 (136个JSON文件)
+├── node_modules/               # Node.js依赖
+├── package.json                # 依赖配置
+├── package-lock.json           # 依赖锁定文件
+└── README.md                   # 服务文档
 ```
 
 ### 架构设计原则
 
 #### 前端架构
-- **组件化设计**: 19个UI组件 + 8个地图组件 + 2个布局组件，高度可复用
-- **状态管理**: 17个Pinia状态模块，模块化管理应用状态
-- **组合式函数**: 12个composables承载业务逻辑，与组件解耦
+- **事件驱动设计**: 基于CustomEvent的前后端解耦通信机制
+- **组件化设计**: 25个UI组件 + 14个地图组件 + 17个图表组件 + 3个Agent组件，高度可复用
+- **状态管理**: 21个Pinia状态模块，模块化管理应用状态
+- **组合式函数**: 25个composables承载业务逻辑，与组件解耦
 - **路由驱动**: 每个功能面板独立路由，支持懒加载
 - **主题系统**: CSS变量驱动的主题切换，支持明暗模式
 
 #### 后端架构
-- **微服务设计**: 用户服务与分析服务独立部署
+- **EDA事件驱动**: Agent服务通过工具调用和事件反馈实现智能交互
+- **微服务设计**: EDA Agent服务 + 用户服务 + 分析服务独立部署
 - **DDD架构**: 领域驱动设计，清晰的分层结构
+- **AI Agent集成**: LangChain + 通义千问，专业领域知识驱动
 - **API优先**: RESTful API设计，完整的Swagger文档
 - **类型安全**: TypeScript/Python类型检查，减少运行时错误
 
@@ -305,9 +544,21 @@ sudo systemctl start postgresql
 
 #### 2. 启动后端服务
 
-**用户认证服务 (端口: 8000)**
+**EDA事件驱动Agent服务 (端口: 8089)**
 ```bash
 # 打开第一个 PowerShell 窗口
+cd Backend/agent
+
+# 激活 Python 环境 (如使用 conda)
+conda activate pyside6
+
+# 启动EDA Agent服务
+python -m uvicorn app:app --reload --host 0.0.0.0 --port 8089
+```
+
+**用户认证服务 (端口: 8000)**
+```bash
+# 打开第二个 PowerShell 窗口
 cd Backend/user
 
 # 激活 Python 环境 (如使用 conda)
@@ -319,7 +570,7 @@ python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 **空间分析服务 (端口: 3001)**
 ```bash
-# 打开第二个 PowerShell 窗口
+# 打开第三个 PowerShell 窗口
 cd Backend/analysis
 
 # 安装依赖 (首次运行)
@@ -329,9 +580,9 @@ npm install
 npm run dev
 ```
 
-#### 3. 启动前端应用 (端口: 5173)
+#### 4. 启动前端应用 (端口: 5173)
 ```bash
-# 打开第三个 PowerShell 窗口
+# 打开第四个 PowerShell 窗口
 cd Frontend
 
 # 安装依赖 (首次运行)
@@ -348,8 +599,10 @@ npm run dev
 | 服务 | 地址 | 说明 |
 |------|------|------|
 | 🌐 前端应用 | http://localhost:5173 | 主应用界面 |
+| 🤖 EDA Agent服务 | http://localhost:8089/docs | FastAPI Swagger 文档 |
 | 👤 用户服务 API | http://localhost:8000/docs | FastAPI Swagger 文档 |
 | 🗺️ 分析服务 API | http://localhost:3001/docs | 空间分析 API 文档 |
+| ❤️ 健康检查 | http://localhost:8089/health | EDA Agent服务健康状态 |
 | ❤️ 健康检查 | http://localhost:8000/health | 用户服务健康状态 |
 | ❤️ 健康检查 | http://localhost:3001/health | 分析服务健康状态 |
 
@@ -375,6 +628,19 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
+#### EDA Agent 配置
+```bash
+# 阿里云通义千问配置
+DASHSCOPE_API_KEY=your-dashscope-api-key
+DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+DASHSCOPE_MODEL=qwen-max
+DASHSCOPE_TEMPERATURE=0.7
+DASHSCOPE_MAX_TOKENS=3000
+
+# CORS 配置
+CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+```
+
 ### 构建与部署
 
 #### 前端构建
@@ -386,6 +652,10 @@ npm run build
 
 #### 后端部署
 ```bash
+# EDA Agent服务
+cd Backend/agent
+python -m uvicorn app:app --host 0.0.0.0 --port 8089
+
 # 用户服务
 cd Backend/user
 python -m uvicorn main:app --host 0.0.0.0 --port 8000
@@ -398,6 +668,19 @@ npm start
 ## 🔧 开发指南
 
 ### API 文档
+
+#### EDA事件驱动Agent服务 API
+- **基础URL**: `http://localhost:8089/agent`
+- **Swagger 文档**: http://localhost:8089/docs
+- **主要接口**:
+  - `POST /tool-chat` - LLM工具调用聊天接口
+  - `GET /health` - 健康检查
+- **17个工具函数**:
+  - 图层管理: `toggle_layer_visibility`
+  - 属性查询: `query_features_by_attribute`
+  - 空间分析: `execute_buffer_analysis`, `execute_intersection_analysis`, `execute_erase_analysis`, `execute_shortest_path_analysis`
+  - 结果保存: `save_*_results_as_layer`
+  - 结果导出: `export_*_results_as_json`
 
 #### 用户认证服务 API
 - **基础URL**: `http://localhost:8000/api/v1/user`
@@ -425,10 +708,12 @@ npm start
 - **组件命名**: 使用 PascalCase (如: `MapViewer.vue`)
 - **文件结构**: 使用 `<script setup lang="ts">` 语法糖
 - **状态管理**: 使用 Composition API 风格的 Pinia stores
+- **事件驱动**: 使用 CustomEvent 进行组件间通信
 - **路由管理**: 支持懒加载和路由守卫
 - **样式规范**: 使用 CSS 变量，支持主题切换
 
 #### 后端开发规范
+- **EDA Agent**: 使用 LangChain 工具调用和上下文记忆
 - **API 设计**: RESTful API，统一响应格式
 - **错误处理**: 完整的异常处理机制
 - **数据验证**: 请求参数严格验证
@@ -436,24 +721,31 @@ npm start
 
 ### 核心组件库
 
-#### UI 组件 (19个)
-- **按钮类**: PrimaryButton, SecondaryButton, IconButton, ButtonGroup
+#### UI 组件 (25个)
+- **按钮类**: PrimaryButton, SecondaryButton, IconButton, ButtonGroup, BaseButton, DownloadButton, UploadButton
 - **输入类**: TraditionalInputGroup, LLMInputGroup, DropdownSelect, QueryConditionRow
 - **面板类**: PanelContainer, PanelWindow, SplitPanel
-- **对话框类**: EditModal, ConfirmDialog, TipWindow
+- **对话框类**: EditModal, ConfirmDialog, TipWindow, DataUploadModal, LayerNameModal
 - **通知类**: NotificationToast, NotificationManager
-- **容器类**: AutoScrollContainer
+- **容器类**: AutoScrollContainer, ThemeTransitionOverlay
+- **图标类**: Icon
+- **图层类**: LayerItem
 
-#### 地图组件 (8个)
+#### 地图组件 (14个)
 - **显示控件**: CoordinateDisplay, ScaleBar, OverviewMap
-- **交互工具**: FeaturePopup, layerAssistant
-- **测量工具**: DistanceMeasurePanel, AreaMeasurePanel
+- **交互工具**: FeaturePopup, LayerAssistant
+- **测量工具**: DistanceMeasurePanel, AreaMeasurePanel, DistanceMeasureButton
+- **图例组件**: MapLegend, AdminLegend, TrafficLegend, TrafficWaterLegend, WaterLegend, YangtzeLegend
 
-#### 状态管理 (17个 Pinia Stores)
+#### 状态管理 (21个 Pinia Stores)
 - **核心状态**: mapStore, userStore, themeStore, modalStore, loadingStore
 - **分析状态**: analysisStore, bufferAnalysisStore, intersectionAnalysisStore, eraseAnalysisStore, shortestPathAnalysisStore
-- **交互状态**: selectionStore, areaSelectionStore, featureQueryStore, popupStore
-- **其他状态**: interactionStore, modeStateStore, shortestPathStore
+- **交互状态**: selectionStore, areaSelectionStore, featureQueryStore, popupStore, interactionStore
+- **模式状态**: modeStateStore (LLM模式 + 传统模式状态管理)
+- **图层状态**: layerDataStore, layerUIStore (图层数据和UI状态管理)
+- **监测状态**: monitoringDataStore (水质监测数据状态)
+- **页面状态**: pageStateStore (页面状态管理)
+- **持久化状态**: persistenceStore (状态持久化管理)
 
 ## 📖 文档与资源
 
@@ -465,8 +757,11 @@ npm start
 - **[UI组件设置](Frontend/docs/2.UI组件设置.md)**: 19个UI组件详细说明
 - **[功能实现方法](Frontend/docs/4.功能实现方法.md)**: 12个组合式函数实现
 - **[状态管理设计](Frontend/docs/5.状态管理设计.md)**: 17个Pinia状态模块设计
+- **[图层管理与数据读取机制分析](Frontend/docs/9.图层管理与数据读取机制分析.md)**: 数据流转机制
+- **[事件驱动分析](Frontend/docs/20.事件驱动分析.md)**: EDA事件驱动架构详解
 
 #### 后端文档 (Backend/)
+- **[EDA事件驱动Agent服务](Backend/agent/app.py)**: 17个工具函数的Agent服务
 - **[用户认证API文档](Backend/user/docs/user-auth-api.md)**: 完整的用户服务API说明
 - **[用户认证快速参考](Backend/user/docs/user-auth-quick-reference.md)**: API快速查询手册
 - **[空间分析服务文档](Backend/analysis/README.md)**: DDD架构分析服务说明
@@ -481,8 +776,10 @@ npm start
 
 | 服务 | Swagger 文档 | 说明 |
 |------|-------------|------|
+| EDA事件驱动Agent服务 | http://localhost:8089/docs | FastAPI + LangChain 文档 |
 | 用户认证服务 | http://localhost:8000/docs | FastAPI 自动生成文档 |
 | 空间分析服务 | http://localhost:3001/docs | Express + Swagger 文档 |
+| 健康检查 | http://localhost:8089/health | EDA Agent服务健康状态 |
 | 健康检查 | http://localhost:8000/health | 用户服务健康状态 |
 | 健康检查 | http://localhost:3001/health | 分析服务健康状态 |
 
@@ -497,6 +794,8 @@ npm start
 
 #### 后端技术
 - [FastAPI 文档](https://fastapi.tiangolo.com/) - Python Web框架文档
+- [LangChain 文档](https://python.langchain.com/) - AI Agent 框架文档
+- [通义千问 文档](https://help.aliyun.com/zh/dashscope/) - 阿里云大语言模型文档
 - [Node.js 文档](https://nodejs.org/) - Node.js 官方文档
 - [Express 文档](https://expressjs.com/) - Express 框架文档
 - [PostgreSQL 文档](https://www.postgresql.org/) - 数据库文档
@@ -774,14 +1073,17 @@ RATE_LIMIT_MAX_REQUESTS=100
 3. **地图操作**: 使用鼠标进行缩放、平移等基础操作
 4. **图层管理**: 在传统模式下使用图层管理面板控制图层显示
 
-### LLM 智能模式
+### EDA事件驱动LLM智能模式
 
-- 在聊天界面输入自然语言指令
-- 支持的地图操作：缩放、平移、图层控制、要素查询
+- 在聊天界面输入自然语言指令，支持长江水域监测专业术语
+- 支持的地图操作：图层管理、属性查询、空间分析、结果导出
+- 17个工具函数支持完整的地理空间分析工作流
 - 示例指令：
-  - "显示所有学校"
-  - "放大到武汉市"
-  - "查询人口大于100万的区域"
+  - "显示@学校图层"
+  - "在@人口图层中查找人口>100万"
+  - "对@污染源图层进行缓冲区分析，半径500米"
+  - "保存缓冲区分析结果为图层"
+  - "导出相交分析结果为JSON"
 
 ### 传统 GIS 模式
 
@@ -885,6 +1187,8 @@ npm run dev -- --debug
 
 ### 后端技术
 - [FastAPI](https://fastapi.tiangolo.com/) - 现代高性能 Python Web 框架
+- [LangChain](https://python.langchain.com/) - AI Agent 框架和工具调用
+- [通义千问](https://help.aliyun.com/zh/dashscope/) - 阿里云大语言模型
 - [Node.js](https://nodejs.org/) - JavaScript 运行时环境
 - [Express](https://expressjs.com/) - Node.js Web 应用框架
 - [PostgreSQL](https://www.postgresql.org/) - 开源关系型数据库

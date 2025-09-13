@@ -268,6 +268,54 @@ export function uselayermanager() {
       }
     })
     
+    // 监听 Agent 获取当前打开图层事件
+    window.addEventListener('agent:getOpenLayers', async (e: any) => {
+      try {
+        // 获取当前打开的图层列表
+        const openLayers = mapStore.vectorlayers
+          .filter(layer => layer.visible)
+          .map(layer => ({
+            id: layer.id,
+            name: layer.name,
+            type: layer.type,
+            source: layer.source,
+            isLazyLoaded: layer.isLazyLoaded,
+            isLoaded: layer.isLoaded
+          }))
+        
+        const totalCount = openLayers.length
+        const layerNames = openLayers.map(l => l.name).join('、')
+        
+        const successMessage = `当前打开了${totalCount}个图层：${layerNames}`
+        console.log(`[Agent] ${successMessage}`)
+        
+        // 发送查询成功事件
+        const successEvent = new CustomEvent('agent:getOpenLayersResult', {
+          detail: {
+            success: true,
+            message: successMessage,
+            layerCount: totalCount,
+            layers: openLayers,
+            layerNames: layerNames
+          }
+        })
+        window.dispatchEvent(successEvent)
+        
+      } catch (error) {
+        console.error('[Agent] 获取打开图层列表失败:', error)
+        
+        // 发送查询失败事件
+        const errorEvent = new CustomEvent('agent:getOpenLayersResult', {
+          detail: {
+            success: false,
+            message: `获取图层列表失败: ${error instanceof Error ? error.message : '未知错误'}`,
+            error: error instanceof Error ? error.message : '未知错误'
+          }
+        })
+        window.dispatchEvent(errorEvent)
+      }
+    })
+
     // 监听 Agent 缓冲区分析事件
     window.addEventListener('agent:executeBufferAnalysis', async (e: any) => {
       const { layerName, radius, unit } = e.detail || {}
@@ -281,7 +329,7 @@ export function uselayermanager() {
         // 根据图层名称查找图层ID
         const layer = mapStore.vectorlayers.find(l => l.name === layerName)
         if (!layer) {
-          console.error(`[Agent] 未找到图层: ${layerName}`)
+          console.error(`[Agent] 未找到图层"${layerName}"`)
           return
         }
         
@@ -1388,19 +1436,19 @@ export function uselayermanager() {
           case 'upload':
             return createRedStyle('upload', 3)
           case 'path':
-            // 路径分析使用蓝色
+            // 路径分析使用淡粉红色
             return new ol.style.Style({
               stroke: new ol.style.Stroke({
-                color: '#0078D4',
+                color: '#FFB6C1',
                 width: 4
               }),
               fill: new ol.style.Fill({
-                color: '#0078D44D' // 蓝色，70%透明度
+                color: '#FFB6C14D' // 淡粉红色，70%透明度
               }),
               image: new ol.style.Circle({
                 radius: 8,
                 fill: new ol.style.Fill({
-                  color: '#0078D4'
+                  color: '#FFB6C1'
                 }),
                 stroke: new ol.style.Stroke({
                   color: panelColor,
@@ -1583,27 +1631,23 @@ export function uselayermanager() {
 
   // 生成默认绘制图层名称
   const generateDefaultDrawlayerName = (geometryTypes: Set<string>): string => {
-    const timestamp = new Date().toLocaleString('zh-CN', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace(/[\/\s:]/g, '')
+    // 生成随机不重复ID
+    const randomId = Math.random().toString(36).substr(2, 8)
     
     if (geometryTypes.size === 1) {
       const type = Array.from(geometryTypes)[0]
       switch (type) {
         case 'Point':
-          return `绘制点_${timestamp}`
+          return `绘制点_${randomId}`
         case 'LineString':
-          return `绘制线_${timestamp}`
+          return `绘制线_${randomId}`
         case 'Polygon':
-          return `绘制面_${timestamp}`
+          return `绘制面_${randomId}`
         default:
-          return `绘制图层_${timestamp}`
+          return `绘制图层_${randomId}`
       }
     } else {
-      return `绘制图层_${timestamp}`
+      return `绘制图层_${randomId}`
     }
   }
 

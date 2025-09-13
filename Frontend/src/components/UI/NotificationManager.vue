@@ -15,14 +15,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import NotificationToast from './NotificationToast.vue'
 
 interface Notification {
   id: string
   title: string
   message?: string
-  type: 'success' | 'error' | 'info'
+  type: 'success' | 'error' | 'info' | 'warning'
   duration?: number
 }
 
@@ -45,6 +45,28 @@ const removeNotification = (id: string) => {
     notifications.value.splice(index, 1)
   }
 }
+
+// 处理系统阈值警告事件
+const handleThresholdAlert = (event: CustomEvent) => {
+  const { type, title, message } = event.detail
+  
+  addNotification({
+    title,
+    message,
+    type: type || 'warning',
+    duration: 8000 // 阈值警告显示8秒
+  })
+}
+
+onMounted(() => {
+  // 监听系统阈值警告事件
+  window.addEventListener('system:thresholdAlert', handleThresholdAlert as unknown as EventListener)
+})
+
+onUnmounted(() => {
+  // 清理事件监听器
+  window.removeEventListener('system:thresholdAlert', handleThresholdAlert as unknown as EventListener)
+})
 
 // 暴露方法给全局使用
 defineExpose({

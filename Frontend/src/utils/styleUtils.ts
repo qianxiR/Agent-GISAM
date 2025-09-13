@@ -189,9 +189,9 @@ export const createLayerStyle = (sourceType: string, layerName?: string): any =>
   const prefix = styleMap[sourceType] || 'analysis'
   const config = getStyleConfig(prefix)
   
-  // 特殊处理路径分析图层（使用蓝色）
+  // 特殊处理路径分析图层（使用淡粉红色）
   if (sourceType === 'path') {
-    config.strokeColor = '#0078D4'
+    config.strokeColor = '#FFB6C1'
     config.fillOpacity = 0.3
     config.strokeWidth = 4
   }
