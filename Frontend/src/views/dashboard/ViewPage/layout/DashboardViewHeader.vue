@@ -311,7 +311,7 @@ const performQuickUpload = async (files: File[], options: any, layerName: string
       // 使用文件原来的名称
       const finalLayerName = file.name.replace(/\.(geojson|json)$/i, '')
       
-      // 保存到上传图层组
+      // 保存到上传图层组（内部已包含重复检查逻辑）
       await layerManager.saveFeaturesAslayer(features, finalLayerName, 'upload')
       
       // 自动缩放到图层

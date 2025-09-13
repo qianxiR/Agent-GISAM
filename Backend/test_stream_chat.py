@@ -1,86 +1,25 @@
 #!/usr/bin/env python3
 """
-流式聊天功能测试脚本
+聊天功能测试脚本
 """
 import requests
 import json
 import time
 
-def test_stream_chat():
-    """测试流式聊天接口"""
-    url = "http://localhost:8089/agent/tool-chat"
-    
-    # 测试数据 - 流式输出
-    data = {
-        "model": "qwen-plus",
-        "temperature": 0.7,
-        "prompt": "请介绍一下自己",
-        "conversation_id": "test_stream",
-        "stream": True
-    }
-    
-    print("🚀 开始测试流式聊天接口...")
-    print(f"📝 请求数据: {json.dumps(data, ensure_ascii=False, indent=2)}")
-    print("=" * 50)
-    
-    try:
-        response = requests.post(url, json=data, stream=True)
-        response.raise_for_status()
-        
-        print("📡 流式响应:")
-        print("-" * 30)
-        
-        for line in response.iter_lines():
-            if line:
-                line_str = line.decode('utf-8')
-                if line_str.startswith('data: '):
-                    try:
-                        data_str = line_str[6:]  # 移除 'data: ' 前缀
-                        data_obj = json.loads(data_str)
-                        
-                        if data_obj['type'] == 'content':
-                            print(data_obj['content'], end='', flush=True)
-                        elif data_obj['type'] == 'usage':
-                            print(f"\n\n📊 Token用量:")
-                            print(f"   输入: {data_obj['usage']['prompt_tokens']}")
-                            print(f"   输出: {data_obj['usage']['completion_tokens']}")
-                            print(f"   总计: {data_obj['usage']['total_tokens']}")
-                        elif data_obj['type'] == 'complete':
-                            print(f"\n\n✅ 完整回复已接收")
-                        elif data_obj['type'] == 'task_start':
-                            print(f"\n🚀 任务开始: {data_obj.get('task_id', 'N/A')}")
-                        elif data_obj['type'] == 'error':
-                            print(f"\n❌ 错误: {data_obj['error']}")
-                        elif data_obj['type'] == 'done':
-                            print(f"\n🏁 流式响应完成 (任务ID: {data_obj.get('task_id', 'N/A')})")
-                            break
-                            
-                    except json.JSONDecodeError as e:
-                        print(f"\n⚠️ JSON解析错误: {e}")
-                        print(f"原始数据: {line_str}")
-        
-        print("\n" + "=" * 50)
-        print("✅ 流式聊天测试完成")
-        
-    except requests.exceptions.RequestException as e:
-        print(f"❌ 请求失败: {e}")
-    except Exception as e:
-        print(f"❌ 测试失败: {e}")
 
 def test_normal_chat():
-    """测试普通聊天接口（非流式）"""
+    """测试聊天接口"""
     url = "http://localhost:8089/agent/tool-chat"
     
-    # 测试数据 - 非流式输出
+    # 测试数据
     data = {
         "model": "qwen-plus",
         "temperature": 0.7,
         "prompt": "你好，请简单介绍一下自己",
-        "conversation_id": "test_normal",
-        "stream": False
+        "conversation_id": "test_normal"
     }
     
-    print("🚀 开始测试普通聊天接口...")
+    print("🚀 开始测试聊天接口...")
     print(f"📝 请求数据: {json.dumps(data, ensure_ascii=False, indent=2)}")
     print("=" * 50)
     
@@ -106,7 +45,7 @@ def test_normal_chat():
             print(f"❌ 请求失败: {result.get('error', '未知错误')}")
         
         print("\n" + "=" * 50)
-        print("✅ 普通聊天测试完成")
+        print("✅ 聊天测试完成")
         
     except requests.exceptions.RequestException as e:
         print(f"❌ 请求失败: {e}")
@@ -130,10 +69,10 @@ def test_health_check():
         for feature in data['features']:
             print(f"   - {feature}")
         
-        if 'Stream Chat' in str(data):
-            print("✅ 流式聊天功能已启用")
+        if 'LLM Chat' in str(data):
+            print("✅ 聊天功能已启用")
         else:
-            print("⚠️ 流式聊天功能未检测到")
+            print("⚠️ 聊天功能未检测到")
             
     except requests.exceptions.RequestException as e:
         print(f"❌ 健康检查失败: {e}")
@@ -141,16 +80,12 @@ def test_health_check():
         print(f"❌ 健康检查异常: {e}")
 
 if __name__ == "__main__":
-    print("🧪 Agent Service 流式聊天功能测试")
+    print("🧪 Agent Service 聊天功能测试")
     print("=" * 60)
     
     # 先检查服务状态
     test_health_check()
     print()
     
-    # 测试普通聊天（非流式）
+    # 测试聊天功能
     test_normal_chat()
-    print()
-    
-    # 测试流式聊天
-    test_stream_chat()

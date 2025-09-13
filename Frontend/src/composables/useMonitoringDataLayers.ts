@@ -114,6 +114,18 @@ export function useMonitoringDataLayers() {
       // 添加到地图
       mapStore.map.addLayer(vectorLayer)
 
+      // 检查是否已存在同名图层，避免重复添加
+      const existingLayer = mapStore.vectorlayers.find(layer => 
+        layer.name === siteInfo.layerName && 
+        layer.source === 'local' && 
+        layer.layer.get('sourceType') === 'upload'
+      )
+      
+      if (existingLayer) {
+        console.log(`图层 "${siteInfo.layerName}" 已存在，不重复添加`)
+        return
+      }
+      
       // 直接添加到mapStore的vectorlayers中，使其在图层管理面板中显示
       const layerInfo = {
         id: siteInfo.id,

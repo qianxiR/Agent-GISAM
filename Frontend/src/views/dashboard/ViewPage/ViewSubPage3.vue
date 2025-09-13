@@ -233,6 +233,17 @@ const loadYangtzeSurfaceLayer = async () => {
     // 添加到地图
     mapStore.map.addLayer(yangtzeSurfaceLayer)
     
+    // 检查是否已存在同名图层，避免重复添加
+    const existingLayer = mapStore.vectorlayers.find(layer => 
+      layer.name === '长江面' && 
+      layer.source === 'yangtze_surface'
+    )
+    
+    if (existingLayer) {
+      console.log(`图层 "长江面" 已存在，不重复添加`)
+      return
+    }
+    
     // 添加到图层管理
     mapStore.vectorlayers.push({
       id: '长江面',
@@ -292,6 +303,17 @@ const loadYangtzeLineLayer = async () => {
     
     // 添加到地图
     mapStore.map.addLayer(yangtzeLineLayer)
+    
+    // 检查是否已存在同名图层，避免重复添加
+    const existingLayer = mapStore.vectorlayers.find(layer => 
+      layer.name === '长江线' && 
+      layer.source === 'yangtze_line'
+    )
+    
+    if (existingLayer) {
+      console.log(`图层 "长江线" 已存在，不重复添加`)
+      return
+    }
     
     // 添加到图层管理
     mapStore.vectorlayers.push({

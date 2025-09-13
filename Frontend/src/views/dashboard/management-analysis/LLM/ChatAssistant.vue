@@ -14,19 +14,8 @@
         <span class="button-text">新对话</span>
       </SecondaryButton>
       
-      <!-- 历史记录按钮 -->
-      <SecondaryButton
-        class="history-button"
-        variant="secondary"
-        @click="showChatHistory"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span class="button-text">历史记录</span>
-      </SecondaryButton>
-      
-      <!-- 服务状态按钮 -->
+
+            <!-- 服务状态按钮 -->
       <SecondaryButton
         class="status-button"
         variant="secondary"
@@ -37,6 +26,33 @@
           <path d="M8 12l2 2 4-4"/>
         </svg>
         <span class="button-text">服务状态</span>
+      </SecondaryButton>
+
+      
+      <!-- 历史记录按钮 -->
+      <SecondaryButton
+        class="history-button"
+        variant="secondary"
+        @click="toggleChatHistory"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span class="button-text">历史记录</span>
+      </SecondaryButton>
+    
+      
+      <!-- 工具记录按钮 -->
+      <SecondaryButton
+        class="tool-records-button"
+        variant="secondary"
+        @click="toggleToolRecords"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/>
+        </svg>
+        <span class="button-text">工具记录</span>
       </SecondaryButton>
       
     </div>
@@ -90,6 +106,51 @@
       </div>
     </div>
 
+    <!-- 工具记录弹窗 -->
+    <div v-if="showToolRecords" class="tool-records-modal-overlay" @click="toggleToolRecords">
+      <div class="tool-records-modal" @click.stop>
+        <div class="modal-header">
+          <h3>工具调用记录</h3>
+          <button class="close-button" @click="toggleToolRecords">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-content">
+          <div class="tool-records-header">
+            <span class="record-count">共 {{ toolRecords.length }} 条记录</span>
+            <button class="clear-records-button" @click="clearToolRecords" v-if="toolRecords.length > 0">
+              清空记录
+            </button>
+          </div>
+        <div class="tool-records-info">
+          <div class="records-header">
+            <span class="record-tool-name">工具名称</span>
+            <span class="record-status">状态</span>
+          </div>
+          <div class="records-list">
+            <div v-for="(record, index) in toolRecords" :key="index" class="record-item">
+              <span class="record-tool-name">{{ record.name }}</span>
+              <span class="record-status" :class="getStatusClass(record.resultStr)">
+                {{ getStatusText(record.resultStr) }}
+              </span>
+            </div>
+            <div v-if="toolRecords.length === 0" class="no-records">
+              暂无工具调用记录
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 聊天历史弹窗 -->
+    <ChatHistory
+      :visible="showChatHistory"
+      @close="showChatHistory = false"
+    />
+
     <!-- 工具调用提示区域（当AI调用了工具时显示） -->
     <div v-if="toolCallInfo" class="tool-call-banner">
       <div class="tool-call-left">
@@ -118,6 +179,7 @@
       v-model="newMessage"
       placeholder="请输入您的需求..."
       :rows="3"
+      :disabled="isLLMResponding"
       @send="sendMessage"
     />
   </div>
@@ -132,6 +194,7 @@ import { useMonitoringDataStore } from '@/stores/monitoringDataStore';
 import LLMInputWindow from '@/components/Agent/LLMInputWindow.vue';
 import ChatMessagesPanel from '@/components/Agent/ChatMessagesPanel.vue';
 import SecondaryButton from '@/components/UI/SecondaryButton.vue';
+import ChatHistory from './ChatHistory.vue';
 import { getAgentApiBaseUrl, getLLMApiConfig } from '@/utils/config'
 import { getEnvironmentalBackground, getUseCases } from '@/utils/domainBackground'
 
@@ -156,10 +219,13 @@ const messagesPanelRef = ref<InstanceType<typeof ChatMessagesPanel> | null>(null
 const toolCallInfo = ref<{ name: string; argsStr: string; resultStr: string } | null>(null);
 const nextAssistantOverride = ref<string | null>(null);
 const currentTaskId = ref<string | null>(null);
+const isLLMResponding = ref<boolean>(false);
 const apiStatus = ref<any>(null);
 const showApiStatus = ref<boolean>(false);
+const showToolRecords = ref<boolean>(false);
+const showChatHistory = ref<boolean>(false);
+const toolRecords = ref<Array<{name: string, argsStr: string, resultStr: string, timestamp: number}>>([]);
 let statusInterval: number | null = null;
-// 注意：isTaskRunning已移除，统一使用基于消息记录的状态管理
 
 
 // 智能滚动相关状态现在由ChatMessagesPanel组件内部处理
@@ -204,10 +270,115 @@ const toggleApiStatus = () => {
   }
 }
 
+// 切换工具记录显示
+const toggleToolRecords = () => {
+  showToolRecords.value = !showToolRecords.value
+  // 如果显示记录，从localStorage加载
+  if (showToolRecords.value) {
+    loadToolRecords()
+  }
+}
+
+// 切换聊天历史显示
+const toggleChatHistory = () => {
+  showChatHistory.value = !showChatHistory.value
+}
+
+// 加载工具记录
+const loadToolRecords = () => {
+  try {
+    const saved = localStorage.getItem('toolRecords')
+    if (saved) {
+      toolRecords.value = JSON.parse(saved)
+    }
+  } catch (error) {
+    console.error('加载工具记录失败:', error)
+    toolRecords.value = []
+  }
+}
+
+// 保存工具记录
+const saveToolRecord = (name: string, argsStr: string, resultStr: string) => {
+  const record = {
+    name,
+    argsStr,
+    resultStr,
+    timestamp: Date.now()
+  }
+  
+  toolRecords.value.unshift(record) // 添加到开头
+  
+  // 限制记录数量，最多保存50条
+  if (toolRecords.value.length > 50) {
+    toolRecords.value = toolRecords.value.slice(0, 50)
+  }
+  
+  // 保存到localStorage
+  try {
+    localStorage.setItem('toolRecords', JSON.stringify(toolRecords.value))
+  } catch (error) {
+    console.error('保存工具记录失败:', error)
+  }
+}
+
+// 清空工具记录
+const clearToolRecords = () => {
+  toolRecords.value = []
+  localStorage.removeItem('toolRecords')
+}
+
+// 格式化时间
+const formatTime = (timestamp: number) => {
+  const date = new Date(timestamp)
+  return date.toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+}
+
+// 获取状态文本
+const getStatusText = (resultStr: string) => {
+  if (!resultStr || resultStr.trim() === '') {
+    return '执行中'
+  }
+  try {
+    const result = JSON.parse(resultStr)
+    if (result.action && result.params) {
+      return '已完成'
+    }
+  } catch (e) {
+    // 不是JSON格式，检查是否包含成功标识
+    if (resultStr.includes('成功') || resultStr.includes('完成')) {
+      return '已完成'
+    }
+  }
+  return '已完成'
+}
+
+// 获取状态样式类
+const getStatusClass = (resultStr: string) => {
+  const status = getStatusText(resultStr)
+  return {
+    'status-completed': status === '已完成',
+    'status-executing': status === '执行中'
+  }
+}
+
 // 键盘事件处理
 const handleKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && showApiStatus.value) {
-    showApiStatus.value = false
+  if (event.key === 'Escape') {
+    if (showApiStatus.value) {
+      showApiStatus.value = false
+    }
+    if (showToolRecords.value) {
+      showToolRecords.value = false
+    }
+    if (showChatHistory.value) {
+      showChatHistory.value = false
+    }
   }
 }
 
@@ -258,6 +429,10 @@ const restoreHistoryMessages = (historyMessages: any[]) => {
     
     // 清空输入框
     newMessage.value = ''
+    
+    // 重置状态
+    currentTaskId.value = null
+    isLLMResponding.value = false
     
     // 滚动到底部
     nextTick(() => {
@@ -373,6 +548,7 @@ const handleBufferAnalysisResult = (event: CustomEvent) => {
   
   // 任务完成，重置状态
   currentTaskId.value = null
+  isLLMResponding.value = false
   console.log('缓冲区分析完成，任务状态已重置')
   
   // 更新系统消息状态到Pinia（分析结果作为系统消息）
@@ -411,6 +587,7 @@ const handleIntersectionAnalysisResult = (event: CustomEvent) => {
   
   // 任务完成，重置状态
   currentTaskId.value = null
+  isLLMResponding.value = false
   console.log('相交分析完成，任务状态已重置')
   
   // 更新系统消息状态到Pinia（分析结果作为系统消息）
@@ -449,6 +626,7 @@ const handleEraseAnalysisResult = (event: CustomEvent) => {
   
   // 任务完成，重置状态
   currentTaskId.value = null
+  isLLMResponding.value = false
   console.log('擦除分析完成，任务状态已重置')
   
   // 更新系统消息状态到Pinia（分析结果作为系统消息）
@@ -487,6 +665,7 @@ const handlePathAnalysisResult = (event: CustomEvent) => {
   
   // 任务完成，重置状态
   currentTaskId.value = null
+  isLLMResponding.value = false
   console.log('最短路径分析完成，任务状态已重置')
   
   // 更新系统消息状态到Pinia（分析结果作为系统消息）
@@ -525,6 +704,7 @@ const handleGetOpenLayersResult = (event: CustomEvent) => {
   
   // 任务完成，重置状态
   currentTaskId.value = null
+  isLLMResponding.value = false
   console.log('图层查询完成，任务状态已重置')
 }
 
@@ -692,6 +872,10 @@ onMounted(() => {
   if (llmState.inputText) {
     newMessage.value = llmState.inputText
   }
+  
+  // 重置任务状态
+  currentTaskId.value = null
+  isLLMResponding.value = false
   
   // 设置定期更新API状态（每30秒，但不自动显示）
   statusInterval = setInterval(() => {
@@ -898,6 +1082,9 @@ const sendImplicitMessageToLLM = async (resultMessage: string, showResponse: boo
 
 // 快速发送消息到LLM（不显示发送状态，直接发送）
 const sendQuickMessageToLLM = async (resultMessage: string) => {
+  // 设置LLM响应状态
+  isLLMResponding.value = true
+  
   try {
     const apiBase = getAgentApiBaseUrl()
     // 使用相同的会话ID
@@ -956,11 +1143,18 @@ const sendQuickMessageToLLM = async (resultMessage: string) => {
       
       // 保存状态
       saveLLMState()
+      
+      // 重置响应状态
+      isLLMResponding.value = false
     } else {
       console.error('LLM API请求失败:', resp.status, resp.statusText)
+      // 重置响应状态
+      isLLMResponding.value = false
     }
   } catch (error) {
     console.error('快速发送消息到LLM失败:', error)
+    // 重置响应状态
+    isLLMResponding.value = false
   }
 }
 
@@ -968,6 +1162,11 @@ const sendQuickMessageToLLM = async (resultMessage: string) => {
 const sendMessage = async () => {
   const message = newMessage.value.trim()
   
+  // 如果LLM正在响应中，不允许发送新消息
+  if (isLLMResponding.value) {
+    console.log('[ChatAssistant] LLM正在响应中，禁止发送新消息')
+    return
+  }
   
   // 获取要发送的消息内容：优先使用输入框内容，否则使用最后一条用户消息
   const messageToSend = message || (() => {
@@ -976,6 +1175,9 @@ const sendMessage = async () => {
   })()
   
   if (!messageToSend) return
+
+  // 设置LLM响应状态
+  isLLMResponding.value = true
 
   // 只有在输入框有内容时才添加用户消息（避免重复添加）
   if (message) {
@@ -1022,6 +1224,7 @@ const sendMessage = async () => {
       const errText = await resp.text()
       messages.value.push({ id: Date.now() + 1, text: `LLM请求失败(${resp.status}): ${errText}`, sender: 'system' })
       currentTaskId.value = null
+      isLLMResponding.value = false
       // 重置消息监控状态
     } else {
       const data = await resp.json()
@@ -1038,13 +1241,18 @@ const sendMessage = async () => {
         const call = toolCalls[0]
         const name = call?.name || 'unknown'
         const argsStr = call?.args ? JSON.stringify(call.args) : ''
-        const resultStr = data?.data?.tool_result != null ? String(data.data.tool_result) : ''
+        const resultStr = data?.data?.tool_result != null ? 
+          (typeof data.data.tool_result === 'object' ? 
+            JSON.stringify(data.data.tool_result, null, 2) : 
+            String(data.data.tool_result)) : ''
         
         // 知识库工具调用不显示工具调用结果
         if (name === 'query_knowledge_base' || name === 'update_knowledge_base') {
           toolCallInfo.value = null
         } else {
           toolCallInfo.value = { name, argsStr, resultStr }
+          // 保存工具调用记录
+          saveToolRecord(name, argsStr, resultStr)
         }
         
         // 调试：打印AI实际调用的工具名称
@@ -1368,11 +1576,14 @@ const sendMessage = async () => {
         toolCallInfo.value = null
         // 没有工具调用，直接重置任务状态
         currentTaskId.value = null
+        isLLMResponding.value = false
         console.log('LLM响应完成（无工具调用），任务状态已重置')
+        
+        // 只有在没有工具调用时才添加AI的final_answer响应
+        const content = nextAssistantOverride.value || data?.data?.final_answer || '[空响应]'
+        const systemMessage = { id: Date.now() + 1, text: content, sender: 'system' as const }
+        messages.value.push(systemMessage)
       }
-      const content = nextAssistantOverride.value || data?.data?.final_answer || '[空响应]'
-      const systemMessage = { id: Date.now() + 1, text: content, sender: 'system' as const }
-      messages.value.push(systemMessage)
       
       // 更新系统消息状态到Pinia
 
@@ -1385,21 +1596,18 @@ const sendMessage = async () => {
     messages.value.push({ id: Date.now() + 2, text: `LLM请求异常: ${e?.message || e}`, sender: 'system' })
     // 任务失败，重置状态
     currentTaskId.value = null
+    isLLMResponding.value = false
     // 重置消息监控状态
   }
 
   newMessage.value = ''
 }
 
-// 跳转到历史聊天记录页面
-const showChatHistory = () => {
-  router.push('/dashboard/management-analysis/llm/chat-history');
-};
 
 
 // 新增：开启新对话功能
 const startNewConversation = () => {
-  // 保存当前对话到历史记录
+  // 保存当前对话到历史记录（只要有消息就保存，包括欢迎消息）
   if (messages.value.length > 0) {
     const savedChatHistory = localStorage.getItem('chatHistory') || '[]';
     const chatHistory = JSON.parse(savedChatHistory);
@@ -1419,6 +1627,16 @@ const startNewConversation = () => {
     }
     
     localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    
+    // 显示保存成功通知
+    window.dispatchEvent(new CustomEvent('showNotification', {
+      detail: {
+        title: '对话已保存',
+        message: '当前对话已保存到历史记录',
+        type: 'success',
+        duration: 2000
+      }
+    }));
   }
   
   // 清空消息历史
@@ -1427,6 +1645,8 @@ const startNewConversation = () => {
   newMessage.value = '';
   // 重置状态
   hasAnnounced.value = false;
+  currentTaskId.value = null;
+  isLLMResponding.value = false;
   
   // 重新初始化状态
   maybeAnnounceInitiallayers();
@@ -1447,7 +1667,7 @@ const startNewConversation = () => {
 // 暴露方法给父组件
 defineExpose({
   startNewConversation,
-  showChatHistory
+  toggleChatHistory
 });
 </script>
 
@@ -1628,6 +1848,159 @@ defineExpose({
   padding: 20px;
 }
 
+/* 工具记录弹窗样式 */
+.tool-records-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.tool-records-modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 50vw;
+  width: 80%;
+  max-height: 70vh;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.tool-records-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.record-count {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.clear-records-button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-records-button:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+}
+
+/* 使用与FeatureQueryPanel相同的表格样式 */
+.tool-records-info {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--glow);
+}
+
+.records-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.records-list {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.record-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--divider);
+  font-size: 12px;
+  background: var(--panel);
+  transition: none !important;
+}
+
+.record-item:hover {
+  background: var(--surface-hover);
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-tool-name {
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.record-status {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  min-width: 60px;
+}
+
+.status-completed {
+  background: var(--field-type-text-bg);
+  color: var(--field-type-text-color);
+}
+
+.status-executing {
+  background: var(--field-type-number-bg);
+  color: var(--field-type-number-color);
+}
+
+.no-records {
+  text-align: center;
+  color: var(--sub);
+  font-size: 14px;
+  padding: 40px 20px;
+}
+
+/* 滚动条样式 */
+.records-list::-webkit-scrollbar {
+  width: 3px;
+}
+
+.records-list::-webkit-scrollbar-track {
+  background: var(--scrollbar-track, rgba(200, 200, 200, 0.1));
+  border-radius: 1.5px;
+}
+
+.records-list::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, rgba(150, 150, 150, 0.3));
+  border-radius: 1.5px;
+}
+
+.records-list::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, rgba(150, 150, 150, 0.5));
+}
+
 /* 工具调用提示样式 */
 .tool-call-banner {
   display: flex;
@@ -1664,7 +2037,8 @@ defineExpose({
 
 .history-button,
 .new-chat-button,
-.status-button {
+.status-button,
+.tool-records-button {
   display: flex !important;
   align-items: center !important;
   gap: 6px !important;
@@ -1682,7 +2056,8 @@ defineExpose({
 
 .history-button:hover,
 .new-chat-button:hover,
-.status-button:hover {
+.status-button:hover,
+.tool-records-button:hover {
   transform: none !important;
   box-shadow: none !important;
   background: var(--surface-hover) !important;
@@ -1691,14 +2066,16 @@ defineExpose({
 
 .history-button:active,
 .new-chat-button:active,
-.status-button:active {
+.status-button:active,
+.tool-records-button:active {
   transform: translateY(0) !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
 }
 
 .history-button .button-text,
 .new-chat-button .button-text,
-.status-button .button-text {
+.status-button .button-text,
+.tool-records-button .button-text {
   font-size: 12px !important;
   font-weight: 500 !important;
   color: var(--text) !important;
@@ -1708,7 +2085,8 @@ defineExpose({
 
 .history-button svg,
 .new-chat-button svg,
-.status-button svg {
+.status-button svg,
+.tool-records-button svg {
   flex-shrink: 0 !important;
   width: 14px !important;
   height: 14px !important;

@@ -6,9 +6,8 @@ Usage (dev):
 """
 from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any, Generator
+from typing import List, Optional, Dict, Any
 import uvicorn
 import os
 import uuid
@@ -23,7 +22,6 @@ from langchain.chat_models import init_chat_model
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from langchain_tavily import TavilySearch
-from openai import OpenAI, APIError
 
 # 关闭全局SSL验证以规避企业网络或中间代理引起的握手问题
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -351,7 +349,6 @@ class ToolChatRequest(BaseModel):
     model: str
     temperature: float
     prompt: str
-    stream: bool = False
     conversation_id: str = "default"
 
 
@@ -360,42 +357,23 @@ class ToolChatRequest(BaseModel):
 @router.post("/tool-chat")
 async def tool_chat(req: ToolChatRequest):
     """
-    LangChain 工具调用接口（支持流式输出）：
+    LangChain 工具调用接口：
     输入数据格式：
       - model: LLM 模型名称
       - temperature: 采样温度
       - prompt: 用户问题（例如 What's 5 times forty two）
-      - stream: 是否流式输出
       - conversation_id: 对话会话ID
     数据处理方法：
-      - 如果stream=True：返回流式响应
-      - 如果stream=False：返回标准JSON响应
       - 创建任务ID
       - 创建 OpenAI 兼容模型，并通过 bind_tools 绑定所有工具
       - 第一步调用：发送 HumanMessage(prompt)，获取包含 tool_calls 的 AIMessage
       - 执行工具：根据 AIMessage 中的工具与参数，执行相应工具并得到结果
       - 第二步调用：将工具结果以 ToolMessage 形式回传给模型，生成最终回答
     输出数据格式：
-      - 流式：Server-Sent Events (SSE) 格式
-      - 非流式：{ success: true, data: { first_call: AIMessage(JSON), tool_result: string, final_answer: string }, task_id: string }
+      - { success: true, data: { first_call: AIMessage(JSON), tool_result: string, final_answer: string }, task_id: string }
     """
     # 创建任务
     task_id = await create_task()
-    
-    # 如果请求流式输出，返回流式响应
-    if req.stream:
-        return StreamingResponse(
-            generate_tool_chat_stream_response(req, task_id),
-            media_type="text/plain; charset=utf-8",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "*",
-            }
-        )
-    
-    # 非流式输出，返回标准JSON响应
     try:
         model = init_chat_model(f"openai:{req.model}")
         llm_with_tools = model.bind_tools([
@@ -537,115 +515,6 @@ async def tool_chat(req: ToolChatRequest):
         return ChatResponse(success=False, error=f"LLM请求失败: {str(e)}", task_id=task_id)
 
 
-def generate_tool_chat_stream_response(req: ToolChatRequest, task_id: str) -> Generator[str, None, None]:
-    """生成工具调用的流式响应"""
-    try:
-        # 发送任务开始信息
-        yield f"data: {json.dumps({'type': 'task_start', 'task_id': task_id}, ensure_ascii=False)}\n\n"
-        
-        # 创建OpenAI客户端
-        client = create_openai_client()
-        
-        # 获取对话上下文和历史操作
-        conversation_context = get_conversation_context(req.conversation_id)
-        history_list = _conversation_layer_history.get(req.conversation_id, [])
-        parsed_lines: List[str] = []
-        last_action_text = ""
-        for entry in history_list:
-            if ":" in entry:
-                action, layer = entry.split(":", 1)
-                parsed_line = f"action={action}; layer={layer}"
-                parsed_lines.append(parsed_line)
-                last_action_text = f"action={action}; layer={layer}"
-            else:
-                parsed_lines.append(entry)
-                last_action_text = entry
-        history_text = "\n".join(parsed_lines)
-        
-        # 加载系统提示词
-        system_prompt = load_system_prompt()
-        
-        # 构建完整的系统提示词
-        full_system_prompt = system_prompt
-        if history_text:
-            full_system_prompt += f"\n\n历史操作(顺序, 最新在下):\n{history_text}\n"
-            full_system_prompt += f"最近一次操作: {last_action_text}。若用户问'刚才做了什么'，请直接依据最近几次操作回答。"
-        
-        if conversation_context:
-            full_system_prompt += f"\n\n对话历史上下文:\n{conversation_context}\n"
-            full_system_prompt += "请结合对话历史上下文理解用户的问题，保持对话的连贯性。"
-        
-        # 添加用户消息到对话历史
-        add_to_conversation_history(req.conversation_id, "user", req.prompt)
-        
-        # 构建消息列表
-        messages = [
-            {"role": "system", "content": full_system_prompt},
-            {"role": "user", "content": req.prompt}
-        ]
-        
-        # 发起流式请求
-        completion = client.chat.completions.create(
-            model=req.model,
-            messages=messages,
-            temperature=req.temperature,
-            stream=True,
-            stream_options={"include_usage": True}
-        )
-        
-        # 处理流式响应
-        content_parts = []
-        
-        for chunk in completion:
-            # 最后一个chunk不包含choices，但包含usage信息
-            if chunk.choices:
-                # 关键：delta.content可能为None，使用`or ""`避免拼接时出错
-                content = chunk.choices[0].delta.content or ""
-                content_parts.append(content)
-                
-                # 发送流式数据
-                yield f"data: {json.dumps({'type': 'content', 'content': content}, ensure_ascii=False)}\n\n"
-                
-            elif chunk.usage:
-                # 请求结束，发送Token用量信息
-                usage_data = {
-                    'type': 'usage',
-                    'usage': {
-                        'prompt_tokens': chunk.usage.prompt_tokens,
-                        'completion_tokens': chunk.usage.completion_tokens,
-                        'total_tokens': chunk.usage.total_tokens
-                    }
-                }
-                yield f"data: {json.dumps(usage_data, ensure_ascii=False)}\n\n"
-        
-        # 发送完整回复
-        full_response = "".join(content_parts)
-        yield f"data: {json.dumps({'type': 'complete', 'content': full_response}, ensure_ascii=False)}\n\n"
-        
-        # 添加助手回复到对话历史
-        add_to_conversation_history(req.conversation_id, "assistant", full_response)
-        
-        # 发送结束标记
-        yield f"data: {json.dumps({'type': 'done', 'task_id': task_id}, ensure_ascii=False)}\n\n"
-        
-    except APIError as e:
-        error_data = {'type': 'error', 'error': f"API 请求失败: {e}", 'task_id': task_id}
-        yield f"data: {json.dumps(error_data, ensure_ascii=False)}\n\n"
-    except Exception as e:
-        error_data = {'type': 'error', 'error': f"发生未知错误: {e}", 'task_id': task_id}
-        yield f"data: {json.dumps(error_data, ensure_ascii=False)}\n\n"
-
-
-def create_openai_client() -> OpenAI:
-    """创建OpenAI客户端"""
-    try:
-        client = OpenAI(
-            api_key=os.environ["DASHSCOPE_API_KEY"],
-            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
-        )
-        return client
-    except KeyError:
-        raise ValueError("请设置环境变量 DASHSCOPE_API_KEY")
 
 
 
@@ -804,7 +673,6 @@ async def health():
             "version": "2.0.0",
             "features": [
                 "LLM Chat with System Prompt Injection",
-                "Stream Chat with Real-time Response",
                 "API Key Management", 
                 "Prompt Template Management",
                 "Knowledge Base Management",
@@ -835,7 +703,7 @@ async def root():
         "docs": "/docs",
         "health": "/health",
         "endpoints": {
-            "tool_chat": "/agent/tool-chat (支持stream参数)",
+            "tool_chat": "/agent/tool-chat",
             "knowledge_status": "/agent/knowledge/status",
             "knowledge_update": "/agent/knowledge/update",
             "knowledge_rebuild": "/agent/knowledge/rebuild",

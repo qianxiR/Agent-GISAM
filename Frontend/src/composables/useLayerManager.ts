@@ -1279,6 +1279,17 @@ export function uselayermanager() {
     sourceType: 'draw' | 'area' | 'query' | 'buffer' | 'path' | 'upload' | 'intersect' | 'erase' = 'draw'
   ) => {
     
+    // 检查是否已存在同名图层，避免重复添加
+    const existingLayer = mapStore.vectorlayers.find(layer => 
+      layer.name === layerName && 
+      layer.source === 'local' && 
+      layer.layer.get('sourceType') === sourceType
+    )
+    
+    if (existingLayer) {
+      console.log(`图层 "${layerName}" 已存在，不重复添加`)
+      return false
+    }
     
     if (!features || features.length === 0) {
       

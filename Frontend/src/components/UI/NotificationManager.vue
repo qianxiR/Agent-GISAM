@@ -22,7 +22,7 @@ interface Notification {
   id: string
   title: string
   message?: string
-  type: 'success' | 'error' | 'info' | 'warning'
+  type: 'success' | 'error' | 'info'
   duration?: number
 }
 
@@ -53,19 +53,34 @@ const handleThresholdAlert = (event: CustomEvent) => {
   addNotification({
     title,
     message,
-    type: type || 'warning',
+    type: type === 'warning' ? 'info' : (type || 'info'),
     duration: 8000 // 阈值警告显示8秒
+  })
+}
+
+// 处理通用通知事件
+const handleShowNotification = (event: CustomEvent) => {
+  const { title, message, type, duration } = event.detail
+  
+  addNotification({
+    title,
+    message,
+    type: type === 'warning' ? 'info' : (type || 'info'),
+    duration: duration || 3000
   })
 }
 
 onMounted(() => {
   // 监听系统阈值警告事件
   window.addEventListener('system:thresholdAlert', handleThresholdAlert as unknown as EventListener)
+  // 监听通用通知事件
+  window.addEventListener('showNotification', handleShowNotification as unknown as EventListener)
 })
 
 onUnmounted(() => {
   // 清理事件监听器
   window.removeEventListener('system:thresholdAlert', handleThresholdAlert as unknown as EventListener)
+  window.removeEventListener('showNotification', handleShowNotification as unknown as EventListener)
 })
 
 // 暴露方法给全局使用
@@ -94,7 +109,7 @@ defineExpose({
 /* 动画效果 */
 .toast-enter-active,
 .toast-leave-active {
-   
+  transition: all 0.3s ease;
 }
 
 .toast-enter-from {
