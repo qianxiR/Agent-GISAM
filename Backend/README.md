@@ -132,9 +132,9 @@ requirements.txt                # 依赖
 
 
 ### 📚 API文档访问
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **健康检查**: http://localhost:8000/health
+- **Swagger UI**: http://localhost:8089/docs
+- **ReDoc**: http://localhost:8089/redoc
+- **健康检查**: http://localhost:8089/health
 
 #### 📡 API 概览（用户模块）
 
@@ -193,7 +193,7 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ### 🔗 相关链接
 
-- [API 文档](http://localhost:8000/docs)
+- [API 文档](http://localhost:8089/docs)
 - [FastAPI 文档](https://fastapi.tiangolo.com)
 - [SQLAlchemy 文档](https://docs.sqlalchemy.org)
 

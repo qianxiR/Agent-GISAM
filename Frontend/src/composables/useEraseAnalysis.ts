@@ -13,6 +13,7 @@ import { Style, Stroke, Fill } from 'ol/style'
 import GeoJSON from 'ol/format/GeoJSON'
 import { ref as vueRef } from 'vue'
 import { useLayerExport } from '@/composables/useLayerExport'
+import axios from 'axios'
 
 interface EraseResultItem {
   id: string
@@ -176,21 +177,8 @@ export function useEraseAnalysis() {
 
       // 调用后端API
       const API_BASE_URL = getAnalysisServiceConfig().baseUrl
-      const response = await fetch(`${API_BASE_URL}/erase`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestData)
-      })
-
-      // 检查HTTP状态码：200时直接返回成功，非200时返回错误
-      if (response.status !== 200) {
-        const errorData = await response.json()
-        throw new Error(`API请求失败: ${errorData.error?.message || '未知错误'}`)
-      }
-
-      const apiResponse = await response.json()
+      const response = await axios.post(`${API_BASE_URL}/erase`, requestData)
+      const apiResponse = response.data
 
       // 后端现在直接返回 FeatureCollection 格式
       if (!apiResponse.features) {

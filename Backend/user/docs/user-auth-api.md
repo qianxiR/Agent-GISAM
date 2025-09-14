@@ -4,7 +4,7 @@
 
 用户认证API提供完整的用户账户管理功能，包括注册、登录、资料管理、密码修改等操作。所有接口都支持JSON格式的请求和响应。
 
-**基础URL**: `http://localhost:8000/api/v1/user`
+**基础URL**: `http://localhost:8089/api/v1/user`
 
 ---
 
@@ -59,7 +59,7 @@
 
 ```bash
 # curl 示例
-curl -X POST "http://localhost:8000/api/v1/user/register" \
+curl -X POST "http://localhost:8089/api/v1/user/register" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "testuser",
@@ -78,7 +78,7 @@ $body = @{
     confirm_password = "password123"
 } | ConvertTo-Json
 
-Invoke-RestMethod -Uri "http://localhost:8000/api/v1/user/register" -Method POST -Body $body -ContentType "application/json"
+Invoke-RestMethod -Uri "http://localhost:8089/api/v1/user/register" -Method POST -Body $body -ContentType "application/json"
 ```
 
 ---
@@ -135,7 +135,7 @@ Invoke-RestMethod -Uri "http://localhost:8000/api/v1/user/register" -Method POST
 
 ```bash
 # 使用用户名登录
-curl -X POST "http://localhost:8000/api/v1/user/login" \
+curl -X POST "http://localhost:8089/api/v1/user/login" \
   -H "Content-Type: application/json" \
   -d '{
     "login_identifier": "testuser",
@@ -143,7 +143,7 @@ curl -X POST "http://localhost:8000/api/v1/user/login" \
   }'
 
 # 使用邮箱登录
-curl -X POST "http://localhost:8000/api/v1/user/login" \
+curl -X POST "http://localhost:8089/api/v1/user/login" \
   -H "Content-Type: application/json" \
   -d '{
     "login_identifier": "test@example.com",
@@ -151,7 +151,7 @@ curl -X POST "http://localhost:8000/api/v1/user/login" \
   }'
 
 # 使用手机号登录
-curl -X POST "http://localhost:8000/api/v1/user/login" \
+curl -X POST "http://localhost:8089/api/v1/user/login" \
   -H "Content-Type: application/json" \
   -d '{
     "login_identifier": "13800138000",
@@ -188,7 +188,7 @@ curl -X POST "http://localhost:8000/api/v1/user/login" \
 ### 使用示例
 
 ```bash
-curl -X GET "http://localhost:8000/api/v1/user/profile" \
+curl -X GET "http://localhost:8089/api/v1/user/profile" \
   -H "Authorization: Bearer your_token_here"
 ```
 
@@ -221,7 +221,7 @@ curl -X GET "http://localhost:8000/api/v1/user/profile" \
 ### 使用示例
 
 ```bash
-curl -X GET "http://localhost:8000/api/v1/user/me" \
+curl -X GET "http://localhost:8089/api/v1/user/me" \
   -H "Authorization: Bearer your_token_here"
 ```
 
@@ -255,7 +255,7 @@ curl -X GET "http://localhost:8000/api/v1/user/me" \
 ### 使用示例
 
 ```bash
-curl -X GET "http://localhost:8000/api/v1/user/stats" \
+curl -X GET "http://localhost:8089/api/v1/user/stats" \
   -H "Authorization: Bearer your_token_here"
 ```
 
@@ -329,7 +329,7 @@ curl -X GET "http://localhost:8000/api/v1/user/stats" \
 
 ```bash
 # 完整修改
-curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
+curl -X POST "http://localhost:8089/api/v1/user/update-profile" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
   -d '{
@@ -342,7 +342,7 @@ curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
   }'
 
 # 只修改用户名
-curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
+curl -X POST "http://localhost:8089/api/v1/user/update-profile" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
   -d '{
@@ -353,7 +353,7 @@ curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
   }'
 
 # 只修改邮箱
-curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
+curl -X POST "http://localhost:8089/api/v1/user/update-profile" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
   -d '{
@@ -426,7 +426,7 @@ curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
 ### 使用示例
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/user/change-password" \
+curl -X POST "http://localhost:8089/api/v1/user/change-password" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
   -d '{
@@ -461,7 +461,7 @@ curl -X POST "http://localhost:8000/api/v1/user/change-password" \
 ### 使用示例
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/user/logout" \
+curl -X POST "http://localhost:8089/api/v1/user/logout" \
   -H "Authorization: Bearer your_token_here"
 ```
 
@@ -505,7 +505,7 @@ curl -X POST "http://localhost:8000/api/v1/user/logout" \
 
 ```bash
 # 1. 用户注册
-curl -X POST "http://localhost:8000/api/v1/user/register" \
+curl -X POST "http://localhost:8089/api/v1/user/register" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "newuser",
@@ -516,7 +516,7 @@ curl -X POST "http://localhost:8000/api/v1/user/register" \
   }'
 
 # 2. 用户登录
-curl -X POST "http://localhost:8000/api/v1/user/login" \
+curl -X POST "http://localhost:8089/api/v1/user/login" \
   -H "Content-Type: application/json" \
   -d '{
     "login_identifier": "newuser",
@@ -524,11 +524,11 @@ curl -X POST "http://localhost:8000/api/v1/user/login" \
   }'
 
 # 3. 获取用户信息（使用返回的token）
-curl -X GET "http://localhost:8000/api/v1/user/me" \
+curl -X GET "http://localhost:8089/api/v1/user/me" \
   -H "Authorization: Bearer your_token_here"
 
 # 4. 修改用户信息
-curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
+curl -X POST "http://localhost:8089/api/v1/user/update-profile" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
   -d '{
@@ -541,7 +541,7 @@ curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
   }'
 
 # 5. 修改密码
-curl -X POST "http://localhost:8000/api/v1/user/change-password" \
+curl -X POST "http://localhost:8089/api/v1/user/change-password" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
   -d '{
@@ -551,7 +551,7 @@ curl -X POST "http://localhost:8000/api/v1/user/change-password" \
   }'
 
 # 6. 用户登出
-curl -X POST "http://localhost:8000/api/v1/user/logout" \
+curl -X POST "http://localhost:8089/api/v1/user/logout" \
   -H "Authorization: Bearer your_token_here"
 ```
 
@@ -572,7 +572,7 @@ curl -X POST "http://localhost:8000/api/v1/user/logout" \
 
 ## 🔗 相关链接
 
-- [API文档 (Swagger UI)](http://localhost:8000/docs)
-- [API文档 (ReDoc)](http://localhost:8000/redoc)
-- [健康检查](http://localhost:8000/health)
+- [API文档 (Swagger UI)](http://localhost:8089/docs)
+- [API文档 (ReDoc)](http://localhost:8089/redoc)
+- [健康检查](http://localhost:8089/health)
 - [项目README](../README.md)

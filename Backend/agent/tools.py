@@ -18,7 +18,8 @@ def toggle_layer_visibility(layer_name: str, action: str) -> str:
     输出数据格式：
       - string: 格式 "action:layer_name"
     """
-    return f"{action}:{layer_name}"
+    result = f"{action}:{layer_name}"
+    return result
 
 
 @tool
@@ -35,7 +36,8 @@ def query_features_by_attribute(layer_name: str, field: str, operator: str, valu
     输出数据格式：
       - string: 格式 "query:layer_name:field:operator:value"
     """
-    return f"query:{layer_name}:{field}:{operator}:{value}"
+    result = f"query:{layer_name}:{field}:{operator}:{value}"
+    return result
 
 
 @tool
@@ -49,8 +51,7 @@ def save_query_results_as_layer(layer_name: str) -> str:
     输出数据格式：
       - string: 格式 "save_layer:layer_name"
     """
-    print(f"[DEBUG] save_query_results_as_layer 被调用，参数: {layer_name}")
-    return "success"
+    return f"save_layer:{layer_name}"
 
 
 @tool
@@ -64,7 +65,7 @@ def export_query_results_as_json(file_name: str) -> str:
     输出数据格式：
       - string: 格式 "export_json:file_name"
     """
-    return "success"
+    return f"export_json:{file_name}"
 
 
 @tool
@@ -78,7 +79,8 @@ def get_open_layers() -> str:
     输出数据格式：
       - string: 格式 "get_open_layers"
     """
-    return "success"
+    result = "get_open_layers"
+    return result
 
 
 @tool
@@ -94,7 +96,8 @@ def execute_buffer_analysis(layer_name: str, radius: float, unit: str = "meters"
     输出数据格式：
       - string: 格式 "buffer_analysis:layer_name:radius:unit"
     """
-    return "success"
+    result = f"buffer_analysis:{layer_name}:{radius}:{unit}"
+    return result
 
 
 @tool
@@ -109,7 +112,8 @@ def execute_intersection_analysis(target_layer_name: str, mask_layer_name: str) 
     输出数据格式：
       - string: 格式 "intersection_analysis:target_layer_name:mask_layer_name"
     """
-    return "success"
+    result = f"intersection_analysis:{target_layer_name}:{mask_layer_name}"
+    return result
 
 
 @tool
@@ -124,7 +128,8 @@ def execute_erase_analysis(target_layer_name: str, erase_layer_name: str) -> str
     输出数据格式：
       - string: 格式 "erase_analysis:target_layer_name:erase_layer_name"
     """
-    return "success"
+    result = f"erase_analysis:{target_layer_name}:{erase_layer_name}"
+    return result
 
 
 @tool
@@ -140,7 +145,8 @@ def execute_shortest_path_analysis(start_layer_name: str, end_layer_name: str, o
     输出数据格式：
       - string: 格式 "shortest_path_analysis:start_layer_name:end_layer_name:obstacle_layer_name"
     """
-    return "success"
+    result = f"shortest_path_analysis:{start_layer_name}:{end_layer_name}:{obstacle_layer_name}"
+    return result
 
 
 # ===== 4个分析功能的导出和保存工具函数 =====
@@ -156,8 +162,8 @@ def save_buffer_results_as_layer(layer_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { action: 'buffer.save_layer', params: { layer_name: string } }
     """
-    print(f"[DEBUG] save_buffer_results_as_layer 被调用，参数: {layer_name}")
-    return {"action": "buffer.save_layer", "params": {"layer_name": layer_name}}
+    result = {"action": "buffer.save_layer", "params": {"layer_name": layer_name}}
+    return result
 
 
 @tool
@@ -171,7 +177,8 @@ def export_buffer_results_as_json(file_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { action: 'buffer.export_json', params: { file_name: string } }
     """
-    return {"action": "buffer.export_json", "params": {"file_name": file_name}}
+    result = {"action": "buffer.export_json", "params": {"file_name": file_name}}
+    return result
 
 
 @tool
@@ -185,7 +192,8 @@ def save_intersection_results_as_layer(layer_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { action: 'intersection.save_layer', params: { layer_name: string } }
     """
-    return {"action": "intersection.save_layer", "params": {"layer_name": layer_name}}
+    result = {"action": "intersection.save_layer", "params": {"layer_name": layer_name}}
+    return result
 
 
 @tool
@@ -199,7 +207,8 @@ def export_intersection_results_as_json(file_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { action: 'intersection.export_json', params: { file_name: string } }
     """
-    return {"action": "intersection.export_json", "params": {"file_name": file_name}}
+    result = {"action": "intersection.export_json", "params": {"file_name": file_name}}
+    return result
 
 
 @tool
@@ -213,7 +222,8 @@ def save_erase_results_as_layer(layer_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { action: 'erase.save_layer', params: { layer_name: string } }
     """
-    return {"action": "erase.save_layer", "params": {"layer_name": layer_name}}
+    result = {"action": "erase.save_layer", "params": {"layer_name": layer_name}}
+    return result
 
 
 @tool
@@ -227,7 +237,8 @@ def export_erase_results_as_json(file_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { action: 'erase.export_json', params: { file_name: string } }
     """
-    return {"action": "erase.export_json", "params": {"file_name": file_name}}
+    result = {"action": "erase.export_json", "params": {"file_name": file_name}}
+    return result
 
 
 @tool
@@ -241,7 +252,8 @@ def save_path_results_as_layer(layer_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { action: 'path.save_layer', params: { layer_name: string } }
     """
-    return {"action": "path.save_layer", "params": {"layer_name": layer_name}}
+    result = {"action": "path.save_layer", "params": {"layer_name": layer_name}}
+    return result
 
 
 @tool
@@ -255,7 +267,8 @@ def export_path_results_as_json(file_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { action: 'path.export_json', params: { file_name: string } }
     """
-    return {"action": "path.export_json", "params": {"file_name": file_name}}
+    result = {"action": "path.export_json", "params": {"file_name": file_name}}
+    return result
 
 
 # 导出所有工具函数

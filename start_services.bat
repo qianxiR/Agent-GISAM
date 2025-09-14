@@ -41,7 +41,7 @@ echo [INFO] 正在启动后端服务和前端服务...
 echo.
 
 :::: 启动 Analysis 服务 (Node.js)
-echo [1/5] 启动 Analysis 服务 (Node.js)...
+echo [1/4] 启动 Analysis 服务 (Node.js)...
 start "Analysis Service" cmd /k "cd /d %~dp0Backend\analysis && echo 启动 Analysis 服务... && npm run dev"
 
 :::: 等待2秒
@@ -49,7 +49,7 @@ timeout /t 2 /nobreak >nul
 
 :::: 启动 User 服务 (Python FastAPI)
 echo [2/4] 启动 User 服务 (Python FastAPI)...
-start "User Service" cmd /k "cd /d %~dp0Backend && echo 激活 conda py310 环境... && conda activate py310 && echo 启动 User 服务... && python -m uvicorn user.main:app --reload --host 0.0.0.0 --port 8088"
+start "User Service" cmd /k "cd /d %~dp0Backend\user && echo 激活 conda py310 环境... && conda activate py310 && echo 启动 User 服务... && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8088"
 
 :::: 等待2秒
 timeout /t 2 /nobreak >nul

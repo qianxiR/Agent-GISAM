@@ -189,6 +189,12 @@ _conversation_history: Dict[str, List[Dict[str, Any]]] = {}
 # RAG系统实例缓存
 _rag_system_cache: Optional[RAGSystem] = None
 
+# 工具调用统计
+_tool_call_stats: Dict[str, int] = {}
+
+# 工具执行状态历史
+_tool_execution_history: List[Dict[str, Any]] = []
+
 
 def generate_task_id() -> str:
     """生成唯一任务ID"""
@@ -218,7 +224,7 @@ def detect_keywords_and_structure(user_input: str, conversation_id: str) -> str:
     """
     # 关键词检测
     keywords = {
-        "导出为json": ["导出为json", "导出为JSON", "导出json", "导出JSON", "保存为json", "保存为JSON"],
+        "导出为json": ["导出为json", "导出为JSON", "导出json", "导出JSON", "保存为json", "保存为JSON", "导出结果", "导出", "json", "JSON"],
         "导出为图层": ["导出为图层", "保存为图层", "导出图层", "保存图层"],
         "缓冲区分析": ["缓冲区分析", "缓冲区", "缓冲"],
         "相交分析": ["相交分析", "相交", "交集"],
@@ -307,7 +313,7 @@ def force_tool_call_based_on_keywords(user_input: str, conversation_id: str) -> 
       - 工具调用字典或None
     """
     # 检测导出相关关键词
-    if any(keyword in user_input for keyword in ["导出为json", "导出为JSON", "导出json", "导出JSON", "保存为json", "保存为JSON"]):
+    if any(keyword in user_input for keyword in ["导出为json", "导出为JSON", "导出json", "导出JSON", "保存为json", "保存为JSON", "导出结果", "导出", "json", "JSON"]):
         recent_analysis = get_recent_analysis_type(conversation_id)
         
         if recent_analysis == "缓冲区分析":
@@ -565,6 +571,11 @@ async def tool_chat(req: ToolChatRequest):
     """
     # 创建任务
     task_id = await create_task()
+    print(f"\n🚀 开始处理对话请求")
+    print(f"📋 任务ID: {task_id}")
+    print(f"💬 用户输入: {req.prompt}")
+    print(f"🆔 对话ID: {req.conversation_id}")
+    print(f"🤖 模型: {req.model}")
     try:
         # 创建OpenAI客户端用于JSON格式输出
         client = OpenAI(
@@ -641,10 +652,13 @@ async def tool_chat(req: ToolChatRequest):
         
         # 如果没有工具调用，尝试强制调用基于关键词检测
         if not first_ai.tool_calls:
+            print("🔍 未检测到工具调用，尝试基于关键词强制调用...")
             forced_tool_call = force_tool_call_based_on_keywords(req.prompt, req.conversation_id)
             if forced_tool_call:
+                print(f"⚡ 强制调用工具: {forced_tool_call['name']}")
                 first_ai.tool_calls = [forced_tool_call]
             else:
+                print("💬 无工具调用，返回纯文本回复")
                 return ChatResponse(success=True, data={"first_call": {"tool_calls": []}, "tool_result": None, "final_answer": first_ai.content}, task_id=task_id)
         
         tool_call = first_ai.tool_calls[0]
@@ -652,6 +666,9 @@ async def tool_chat(req: ToolChatRequest):
         
         # 根据工具名称执行相应的工具
         tool_name = tool_call.get("name", "")
+        print(f"🔧 Agent调用工具: {tool_name}")
+        print(f"📝 工具参数: {tool_args}")
+        
         if tool_name == "query_knowledge_base":
             tool_result = query_knowledge_base.invoke(tool_args)
         elif tool_name == "update_knowledge_base":
@@ -692,6 +709,29 @@ async def tool_chat(req: ToolChatRequest):
             tool_result = export_path_results_as_json.invoke(tool_args)
         else:
             tool_result = f"未知工具: {tool_name}"
+        
+        print(f"✅ 工具执行完成: {tool_name}")
+        print(f"📊 工具结果: {str(tool_result)[:200]}{'...' if len(str(tool_result)) > 200 else ''}")
+        
+        # 更新工具调用统计
+        _tool_call_stats[tool_name] = _tool_call_stats.get(tool_name, 0) + 1
+        print(f"📈 工具调用统计: {tool_name} (总计: {_tool_call_stats[tool_name]}次)")
+        
+        # 记录工具执行状态
+        execution_record = {
+            "timestamp": get_current_timestamp(),
+            "task_id": task_id,
+            "conversation_id": req.conversation_id,
+            "tool_name": tool_name,
+            "tool_args": tool_args,
+            "execution_status": "success",
+            "result_preview": str(tool_result)[:100] + "..." if len(str(tool_result)) > 100 else str(tool_result)
+        }
+        _tool_execution_history.append(execution_record)
+        
+        # 限制历史记录长度，保留最近100条
+        if len(_tool_execution_history) > 100:
+            _tool_execution_history[:] = _tool_execution_history[-100:]
         
         # 记录历史：优先记录action；若保存/导出操作，按分析类型归档
         if isinstance(tool_result, dict) and "action" in tool_result:
@@ -735,9 +775,28 @@ async def tool_chat(req: ToolChatRequest):
         # 添加助手回复到对话历史
         add_to_conversation_history(req.conversation_id, "assistant", final_ai.content)
         
+        print(f"✅ 对话处理完成")
+        print(f"📝 最终回复: {final_ai.content[:100]}{'...' if len(final_ai.content) > 100 else ''}")
+        print(f"🔚 任务结束: {task_id}\n")
+        
         return ChatResponse(success=True, data={"first_call": {"tool_calls": first_ai.tool_calls}, "tool_result": tool_result, "final_answer": final_ai.content}, task_id=task_id)
     
     except Exception as e:
+        print(f"❌ 对话处理失败: {str(e)}")
+        
+        # 记录错误到工具执行历史
+        error_record = {
+            "timestamp": get_current_timestamp(),
+            "task_id": task_id,
+            "conversation_id": req.conversation_id,
+            "tool_name": "system_error",
+            "tool_args": {"error": str(e)},
+            "execution_status": "error",
+            "result_preview": f"系统错误: {str(e)}"
+        }
+        _tool_execution_history.append(error_record)
+        
+        print(f"🔚 任务结束: {task_id}\n")
         return ChatResponse(success=False, error=f"LLM请求失败: {str(e)}", task_id=task_id)
 
 
@@ -848,6 +907,45 @@ async def list_conversations():
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+@router.get("/tool-stats")
+async def get_tool_stats():
+    """获取工具调用统计信息"""
+    try:
+        total_calls = sum(_tool_call_stats.values())
+        sorted_stats = sorted(_tool_call_stats.items(), key=lambda x: x[1], reverse=True)
+        
+        return {
+            "success": True,
+            "data": {
+                "total_tool_calls": total_calls,
+                "tool_statistics": dict(sorted_stats),
+                "most_used_tool": sorted_stats[0] if sorted_stats else None
+            }
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.get("/tool-execution-history")
+async def get_tool_execution_history(limit: int = 20):
+    """获取工具执行历史"""
+    try:
+        recent_history = _tool_execution_history[-limit:] if limit > 0 else _tool_execution_history
+        
+        return {
+            "success": True,
+            "data": {
+                "total_executions": len(_tool_execution_history),
+                "recent_executions": recent_history,
+                "execution_summary": {
+                    "success_count": len([h for h in _tool_execution_history if h.get("execution_status") == "success"]),
+                    "error_count": len([h for h in _tool_execution_history if h.get("execution_status") == "error"]),
+                    "most_recent_tool": _tool_execution_history[-1]["tool_name"] if _tool_execution_history else None
+                }
+            }
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 
 app = FastAPI(
     title="Agent Service", 
@@ -910,7 +1008,11 @@ async def health():
             "prompt_loaded": load_system_prompt() != "You are a helpful spatial analysis assistant.",
             "rag_system_status": rag_status,
             "rag_details": rag_details,
-            "tools_count": 19  # 17个原有工具 + 2个知识库工具
+            "tools_count": 19,  # 17个原有工具 + 2个知识库工具
+            "tool_call_statistics": _tool_call_stats,
+            "total_tool_calls": sum(_tool_call_stats.values()),
+            "tool_execution_history_count": len(_tool_execution_history),
+            "recent_tool_executions": _tool_execution_history[-5:] if _tool_execution_history else []
         }
     except Exception as e:
         return {
@@ -936,6 +1038,8 @@ async def root():
             "conversation_history": "/agent/conversation/{conversation_id}/history",
             "clear_conversation": "/agent/conversation/{conversation_id}",
             "list_conversations": "/agent/conversations",
+            "tool_stats": "/agent/tool-stats",
+            "tool_execution_history": "/agent/tool-execution-history",
             "health": "/health"
         }
     }

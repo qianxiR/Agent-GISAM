@@ -1,0 +1,501 @@
+2025-09-14 19:32:03,657 - INFO - 开始运行所有Agent工具测试
+2025-09-14 19:32:03,657 - INFO - ==================================================
+2025-09-14 19:32:03,658 - INFO - 测试图层管理类工具
+2025-09-14 19:32:03,658 - INFO - ==================================================
+2025-09-14 19:32:03,658 - INFO - 开始测试: 切换图层可见性-显示
+2025-09-14 19:32:03,658 - INFO - 输入提示: 显示医院图层
+2025-09-14 19:32:05,703 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:05,703 - INFO - 测试结果: FAILED
+2025-09-14 19:32:05,703 - INFO - 开始测试: 切换图层可见性-隐藏
+2025-09-14 19:32:05,726 - INFO - 输入提示: 隐藏学校图层
+2025-09-14 19:32:07,782 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:07,783 - INFO - 测试结果: FAILED
+2025-09-14 19:32:07,783 - INFO - 开始测试: 获取打开图层
+2025-09-14 19:32:07,784 - INFO - 输入提示: 获取当前打开的图层列表
+2025-09-14 19:32:09,859 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:09,861 - INFO - 测试结果: FAILED
+2025-09-14 19:32:09,884 - INFO - ==================================================
+2025-09-14 19:32:09,884 - INFO - 测试属性查询类工具
+2025-09-14 19:32:09,884 - INFO - ==================================================
+2025-09-14 19:32:09,884 - INFO - 开始测试: 属性查询-等于
+2025-09-14 19:32:09,884 - INFO - 输入提示: 查询医院图层中等级等于三级的医院
+2025-09-14 19:32:11,917 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:11,917 - INFO - 测试结果: FAILED
+2025-09-14 19:32:11,917 - INFO - 开始测试: 属性查询-包含
+2025-09-14 19:32:11,917 - INFO - 输入提示: 查询学校图层中名称包含小学的学校
+2025-09-14 19:32:13,979 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:13,979 - INFO - 测试结果: FAILED
+2025-09-14 19:32:13,980 - INFO - ==================================================
+2025-09-14 19:32:13,980 - INFO - 测试空间分析类工具
+2025-09-14 19:32:13,980 - INFO - ==================================================
+2025-09-14 19:32:13,980 - INFO - 开始测试: 缓冲区分析
+2025-09-14 19:32:13,980 - INFO - 输入提示: 对医院图层进行1000米缓冲区分析
+2025-09-14 19:32:16,052 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:16,055 - INFO - 测试结果: FAILED
+2025-09-14 19:32:16,057 - INFO - 开始测试: 相交分析
+2025-09-14 19:32:16,059 - INFO - 输入提示: 计算医院图层与居民地图层的相交分析
+2025-09-14 19:32:18,135 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:18,136 - INFO - 测试结果: FAILED
+2025-09-14 19:32:18,136 - INFO - 开始测试: 擦除分析
+2025-09-14 19:32:18,136 - INFO - 输入提示: 用限制区图层擦除医院图层
+2025-09-14 19:32:20,178 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:20,178 - INFO - 测试结果: FAILED
+2025-09-14 19:32:20,179 - INFO - 开始测试: 最短路径分析
+2025-09-14 19:32:20,179 - INFO - 输入提示: 计算从起点图层到终点图层的最短路径，避开障碍物图层
+2025-09-14 19:32:22,227 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:22,228 - INFO - 测试结果: FAILED
+2025-09-14 19:32:22,229 - INFO - ==================================================
+2025-09-14 19:32:22,230 - INFO - 测试结果保存类工具
+2025-09-14 19:32:22,231 - INFO - ==================================================
+2025-09-14 19:32:22,232 - INFO - 开始测试: 保存缓冲区分析结果
+2025-09-14 19:32:22,234 - INFO - 输入提示: 将缓冲区分析结果保存为图层，图层名为缓冲区结果
+2025-09-14 19:32:24,265 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:24,265 - INFO - 测试结果: FAILED
+2025-09-14 19:32:24,265 - INFO - 开始测试: 保存相交分析结果
+2025-09-14 19:32:24,265 - INFO - 输入提示: 将相交分析结果保存为图层，图层名为相交分析结果
+2025-09-14 19:32:26,306 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:26,307 - INFO - 测试结果: FAILED
+2025-09-14 19:32:26,307 - INFO - 开始测试: 保存擦除分析结果
+2025-09-14 19:32:26,307 - INFO - 输入提示: 将擦除分析结果保存为图层，图层名为擦除分析结果
+2025-09-14 19:32:28,350 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:28,350 - INFO - 测试结果: FAILED
+2025-09-14 19:32:28,351 - INFO - 开始测试: 保存最短路径分析结果
+2025-09-14 19:32:28,351 - INFO - 输入提示: 将最短路径分析结果保存为图层，图层名为路径分析结果
+2025-09-14 19:32:30,378 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:30,378 - INFO - 测试结果: FAILED
+2025-09-14 19:32:30,378 - INFO - 开始测试: 保存查询结果
+2025-09-14 19:32:30,378 - INFO - 输入提示: 将查询结果保存为图层，图层名为查询结果
+2025-09-14 19:32:32,418 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:32,418 - INFO - 测试结果: FAILED
+2025-09-14 19:32:32,419 - INFO - ==================================================
+2025-09-14 19:32:32,419 - INFO - 测试结果导出类工具
+2025-09-14 19:32:32,419 - INFO - ==================================================
+2025-09-14 19:32:32,419 - INFO - 开始测试: 导出缓冲区分析结果为JSON
+2025-09-14 19:32:32,420 - INFO - 输入提示: 将缓冲区分析结果导出为JSON文件，文件名为buffer_results.json
+2025-09-14 19:32:34,443 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:34,444 - INFO - 测试结果: FAILED
+2025-09-14 19:32:34,444 - INFO - 开始测试: 导出相交分析结果为JSON
+2025-09-14 19:32:34,444 - INFO - 输入提示: 将相交分析结果导出为JSON文件，文件名为intersection_results.json
+2025-09-14 19:32:36,509 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:36,509 - INFO - 测试结果: FAILED
+2025-09-14 19:32:36,509 - INFO - 开始测试: 导出擦除分析结果为JSON
+2025-09-14 19:32:36,510 - INFO - 输入提示: 将擦除分析结果导出为JSON文件，文件名为erase_results.json
+2025-09-14 19:32:40,565 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001E4806CADA0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:32:40,565 - INFO - 测试结果: FAILED
+2025-09-14 19:32:40,565 - INFO - 开始测试: 导出最短路径分析结果为JSON
+2025-09-14 19:32:40,565 - INFO - 输入提示: 将最短路径分析结果导出为JSON文件，文件名为path_results.json
+2025-09-14 19:32:44,632 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001E4806CBB20>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:32:44,633 - INFO - 测试结果: FAILED
+2025-09-14 19:32:44,633 - INFO - 开始测试: 导出查询结果为JSON
+2025-09-14 19:32:44,633 - INFO - 输入提示: 将查询结果导出为JSON文件，文件名为query_results.json
+2025-09-14 19:32:48,683 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001E4806CBEB0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:32:48,683 - INFO - 测试结果: FAILED
+2025-09-14 19:32:48,683 - INFO - ==================================================
+2025-09-14 19:32:48,684 - INFO - 测试知识库类工具
+2025-09-14 19:32:48,684 - INFO - ==================================================
+2025-09-14 19:32:48,684 - INFO - 开始测试: 知识库查询
+2025-09-14 19:32:48,684 - INFO - 输入提示: 查询武汉市的基本概况
+2025-09-14 19:32:52,763 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001E48073C280>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:32:52,763 - INFO - 测试结果: FAILED
+2025-09-14 19:32:52,764 - INFO - 开始测试: 知识库更新
+2025-09-14 19:32:52,764 - INFO - 输入提示: 更新知识库中的长江流域信息
+2025-09-14 19:32:54,806 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,806 - INFO - 测试结果: FAILED
+2025-09-14 19:32:54,807 - INFO - ================================================================================
+2025-09-14 19:32:54,807 - INFO - 测试报告
+2025-09-14 19:32:54,808 - INFO - ================================================================================
+2025-09-14 19:32:54,808 - INFO - 总测试数: 21
+2025-09-14 19:32:54,809 - INFO - 通过测试: 0
+2025-09-14 19:32:54,809 - INFO - 失败测试: 21
+2025-09-14 19:32:54,809 - INFO - 通过率: 0.0%
+2025-09-14 19:32:54,809 - INFO - 
+详细测试结果:
+2025-09-14 19:32:54,810 - INFO - ❌ 切换图层可见性-显示: FAILED
+2025-09-14 19:32:54,810 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,811 - INFO - ❌ 切换图层可见性-隐藏: FAILED
+2025-09-14 19:32:54,811 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,812 - INFO - ❌ 获取打开图层: FAILED
+2025-09-14 19:32:54,812 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,812 - INFO - ❌ 属性查询-等于: FAILED
+2025-09-14 19:32:54,813 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,813 - INFO - ❌ 属性查询-包含: FAILED
+2025-09-14 19:32:54,814 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,814 - INFO - ❌ 缓冲区分析: FAILED
+2025-09-14 19:32:54,815 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,815 - INFO - ❌ 相交分析: FAILED
+2025-09-14 19:32:54,815 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,816 - INFO - ❌ 擦除分析: FAILED
+2025-09-14 19:32:54,816 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,816 - INFO - ❌ 最短路径分析: FAILED
+2025-09-14 19:32:54,817 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,817 - INFO - ❌ 保存缓冲区分析结果: FAILED
+2025-09-14 19:32:54,818 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,818 - INFO - ❌ 保存相交分析结果: FAILED
+2025-09-14 19:32:54,819 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,819 - INFO - ❌ 保存擦除分析结果: FAILED
+2025-09-14 19:32:54,819 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,820 - INFO - ❌ 保存最短路径分析结果: FAILED
+2025-09-14 19:32:54,820 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,821 - INFO - ❌ 保存查询结果: FAILED
+2025-09-14 19:32:54,821 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,821 - INFO - ❌ 导出缓冲区分析结果为JSON: FAILED
+2025-09-14 19:32:54,822 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,822 - INFO - ❌ 导出相交分析结果为JSON: FAILED
+2025-09-14 19:32:54,822 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:54,822 - INFO - ❌ 导出擦除分析结果为JSON: FAILED
+2025-09-14 19:32:54,823 - INFO -    错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001E4806CADA0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:32:54,823 - INFO - ❌ 导出最短路径分析结果为JSON: FAILED
+2025-09-14 19:32:54,824 - INFO -    错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001E4806CBB20>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:32:54,824 - INFO - ❌ 导出查询结果为JSON: FAILED
+2025-09-14 19:32:54,824 - INFO -    错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001E4806CBEB0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:32:54,825 - INFO - ❌ 知识库查询: FAILED
+2025-09-14 19:32:54,825 - INFO -    错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001E48073C280>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:32:54,825 - INFO - ❌ 知识库更新: FAILED
+2025-09-14 19:32:54,826 - INFO -    错误: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:32:55,462 - INFO - 
+详细报告已保存到: test_report_1757849574.json
+2025-09-14 19:34:44,727 - INFO - 开始运行所有Agent工具测试
+2025-09-14 19:34:44,730 - INFO - ==================================================
+2025-09-14 19:34:44,730 - INFO - 测试图层管理类工具
+2025-09-14 19:34:44,730 - INFO - ==================================================
+2025-09-14 19:34:44,730 - INFO - 开始测试: 切换图层可见性-显示
+2025-09-14 19:34:44,730 - INFO - 输入提示: 显示医院图层
+2025-09-14 19:34:48,823 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001CF17A8ADA0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:34:48,824 - INFO - 测试结果: FAILED
+2025-09-14 19:34:48,824 - INFO - 开始测试: 切换图层可见性-隐藏
+2025-09-14 19:34:48,824 - INFO - 输入提示: 隐藏学校图层
+2025-09-14 19:34:52,928 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001CF17A8BB20>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:34:52,929 - INFO - 测试结果: FAILED
+2025-09-14 19:34:52,929 - INFO - 开始测试: 获取打开图层
+2025-09-14 19:34:52,929 - INFO - 输入提示: 获取当前打开的图层列表
+2025-09-14 19:34:57,038 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001CF17A8BEB0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:34:57,038 - INFO - 测试结果: FAILED
+2025-09-14 19:34:57,039 - INFO - ==================================================
+2025-09-14 19:34:57,039 - INFO - 测试属性查询类工具
+2025-09-14 19:34:57,039 - INFO - ==================================================
+2025-09-14 19:34:57,039 - INFO - 开始测试: 属性查询-等于
+2025-09-14 19:34:57,039 - INFO - 输入提示: 查询医院图层中等级等于三级的医院
+2025-09-14 19:35:01,130 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001CF17AF4280>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:35:01,130 - INFO - 测试结果: FAILED
+2025-09-14 19:35:01,130 - INFO - 开始测试: 属性查询-包含
+2025-09-14 19:35:01,131 - INFO - 输入提示: 查询学校图层中名称包含小学的学校
+2025-09-14 19:35:05,220 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001CF17AF4610>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:35:05,220 - INFO - 测试结果: FAILED
+2025-09-14 19:35:05,221 - INFO - ==================================================
+2025-09-14 19:35:05,221 - INFO - 测试空间分析类工具
+2025-09-14 19:35:05,221 - INFO - ==================================================
+2025-09-14 19:35:05,221 - INFO - 开始测试: 缓冲区分析
+2025-09-14 19:35:05,221 - INFO - 输入提示: 对医院图层进行1000米缓冲区分析
+2025-09-14 19:35:09,315 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001CF17AF49A0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:35:09,316 - INFO - 测试结果: FAILED
+2025-09-14 19:35:09,316 - INFO - 开始测试: 相交分析
+2025-09-14 19:35:09,316 - INFO - 输入提示: 计算医院图层与居民地图层的相交分析
+2025-09-14 19:35:41,867 - INFO - 开始运行所有Agent工具测试
+2025-09-14 19:35:41,896 - INFO - ==================================================
+2025-09-14 19:35:41,896 - INFO - 测试图层管理类工具
+2025-09-14 19:35:41,896 - INFO - ==================================================
+2025-09-14 19:35:41,897 - INFO - 开始测试: 切换图层可见性-显示
+2025-09-14 19:35:41,897 - INFO - 输入提示: 显示医院图层
+2025-09-14 19:35:45,964 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002036102ADA0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:35:45,964 - INFO - 测试结果: FAILED
+2025-09-14 19:35:45,965 - INFO - 开始测试: 切换图层可见性-隐藏
+2025-09-14 19:35:45,965 - INFO - 输入提示: 隐藏学校图层
+2025-09-14 19:35:50,031 - ERROR - 请求失败: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /agent/tool-chat (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002036102BB20>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))
+2025-09-14 19:35:50,031 - INFO - 测试结果: FAILED
+2025-09-14 19:35:50,032 - INFO - 开始测试: 获取打开图层
+2025-09-14 19:35:50,032 - INFO - 输入提示: 获取当前打开的图层列表
+2025-09-14 19:37:08,329 - INFO - 开始运行所有Agent工具测试
+2025-09-14 19:37:08,330 - INFO - ==================================================
+2025-09-14 19:37:08,330 - INFO - 测试图层管理类工具
+2025-09-14 19:37:08,330 - INFO - ==================================================
+2025-09-14 19:37:08,330 - INFO - 开始测试: 切换图层可见性-显示
+2025-09-14 19:37:08,330 - INFO - 输入提示: 显示医院图层
+2025-09-14 19:37:14,855 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:37:14,856 - INFO - 测试结果: FAILED
+2025-09-14 19:37:14,856 - INFO - 开始测试: 切换图层可见性-隐藏
+2025-09-14 19:37:14,857 - INFO - 输入提示: 隐藏学校图层
+2025-09-14 19:37:14,879 - ERROR - 请求失败: ('Connection aborted.', ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None))
+2025-09-14 19:37:14,879 - INFO - 测试结果: FAILED
+2025-09-14 19:37:14,879 - INFO - 开始测试: 获取打开图层
+2025-09-14 19:37:14,880 - INFO - 输入提示: 获取当前打开的图层列表
+2025-09-14 19:37:30,786 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:37:30,787 - INFO - 测试结果: FAILED
+2025-09-14 19:37:30,787 - INFO - ==================================================
+2025-09-14 19:37:30,787 - INFO - 测试属性查询类工具
+2025-09-14 19:37:30,787 - INFO - ==================================================
+2025-09-14 19:37:30,787 - INFO - 开始测试: 属性查询-等于
+2025-09-14 19:37:30,788 - INFO - 输入提示: 查询医院图层中等级等于三级的医院
+2025-09-14 19:37:30,800 - ERROR - 请求失败: ('Connection aborted.', ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None))
+2025-09-14 19:37:30,801 - INFO - 测试结果: FAILED
+2025-09-14 19:37:30,801 - INFO - 开始测试: 属性查询-包含
+2025-09-14 19:37:30,801 - INFO - 输入提示: 查询学校图层中名称包含小学的学校
+2025-09-14 19:37:34,654 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:37:34,655 - INFO - 测试结果: FAILED
+2025-09-14 19:37:34,655 - INFO - ==================================================
+2025-09-14 19:37:34,655 - INFO - 测试空间分析类工具
+2025-09-14 19:37:34,655 - INFO - ==================================================
+2025-09-14 19:37:34,656 - INFO - 开始测试: 缓冲区分析
+2025-09-14 19:37:34,656 - INFO - 输入提示: 对医院图层进行1000米缓冲区分析
+2025-09-14 19:37:51,060 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:37:51,061 - INFO - 测试结果: FAILED
+2025-09-14 19:37:51,061 - INFO - 开始测试: 相交分析
+2025-09-14 19:37:51,062 - INFO - 输入提示: 计算医院图层与居民地图层的相交分析
+2025-09-14 19:37:51,081 - ERROR - 请求失败: ('Connection aborted.', ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None))
+2025-09-14 19:37:51,081 - INFO - 测试结果: FAILED
+2025-09-14 19:37:51,082 - INFO - 开始测试: 擦除分析
+2025-09-14 19:37:51,082 - INFO - 输入提示: 用限制区图层擦除医院图层
+2025-09-14 19:37:54,777 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:37:54,778 - INFO - 测试结果: FAILED
+2025-09-14 19:37:54,778 - INFO - 开始测试: 最短路径分析
+2025-09-14 19:37:54,778 - INFO - 输入提示: 计算从起点图层到终点图层的最短路径，避开障碍物图层
+2025-09-14 19:37:58,901 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:37:58,901 - INFO - 测试结果: FAILED
+2025-09-14 19:37:58,901 - INFO - ==================================================
+2025-09-14 19:37:58,901 - INFO - 测试结果保存类工具
+2025-09-14 19:37:58,902 - INFO - ==================================================
+2025-09-14 19:37:58,902 - INFO - 开始测试: 保存缓冲区分析结果
+2025-09-14 19:37:58,902 - INFO - 输入提示: 将缓冲区分析结果保存为图层，图层名为缓冲区结果
+2025-09-14 19:38:03,320 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:38:03,321 - INFO - 测试结果: FAILED
+2025-09-14 19:38:03,322 - INFO - 开始测试: 保存相交分析结果
+2025-09-14 19:38:03,322 - INFO - 输入提示: 将相交分析结果保存为图层，图层名为相交分析结果
+2025-09-14 19:38:07,820 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:38:07,821 - INFO - 测试结果: FAILED
+2025-09-14 19:38:07,821 - INFO - 开始测试: 保存擦除分析结果
+2025-09-14 19:38:07,821 - INFO - 输入提示: 将擦除分析结果保存为图层，图层名为擦除分析结果
+2025-09-14 19:38:12,188 - ERROR - 请求失败: 500 Server Error: Internal Server Error for url: http://localhost:8089/agent/tool-chat
+2025-09-14 19:38:12,189 - INFO - 测试结果: FAILED
+2025-09-14 19:38:12,189 - INFO - 开始测试: 保存最短路径分析结果
+2025-09-14 19:38:12,190 - INFO - 输入提示: 将最短路径分析结果保存为图层，图层名为路径分析结果
+2025-09-14 19:38:12,191 - ERROR - 请求失败: ('Connection aborted.', ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None))
+2025-09-14 19:38:12,192 - INFO - 测试结果: FAILED
+2025-09-14 19:38:12,192 - INFO - 开始测试: 保存查询结果
+2025-09-14 19:38:12,192 - INFO - 输入提示: 将查询结果保存为图层，图层名为查询结果
+2025-09-14 19:38:42,709 - INFO - 测试结果: FAILED
+2025-09-14 19:38:42,709 - INFO - ==================================================
+2025-09-14 19:38:42,710 - INFO - 测试结果导出类工具
+2025-09-14 19:38:42,710 - INFO - ==================================================
+2025-09-14 19:38:42,710 - INFO - 开始测试: 导出缓冲区分析结果为JSON
+2025-09-14 19:38:42,710 - INFO - 输入提示: 将缓冲区分析结果导出为JSON文件，文件名为buffer_results.json
+2025-09-14 19:38:46,701 - INFO - 测试结果: FAILED
+2025-09-14 19:38:46,702 - INFO - 开始测试: 导出相交分析结果为JSON
+2025-09-14 19:38:46,702 - INFO - 输入提示: 将相交分析结果导出为JSON文件，文件名为intersection_results.json
+2025-09-14 19:38:52,631 - INFO - 测试结果: FAILED
+2025-09-14 19:38:52,632 - INFO - 开始测试: 导出擦除分析结果为JSON
+2025-09-14 19:38:52,632 - INFO - 输入提示: 将擦除分析结果导出为JSON文件，文件名为erase_results.json
+2025-09-14 19:42:45,095 - INFO - 开始运行所有Agent工具测试
+2025-09-14 19:42:45,095 - INFO - ==================================================
+2025-09-14 19:42:45,096 - INFO - 测试图层管理类工具
+2025-09-14 19:42:45,096 - INFO - ==================================================
+2025-09-14 19:42:45,096 - INFO - 开始测试: 切换图层可见性-显示
+2025-09-14 19:42:45,096 - INFO - 输入提示: 显示医院图层
+2025-09-14 19:42:52,700 - INFO - 测试结果: FAILED
+2025-09-14 19:42:52,701 - INFO - 开始测试: 切换图层可见性-隐藏
+2025-09-14 19:42:52,701 - INFO - 输入提示: 隐藏学校图层
+2025-09-14 19:42:55,759 - INFO - 测试结果: FAILED
+2025-09-14 19:42:55,760 - INFO - 开始测试: 获取打开图层
+2025-09-14 19:42:55,760 - INFO - 输入提示: 获取当前打开的图层列表
+2025-09-14 19:42:59,074 - INFO - 测试结果: FAILED
+2025-09-14 19:42:59,075 - INFO - ==================================================
+2025-09-14 19:42:59,075 - INFO - 测试属性查询类工具
+2025-09-14 19:42:59,076 - INFO - ==================================================
+2025-09-14 19:42:59,076 - INFO - 开始测试: 属性查询-等于
+2025-09-14 19:42:59,076 - INFO - 输入提示: 查询医院图层中等级等于三级的医院
+2025-09-14 19:43:01,801 - INFO - 测试结果: FAILED
+2025-09-14 19:43:01,801 - INFO - 开始测试: 属性查询-包含
+2025-09-14 19:43:01,801 - INFO - 输入提示: 查询学校图层中名称包含小学的学校
+2025-09-14 19:43:06,435 - INFO - 测试结果: FAILED
+2025-09-14 19:43:06,436 - INFO - ==================================================
+2025-09-14 19:43:06,436 - INFO - 测试空间分析类工具
+2025-09-14 19:43:06,437 - INFO - ==================================================
+2025-09-14 19:43:06,533 - INFO - 开始测试: 缓冲区分析
+2025-09-14 19:43:06,533 - INFO - 输入提示: 对医院图层进行1000米缓冲区分析
+2025-09-14 19:43:10,555 - INFO - 测试结果: FAILED
+2025-09-14 19:43:10,556 - INFO - 开始测试: 相交分析
+2025-09-14 19:43:10,556 - INFO - 输入提示: 计算医院图层与居民地图层的相交分析
+2025-09-14 19:43:18,622 - INFO - 测试结果: FAILED
+2025-09-14 19:43:18,623 - INFO - 开始测试: 擦除分析
+2025-09-14 19:43:18,623 - INFO - 输入提示: 用限制区图层擦除医院图层
+2025-09-14 19:43:22,791 - INFO - 测试结果: FAILED
+2025-09-14 19:43:22,791 - INFO - 开始测试: 最短路径分析
+2025-09-14 19:43:22,792 - INFO - 输入提示: 计算从起点图层到终点图层的最短路径，避开障碍物图层
+2025-09-14 19:43:25,938 - INFO - 测试结果: FAILED
+2025-09-14 19:43:25,938 - INFO - ==================================================
+2025-09-14 19:43:25,938 - INFO - 测试结果保存类工具
+2025-09-14 19:43:25,939 - INFO - ==================================================
+2025-09-14 19:43:25,939 - INFO - 开始测试: 保存缓冲区分析结果
+2025-09-14 19:43:25,939 - INFO - 输入提示: 将缓冲区分析结果保存为图层，图层名为缓冲区结果
+2025-09-14 19:43:30,071 - INFO - 测试结果: FAILED
+2025-09-14 19:43:30,072 - INFO - 开始测试: 保存相交分析结果
+2025-09-14 19:43:30,072 - INFO - 输入提示: 将相交分析结果保存为图层，图层名为相交分析结果
+2025-09-14 19:43:33,687 - INFO - 测试结果: FAILED
+2025-09-14 19:43:33,688 - INFO - 开始测试: 保存擦除分析结果
+2025-09-14 19:43:33,688 - INFO - 输入提示: 将擦除分析结果保存为图层，图层名为擦除分析结果
+2025-09-14 19:43:36,053 - INFO - 测试结果: FAILED
+2025-09-14 19:43:36,053 - INFO - 开始测试: 保存最短路径分析结果
+2025-09-14 19:43:36,053 - INFO - 输入提示: 将最短路径分析结果保存为图层，图层名为路径分析结果
+2025-09-14 19:43:39,739 - INFO - 测试结果: FAILED
+2025-09-14 19:43:39,739 - INFO - 开始测试: 保存查询结果
+2025-09-14 19:43:39,740 - INFO - 输入提示: 将查询结果保存为图层，图层名为查询结果
+2025-09-14 19:43:43,024 - INFO - 测试结果: FAILED
+2025-09-14 19:43:43,025 - INFO - ==================================================
+2025-09-14 19:43:43,025 - INFO - 测试结果导出类工具
+2025-09-14 19:43:43,025 - INFO - ==================================================
+2025-09-14 19:43:43,025 - INFO - 开始测试: 导出缓冲区分析结果为JSON
+2025-09-14 19:43:43,025 - INFO - 输入提示: 将缓冲区分析结果导出为JSON文件，文件名为buffer_results.json
+2025-09-14 19:43:47,485 - INFO - 测试结果: FAILED
+2025-09-14 19:43:47,485 - INFO - 开始测试: 导出相交分析结果为JSON
+2025-09-14 19:43:47,485 - INFO - 输入提示: 将相交分析结果导出为JSON文件，文件名为intersection_results.json
+2025-09-14 19:43:51,174 - INFO - 测试结果: FAILED
+2025-09-14 19:43:51,174 - INFO - 开始测试: 导出擦除分析结果为JSON
+2025-09-14 19:43:51,175 - INFO - 输入提示: 将擦除分析结果导出为JSON文件，文件名为erase_results.json
+2025-09-14 19:43:55,742 - INFO - 测试结果: FAILED
+2025-09-14 19:43:55,742 - INFO - 开始测试: 导出最短路径分析结果为JSON
+2025-09-14 19:43:55,743 - INFO - 输入提示: 将最短路径分析结果导出为JSON文件，文件名为path_results.json
+2025-09-14 19:43:59,653 - INFO - 测试结果: FAILED
+2025-09-14 19:43:59,653 - INFO - 开始测试: 导出查询结果为JSON
+2025-09-14 19:43:59,653 - INFO - 输入提示: 将查询结果导出为JSON文件，文件名为query_results.json
+2025-09-14 19:44:02,467 - INFO - 测试结果: FAILED
+2025-09-14 19:44:02,468 - INFO - ==================================================
+2025-09-14 19:44:02,469 - INFO - 测试知识库类工具
+2025-09-14 19:44:02,469 - INFO - ==================================================
+2025-09-14 19:44:02,470 - INFO - 开始测试: 知识库查询
+2025-09-14 19:44:02,470 - INFO - 输入提示: 查询武汉市的基本概况
+2025-09-14 19:44:29,616 - INFO - 测试结果: FAILED
+2025-09-14 19:44:29,617 - INFO - 开始测试: 知识库更新
+2025-09-14 19:44:29,618 - INFO - 输入提示: 更新知识库中的长江流域信息
+2025-09-14 19:44:31,907 - INFO - 测试结果: FAILED
+2025-09-14 19:44:31,907 - INFO - ================================================================================
+2025-09-14 19:44:31,908 - INFO - 测试报告
+2025-09-14 19:44:31,908 - INFO - ================================================================================
+2025-09-14 19:44:31,908 - INFO - 总测试数: 21
+2025-09-14 19:44:31,908 - INFO - 通过测试: 0
+2025-09-14 19:44:31,909 - INFO - 失败测试: 21
+2025-09-14 19:44:31,909 - INFO - 通过率: 0.0%
+2025-09-14 19:44:31,910 - INFO - 
+详细测试结果:
+2025-09-14 19:44:31,910 - INFO - ❌ 切换图层可见性-显示: FAILED
+2025-09-14 19:44:31,910 - INFO -    错误: None
+2025-09-14 19:44:31,910 - INFO - ❌ 切换图层可见性-隐藏: FAILED
+2025-09-14 19:44:31,911 - INFO -    错误: None
+2025-09-14 19:44:31,911 - INFO - ❌ 获取打开图层: FAILED
+2025-09-14 19:44:31,911 - INFO -    错误: None
+2025-09-14 19:44:31,911 - INFO - ❌ 属性查询-等于: FAILED
+2025-09-14 19:44:31,911 - INFO -    错误: None
+2025-09-14 19:44:31,912 - INFO - ❌ 属性查询-包含: FAILED
+2025-09-14 19:44:31,912 - INFO -    错误: None
+2025-09-14 19:44:31,912 - INFO - ❌ 缓冲区分析: FAILED
+2025-09-14 19:44:31,912 - INFO -    错误: None
+2025-09-14 19:44:31,912 - INFO - ❌ 相交分析: FAILED
+2025-09-14 19:44:31,913 - INFO -    错误: None
+2025-09-14 19:44:31,913 - INFO - ❌ 擦除分析: FAILED
+2025-09-14 19:44:31,913 - INFO -    错误: None
+2025-09-14 19:44:31,913 - INFO - ❌ 最短路径分析: FAILED
+2025-09-14 19:44:31,914 - INFO -    错误: None
+2025-09-14 19:44:31,914 - INFO - ❌ 保存缓冲区分析结果: FAILED
+2025-09-14 19:44:31,914 - INFO -    错误: None
+2025-09-14 19:44:31,914 - INFO - ❌ 保存相交分析结果: FAILED
+2025-09-14 19:44:31,914 - INFO -    错误: None
+2025-09-14 19:44:31,915 - INFO - ❌ 保存擦除分析结果: FAILED
+2025-09-14 19:44:31,915 - INFO -    错误: None
+2025-09-14 19:44:31,915 - INFO - ❌ 保存最短路径分析结果: FAILED
+2025-09-14 19:44:31,915 - INFO -    错误: None
+2025-09-14 19:44:31,916 - INFO - ❌ 保存查询结果: FAILED
+2025-09-14 19:44:31,916 - INFO -    错误: None
+2025-09-14 19:44:31,916 - INFO - ❌ 导出缓冲区分析结果为JSON: FAILED
+2025-09-14 19:44:31,916 - INFO -    错误: None
+2025-09-14 19:44:31,917 - INFO - ❌ 导出相交分析结果为JSON: FAILED
+2025-09-14 19:44:31,917 - INFO -    错误: None
+2025-09-14 19:44:31,917 - INFO - ❌ 导出擦除分析结果为JSON: FAILED
+2025-09-14 19:44:31,917 - INFO -    错误: None
+2025-09-14 19:44:31,918 - INFO - ❌ 导出最短路径分析结果为JSON: FAILED
+2025-09-14 19:44:31,918 - INFO -    错误: None
+2025-09-14 19:44:31,918 - INFO - ❌ 导出查询结果为JSON: FAILED
+2025-09-14 19:44:31,918 - INFO -    错误: None
+2025-09-14 19:44:31,918 - INFO - ❌ 知识库查询: FAILED
+2025-09-14 19:44:31,918 - INFO -    错误: None
+2025-09-14 19:44:31,919 - INFO - ❌ 知识库更新: FAILED
+2025-09-14 19:44:31,919 - INFO -    错误: None
+2025-09-14 19:44:31,977 - INFO - 
+详细报告已保存到: test_report_1757850271.json
+2025-09-14 20:17:00,130 - INFO - 开始运行所有Agent工具测试
+2025-09-14 20:17:00,130 - INFO - ==================================================
+2025-09-14 20:17:00,130 - INFO - 测试图层管理类工具
+2025-09-14 20:17:00,130 - INFO - ==================================================
+2025-09-14 20:17:00,130 - INFO - 开始测试: 切换图层可见性-显示
+2025-09-14 20:17:00,131 - INFO - 输入提示: 显示医院图层
+2025-09-14 20:17:00,249 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852220.2490144}
+2025-09-14 20:17:17,773 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852237.7734675}
+2025-09-14 20:17:17,774 - INFO - 测试结果: FAILED
+2025-09-14 20:17:17,774 - INFO - 开始测试: 切换图层可见性-隐藏
+2025-09-14 20:17:17,775 - INFO - 输入提示: 隐藏学校图层
+2025-09-14 20:17:17,781 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852237.781114}
+2025-09-14 20:17:23,766 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852243.7664785}
+2025-09-14 20:17:23,766 - INFO - 测试结果: FAILED
+2025-09-14 20:17:23,767 - INFO - 开始测试: 获取打开图层
+2025-09-14 20:17:23,767 - INFO - 输入提示: 获取当前打开的图层列表
+2025-09-14 20:17:23,772 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852243.772433}
+2025-09-14 20:17:30,546 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852250.5463247}
+2025-09-14 20:17:30,546 - INFO - 测试结果: FAILED
+2025-09-14 20:17:30,546 - INFO - ==================================================
+2025-09-14 20:17:30,547 - INFO - 测试属性查询类工具
+2025-09-14 20:17:30,547 - INFO - ==================================================
+2025-09-14 20:17:30,547 - INFO - 开始测试: 属性查询-等于
+2025-09-14 20:17:30,547 - INFO - 输入提示: 查询医院图层中等级等于三级的医院
+2025-09-14 20:17:30,553 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852250.5533302}
+2025-09-14 20:17:37,186 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852257.1860058}
+2025-09-14 20:17:37,186 - INFO - 测试结果: FAILED
+2025-09-14 20:17:37,187 - INFO - 开始测试: 属性查询-包含
+2025-09-14 20:17:37,187 - INFO - 输入提示: 查询学校图层中名称包含小学的学校
+2025-09-14 20:17:37,199 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852257.1990092}
+2025-09-14 20:17:43,411 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852263.411942}
+2025-09-14 20:17:43,411 - INFO - 测试结果: FAILED
+2025-09-14 20:17:43,411 - INFO - ==================================================
+2025-09-14 20:17:43,411 - INFO - 测试空间分析类工具
+2025-09-14 20:17:43,412 - INFO - ==================================================
+2025-09-14 20:17:43,412 - INFO - 开始测试: 缓冲区分析
+2025-09-14 20:17:43,412 - INFO - 输入提示: 对医院图层进行1000米缓冲区分析
+2025-09-14 20:17:43,416 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852263.4162621}
+2025-09-14 20:17:50,757 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852270.7579293}
+2025-09-14 20:17:50,758 - INFO - 测试结果: FAILED
+2025-09-14 20:17:50,758 - INFO - 开始测试: 相交分析
+2025-09-14 20:17:50,759 - INFO - 输入提示: 计算医院图层与居民地图层的相交分析
+2025-09-14 20:17:50,770 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852270.7706027}
+2025-09-14 20:18:02,788 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852282.7885537}
+2025-09-14 20:18:02,788 - INFO - 测试结果: FAILED
+2025-09-14 20:18:02,789 - INFO - 开始测试: 擦除分析
+2025-09-14 20:18:02,789 - INFO - 输入提示: 用限制区图层擦除医院图层
+2025-09-14 20:18:02,941 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852282.9411194}
+2025-09-14 20:18:09,745 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852289.7451148}
+2025-09-14 20:18:09,745 - INFO - 测试结果: FAILED
+2025-09-14 20:18:09,746 - INFO - 开始测试: 最短路径分析
+2025-09-14 20:18:09,746 - INFO - 输入提示: 计算从起点图层到终点图层的最短路径，避开障碍物图层
+2025-09-14 20:18:09,754 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852289.7543182}
+2025-09-14 20:18:19,115 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852299.11576}
+2025-09-14 20:18:19,116 - INFO - 测试结果: FAILED
+2025-09-14 20:18:19,116 - INFO - ==================================================
+2025-09-14 20:18:19,116 - INFO - 测试结果保存类工具
+2025-09-14 20:18:19,116 - INFO - ==================================================
+2025-09-14 20:18:19,116 - INFO - 开始测试: 保存缓冲区分析结果
+2025-09-14 20:18:19,116 - INFO - 输入提示: 将缓冲区分析结果保存为图层，图层名为缓冲区结果
+2025-09-14 20:18:19,121 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852299.1212215}
+2025-09-14 20:18:25,517 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852305.5166373}
+2025-09-14 20:18:25,517 - INFO - 测试结果: FAILED
+2025-09-14 20:18:25,518 - INFO - 开始测试: 保存相交分析结果
+2025-09-14 20:18:25,518 - INFO - 输入提示: 将相交分析结果保存为图层，图层名为相交分析结果
+2025-09-14 20:18:25,529 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852305.5290015}
+2025-09-14 20:18:33,248 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852313.2482302}
+2025-09-14 20:18:33,248 - INFO - 测试结果: FAILED
+2025-09-14 20:18:33,248 - INFO - 开始测试: 保存擦除分析结果
+2025-09-14 20:18:33,248 - INFO - 输入提示: 将擦除分析结果保存为图层，图层名为擦除分析结果
+2025-09-14 20:18:33,254 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852313.2547498}
+2025-09-14 20:18:38,892 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852318.8928554}
+2025-09-14 20:18:38,892 - INFO - 测试结果: FAILED
+2025-09-14 20:18:38,892 - INFO - 开始测试: 保存最短路径分析结果
+2025-09-14 20:18:38,892 - INFO - 输入提示: 将最短路径分析结果保存为图层，图层名为路径分析结果
+2025-09-14 20:18:38,896 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852318.8968647}
+2025-09-14 20:18:44,207 - INFO - 执行后前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852324.2070832}
+2025-09-14 20:18:44,207 - INFO - 测试结果: FAILED
+2025-09-14 20:18:44,207 - INFO - 开始测试: 保存查询结果
+2025-09-14 20:18:44,208 - INFO - 输入提示: 将查询结果保存为图层，图层名为查询结果
+2025-09-14 20:18:44,214 - INFO - 执行前前端状态: {'map_ready': True, 'layers': [], 'analysis_status': '', 'timestamp': 1757852324.2141297}

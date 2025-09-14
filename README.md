@@ -600,10 +600,10 @@ npm run dev
 |------|------|------|
 | 🌐 前端应用 | http://localhost:5173 | 主应用界面 |
 | 🤖 EDA Agent服务 | http://localhost:8089/docs | FastAPI Swagger 文档 |
-| 👤 用户服务 API | http://localhost:8000/docs | FastAPI Swagger 文档 |
+| 👤 用户服务 API | http://localhost:8089/docs | FastAPI Swagger 文档 |
 | 🗺️ 分析服务 API | http://localhost:3001/docs | 空间分析 API 文档 |
 | ❤️ 健康检查 | http://localhost:8089/health | EDA Agent服务健康状态 |
-| ❤️ 健康检查 | http://localhost:8000/health | 用户服务健康状态 |
+| ❤️ 健康检查 | http://localhost:8089/health | 用户服务健康状态 |
 | ❤️ 健康检查 | http://localhost:3001/health | 分析服务健康状态 |
 
 ### 环境配置
@@ -634,7 +634,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 DASHSCOPE_API_KEY=your-dashscope-api-key
 DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 DASHSCOPE_MODEL=qwen-plus
-DASHSCOPE_TEMPERATURE=0.7
+DASHSCOPE_TEMPERATURE=0.5
 DASHSCOPE_MAX_TOKENS=3000
 
 # CORS 配置
@@ -683,8 +683,8 @@ npm start
   - 结果导出: `export_*_results_as_json`
 
 #### 用户认证服务 API
-- **基础URL**: `http://localhost:8000/api/v1/user`
-- **Swagger 文档**: http://localhost:8000/docs
+- **基础URL**: `http://localhost:8089/api/v1/user`
+- **Swagger 文档**: http://localhost:8089/docs
 - **主要接口**:
   - `POST /register` - 用户注册
   - `POST /login` - 用户登录
@@ -777,10 +777,10 @@ npm start
 | 服务 | Swagger 文档 | 说明 |
 |------|-------------|------|
 | EDA事件驱动Agent服务 | http://localhost:8089/docs | FastAPI + LangChain 文档 |
-| 用户认证服务 | http://localhost:8000/docs | FastAPI 自动生成文档 |
+| 用户认证服务 | http://localhost:8089/docs | FastAPI 自动生成文档 |
 | 空间分析服务 | http://localhost:3001/docs | Express + Swagger 文档 |
 | 健康检查 | http://localhost:8089/health | EDA Agent服务健康状态 |
-| 健康检查 | http://localhost:8000/health | 用户服务健康状态 |
+| 健康检查 | http://localhost:8089/health | 用户服务健康状态 |
 | 健康检查 | http://localhost:3001/health | 分析服务健康状态 |
 
 ### 技术资源
@@ -915,10 +915,10 @@ npm run dev
 #### 用户服务测试
 ```bash
 # 健康检查
-curl http://localhost:8000/health
+curl http://localhost:8089/health
 
 # 用户注册测试
-curl -X POST "http://localhost:8000/api/v1/user/register" \
+curl -X POST "http://localhost:8089/api/v1/user/register" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "testuser",
@@ -929,7 +929,7 @@ curl -X POST "http://localhost:8000/api/v1/user/register" \
   }'
 
 # 用户登录测试
-curl -X POST "http://localhost:8000/api/v1/user/login" \
+curl -X POST "http://localhost:8089/api/v1/user/login" \
   -H "Content-Type: application/json" \
   -d '{
     "login_identifier": "testuser",
@@ -1038,7 +1038,7 @@ docker run -p 3001:3001 supermap-analysis-service
 
 ```bash
 # 前端环境配置
-VITE_API_BASE_URL=http://localhost:8000
+VITE_API_BASE_URL=http://localhost:8089
 VITE_ANALYSIS_API_BASE_URL=http://localhost:3001
 VITE_SUPERMAP_SERVER_URL=http://your-supermap-server
 VITE_APP_TITLE=SuperMap 智能地理信息分析系统

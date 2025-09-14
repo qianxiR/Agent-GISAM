@@ -4,7 +4,7 @@
 
 ### 基础URL
 ```
-http://localhost:8000/api/v1/user
+http://localhost:8089/api/v1/user
 ```
 
 ### 测试用户
@@ -39,7 +39,7 @@ Authorization: Bearer your_token_here
 ### 获取令牌
 ```bash
 # 登录获取令牌
-curl -X POST "http://localhost:8000/api/v1/user/login" \
+curl -X POST "http://localhost:8089/api/v1/user/login" \
   -H "Content-Type: application/json" \
   -d '{
     "login_identifier": "qianxi",
@@ -53,7 +53,7 @@ curl -X POST "http://localhost:8000/api/v1/user/login" \
 
 ### 1. 用户注册
 ```bash
-curl -X POST "http://localhost:8000/api/v1/user/register" \
+curl -X POST "http://localhost:8089/api/v1/user/register" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "newuser",
@@ -66,7 +66,7 @@ curl -X POST "http://localhost:8000/api/v1/user/register" \
 
 ### 2. 用户登录
 ```bash
-curl -X POST "http://localhost:8000/api/v1/user/login" \
+curl -X POST "http://localhost:8089/api/v1/user/login" \
   -H "Content-Type: application/json" \
   -d '{
     "login_identifier": "qianxi",
@@ -76,13 +76,13 @@ curl -X POST "http://localhost:8000/api/v1/user/login" \
 
 ### 3. 获取用户信息
 ```bash
-curl -X GET "http://localhost:8000/api/v1/user/me" \
+curl -X GET "http://localhost:8089/api/v1/user/me" \
   -H "Authorization: Bearer your_token_here"
 ```
 
 ### 4. 修改用户信息
 ```bash
-curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
+curl -X POST "http://localhost:8089/api/v1/user/update-profile" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
   -d '{
@@ -97,7 +97,7 @@ curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
 
 ### 5. 修改密码
 ```bash
-curl -X POST "http://localhost:8000/api/v1/user/change-password" \
+curl -X POST "http://localhost:8089/api/v1/user/change-password" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
   -d '{
@@ -109,7 +109,7 @@ curl -X POST "http://localhost:8000/api/v1/user/change-password" \
 
 ### 6. 用户登出
 ```bash
-curl -X POST "http://localhost:8000/api/v1/user/logout" \
+curl -X POST "http://localhost:8089/api/v1/user/logout" \
   -H "Authorization: Bearer your_token_here"
 ```
 
@@ -127,7 +127,7 @@ $body = @{
     confirm_password = "password123"
 } | ConvertTo-Json
 
-Invoke-RestMethod -Uri "http://localhost:8000/api/v1/user/register" -Method POST -Body $body -ContentType "application/json"
+Invoke-RestMethod -Uri "http://localhost:8089/api/v1/user/register" -Method POST -Body $body -ContentType "application/json"
 ```
 
 ### 用户登录
@@ -137,7 +137,7 @@ $body = @{
     password = "qianxi147A"
 } | ConvertTo-Json
 
-$response = Invoke-RestMethod -Uri "http://localhost:8000/api/v1/user/login" -Method POST -Body $body -ContentType "application/json"
+$response = Invoke-RestMethod -Uri "http://localhost:8089/api/v1/user/login" -Method POST -Body $body -ContentType "application/json"
 $token = $response.token
 ```
 
@@ -147,7 +147,7 @@ $headers = @{
     "Authorization" = "Bearer $token"
 }
 
-Invoke-RestMethod -Uri "http://localhost:8000/api/v1/user/me" -Method GET -Headers $headers
+Invoke-RestMethod -Uri "http://localhost:8089/api/v1/user/me" -Method GET -Headers $headers
 ```
 
 ---
@@ -191,7 +191,7 @@ Invoke-RestMethod -Uri "http://localhost:8000/api/v1/user/me" -Method GET -Heade
 python -m uvicorn user.main:app --reload --host 0.0.0.0 --port 8000
 
 # 2. 用户注册
-curl -X POST "http://localhost:8000/api/v1/user/register" \
+curl -X POST "http://localhost:8089/api/v1/user/register" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "testuser",
@@ -202,7 +202,7 @@ curl -X POST "http://localhost:8000/api/v1/user/register" \
   }'
 
 # 3. 用户登录
-curl -X POST "http://localhost:8000/api/v1/user/login" \
+curl -X POST "http://localhost:8089/api/v1/user/login" \
   -H "Content-Type: application/json" \
   -d '{
     "login_identifier": "testuser",
@@ -210,11 +210,11 @@ curl -X POST "http://localhost:8000/api/v1/user/login" \
   }'
 
 # 4. 获取用户信息
-curl -X GET "http://localhost:8000/api/v1/user/me" \
+curl -X GET "http://localhost:8089/api/v1/user/me" \
   -H "Authorization: Bearer your_token_here"
 
 # 5. 修改用户信息
-curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
+curl -X POST "http://localhost:8089/api/v1/user/update-profile" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
   -d '{
@@ -227,7 +227,7 @@ curl -X POST "http://localhost:8000/api/v1/user/update-profile" \
   }'
 
 # 6. 修改密码
-curl -X POST "http://localhost:8000/api/v1/user/change-password" \
+curl -X POST "http://localhost:8089/api/v1/user/change-password" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your_token_here" \
   -d '{
@@ -237,7 +237,7 @@ curl -X POST "http://localhost:8000/api/v1/user/change-password" \
   }'
 
 # 7. 用户登出
-curl -X POST "http://localhost:8000/api/v1/user/logout" \
+curl -X POST "http://localhost:8089/api/v1/user/logout" \
   -H "Authorization: Bearer your_token_here"
 ```
 
@@ -246,6 +246,6 @@ curl -X POST "http://localhost:8000/api/v1/user/logout" \
 ## 🔗 相关文档
 
 - [详细API文档](./user-auth-api.md)
-- [Swagger UI](http://localhost:8000/docs)
-- [ReDoc](http://localhost:8000/redoc)
+- [Swagger UI](http://localhost:8089/docs)
+- [ReDoc](http://localhost:8089/redoc)
 - [项目README](../README.md)

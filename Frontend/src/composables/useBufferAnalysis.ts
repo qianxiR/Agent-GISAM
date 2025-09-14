@@ -13,6 +13,7 @@ import type OlFeature from 'ol/Feature'
 import { ref as vueRef } from 'vue'
 import { uselayermanager } from '@/composables/useLayerManager'
 import { useLayerExport } from '@/composables/useLayerExport'
+import axios from 'axios'
 
 // API配置 - 动态获取以避免缓存问题
 
@@ -198,21 +199,8 @@ export function useBufferAnalysis() {
 
 
     const API_BASE_URL = getAnalysisServiceConfig().baseUrl
-    const response = await fetch(`${API_BASE_URL}/buffer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestData)
-    })
-
-    // 检查HTTP状态码：200时直接返回成功，非200时返回错误
-    if (response.status !== 200) {
-      const errorData = await response.json()
-      throw new Error(errorData.error?.message || `API请求失败: ${response.status} ${response.statusText}`)
-    }
-
-    const apiResponse = await response.json()
+    const response = await axios.post(`${API_BASE_URL}/buffer`, requestData)
+    const apiResponse = response.data
 
     // 规范化：将 geometry.type 为 FeatureCollection 的要素扁平化为标准 Feature（合并父/子属性）
     const flattenedFeatures = (() => {

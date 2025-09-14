@@ -1,8 +1,9 @@
 <template>
+  <!-- 聊天助手主容器 -->
   <div class="chat-assistant">
-    <!-- 顶部头部区域：为按钮预留高度，避免遮挡内容 -->
+    <!-- 顶部头部区域：包含功能按钮，为按钮预留高度，避免遮挡内容 -->
     <div class="chat-header">
-      <!-- 新对话按钮 -->
+      <!-- 新对话按钮：清空当前对话，开始新的对话会话 -->
       <SecondaryButton
         class="new-chat-button"
         variant="secondary"
@@ -14,8 +15,7 @@
         <span class="button-text">新对话</span>
       </SecondaryButton>
       
-
-            <!-- 服务状态按钮 -->
+      <!-- 服务状态按钮：显示Agent服务的运行状态和功能信息 -->
       <SecondaryButton
         class="status-button"
         variant="secondary"
@@ -28,8 +28,7 @@
         <span class="button-text">服务状态</span>
       </SecondaryButton>
 
-      
-      <!-- 历史记录按钮 -->
+      <!-- 历史记录按钮：查看和管理历史对话记录 -->
       <SecondaryButton
         class="history-button"
         variant="secondary"
@@ -41,8 +40,7 @@
         <span class="button-text">历史记录</span>
       </SecondaryButton>
     
-      
-      <!-- 工具记录按钮 -->
+      <!-- 工具记录按钮：查看Agent工具调用的历史记录和状态 -->
       <SecondaryButton
         class="tool-records-button"
         variant="secondary"
@@ -57,7 +55,7 @@
       
     </div>
     
-    <!-- API状态弹窗 -->
+    <!-- API状态弹窗：显示Agent服务的详细状态信息 -->
     <div v-if="showApiStatus" class="api-status-modal-overlay" @click="toggleApiStatus">
       <div class="api-status-modal" @click.stop>
         <div class="modal-header">
@@ -69,10 +67,12 @@
           </button>
         </div>
         <div class="modal-content" v-if="apiStatus">
+          <!-- 服务基本状态 -->
           <div class="status-item">
             <div class="status-label">服务状态</div>
             <div class="status-value">{{ apiStatus.service }}</div>
           </div>
+          <!-- RAG知识库系统状态 -->
           <div class="status-item" v-if="apiStatus.rag_system_status">
             <div class="status-label">RAG系统</div>
             <div class="status-value">
@@ -82,14 +82,17 @@
               </span>
             </div>
           </div>
+          <!-- 可用工具数量 -->
           <div class="status-item" v-if="apiStatus.tools_count">
             <div class="status-label">可用工具</div>
             <div class="status-value">{{ apiStatus.tools_count }}个</div>
           </div>
+          <!-- 服务版本信息 -->
           <div class="status-item" v-if="apiStatus.version">
             <div class="status-label">版本</div>
             <div class="status-value">v{{ apiStatus.version }}</div>
           </div>
+          <!-- 功能特性标签 -->
           <div class="status-item">
             <div class="status-label">功能特性</div>
             <div class="status-features">
@@ -106,7 +109,7 @@
       </div>
     </div>
 
-    <!-- 工具记录弹窗 -->
+    <!-- 工具记录弹窗：显示Agent工具调用的历史记录和状态 -->
     <div v-if="showToolRecords" class="tool-records-modal-overlay" @click="toggleToolRecords">
       <div class="tool-records-modal" @click.stop>
         <div class="modal-header">
@@ -118,40 +121,44 @@
           </button>
         </div>
         <div class="modal-content">
+          <!-- 工具记录头部：显示记录数量和清空按钮 -->
           <div class="tool-records-header">
             <span class="record-count">共 {{ toolRecords.length }} 条记录</span>
             <button class="clear-records-button" @click="clearToolRecords" v-if="toolRecords.length > 0">
               清空记录
             </button>
           </div>
-        <div class="tool-records-info">
-          <div class="records-header">
-            <span class="record-tool-name">工具名称</span>
-            <span class="record-status">状态</span>
-          </div>
-          <div class="records-list">
-            <div v-for="(record, index) in toolRecords" :key="index" class="record-item">
-              <span class="record-tool-name">{{ record.name }}</span>
-              <span class="record-status" :class="getStatusClass(record.resultStr)">
-                {{ getStatusText(record.resultStr) }}
-              </span>
+          <!-- 工具记录表格：显示工具名称和执行状态 -->
+          <div class="tool-records-info">
+            <div class="records-header">
+              <span class="record-tool-name">工具名称</span>
+              <span class="record-status">状态</span>
             </div>
-            <div v-if="toolRecords.length === 0" class="no-records">
-              暂无工具调用记录
+            <div class="records-list">
+              <!-- 工具记录列表：遍历显示每条工具调用记录 -->
+              <div v-for="(record, index) in toolRecords" :key="index" class="record-item">
+                <span class="record-tool-name">{{ record.name }}</span>
+                <span class="record-status" :class="getStatusClass(record.resultStr)">
+                  {{ getStatusText(record.resultStr) }}
+                </span>
+              </div>
+              <!-- 空状态提示 -->
+              <div v-if="toolRecords.length === 0" class="no-records">
+                暂无工具调用记录
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
     </div>
 
-    <!-- 聊天历史弹窗 -->
+    <!-- 聊天历史弹窗：管理历史对话记录 -->
     <ChatHistory
       :visible="showChatHistory"
       @close="showChatHistory = false"
     />
 
-    <!-- 工具调用提示区域（当AI调用了工具时显示） -->
+    <!-- 工具调用提示区域：当AI调用了工具时显示工具调用信息（当前已禁用显示） -->
     <div v-if="toolCallInfo" class="tool-call-banner">
       <div class="tool-call-left">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -166,7 +173,7 @@
       <div class="tool-result" v-if="toolCallInfo.resultStr">结果：{{ toolCallInfo.resultStr }}</div>
     </div>
 
-    <!-- 聊天记录显示区域 -->
+    <!-- 聊天记录显示区域：显示用户和AI的对话消息 -->
     <ChatMessagesPanel
       ref="messagesPanelRef"
       :messages="messages"
@@ -174,7 +181,7 @@
       :scroll-threshold="100"
     />
     
-    <!-- 输入区域 -->
+    <!-- 输入区域：用户输入消息的界面 -->
     <LLMInputWindow
       v-model="newMessage"
       placeholder="请输入您的需求..."
@@ -188,60 +195,89 @@
 </template>//
 
 <script setup lang="ts">
+// Vue 3 Composition API 相关导入
 import { ref, watch, onMounted, nextTick, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+
+// 状态管理相关导入
 import { useThemeStore } from '@/stores/themeStore';
 import { useModeStateStore } from '@/stores/modeStateStore';
 import { useMonitoringDataStore } from '@/stores/monitoringDataStore';
+
+// 组件导入
 import LLMInputWindow from '@/components/Agent/LLMInputWindow.vue';
 import ChatMessagesPanel from '@/components/Agent/ChatMessagesPanel.vue';
 import SecondaryButton from '@/components/UI/SecondaryButton.vue';
 import ChatHistory from './ChatHistory.vue';
+
+// 工具函数导入
 import { getAgentApiBaseUrl, getLLMApiConfig } from '@/utils/config'
 import { getEnvironmentalBackground, getUseCases } from '@/utils/domainBackground'
 
+// 空间分析功能组合式函数导入
+import { useBufferAnalysis } from '@/composables/useBufferAnalysis'
+import { useIntersectionAnalysis } from '@/composables/useIntersectionAnalysis'
+import { useEraseAnalysis } from '@/composables/useEraseAnalysis'
+import { useShortestPathAnalysis } from '@/composables/useShortestPathAnalysis'
+
+// HTTP 请求库
+import axios from 'axios'
+
+// 消息接口定义
 interface Message {
   id: number;
   text: string;
   sender: 'user' | 'system';
 }
 
+// 初始化状态管理
 useThemeStore();
 const modeStateStore = useModeStateStore();
 const monitoringDataStore = useMonitoringDataStore();
 const router = useRouter();
 
+// 初始化空间分析功能组合式函数
+const { saveBufferResultsAsLayer, exportBufferResultsAsJSON } = useBufferAnalysis();
+const { saveIntersectionResultsAsLayer, exportIntersectionResultsAsJSON } = useIntersectionAnalysis();
+const { saveEraseResultsAsLayer, exportEraseResultsAsJSON } = useEraseAnalysis();
+const { savePathResultsAsLayer, exportPathResultsAsJSON } = useShortestPathAnalysis();
+
+// 组件属性定义
 const props = defineProps<{
   mapReady: boolean;
 }>();
-const messages = ref<Message[]>([]);
-const newMessage = ref('');
-const hasAnnounced = ref(false);
-const messagesPanelRef = ref<InstanceType<typeof ChatMessagesPanel> | null>(null);
-const toolCallInfo = ref<{ name: string; argsStr: string; resultStr: string } | null>(null);
-const nextAssistantOverride = ref<string | null>(null);
-const currentTaskId = ref<string | null>(null);
-const isLLMResponding = ref<boolean>(false);
-const apiStatus = ref<any>(null);
-const showApiStatus = ref<boolean>(false);
-const showToolRecords = ref<boolean>(false);
-const showChatHistory = ref<boolean>(false);
-const toolRecords = ref<Array<{name: string, argsStr: string, resultStr: string, timestamp: number}>>([]);
-let statusInterval: number | null = null;
+
+// 响应式状态定义
+const messages = ref<Message[]>([]); // 聊天消息列表
+const newMessage = ref(''); // 当前输入的消息
+const hasAnnounced = ref(false); // 是否已显示欢迎消息
+const messagesPanelRef = ref<InstanceType<typeof ChatMessagesPanel> | null>(null); // 消息面板引用
+const toolCallInfo = ref<{ name: string; argsStr: string; resultStr: string } | null>(null); // 工具调用信息
+const nextAssistantOverride = ref<string | null>(null); // 下一个助手回复覆盖
+const currentTaskId = ref<string | null>(null); // 当前任务ID
+const isLLMResponding = ref<boolean>(false); // LLM是否正在响应
+const apiStatus = ref<any>(null); // API状态信息
+const showApiStatus = ref<boolean>(false); // 是否显示API状态弹窗
+const showToolRecords = ref<boolean>(false); // 是否显示工具记录弹窗
+const showChatHistory = ref<boolean>(false); // 是否显示聊天历史弹窗
+const toolRecords = ref<Array<{name: string, argsStr: string, resultStr: string, timestamp: number}>>([]); // 工具调用记录
+let statusInterval: number | null = null; // 状态更新定时器
 
 
 // 智能滚动相关状态现在由ChatMessagesPanel组件内部处理
 
-// API状态管理函数
+// ==================== API状态管理函数 ====================
+
+/**
+ * 获取Agent服务的健康状态信息
+ * 包括服务状态、RAG系统状态、工具数量等
+ */
 const fetchApiStatus = async () => {
   try {
     const apiBase = getAgentApiBaseUrl()
-    const resp = await fetch(`${apiBase}/health`)
-    if (resp.ok) {
-      const status = await resp.json()
-      apiStatus.value = status
-      console.log('[ChatAssistant] API状态更新:', status)
-    }
+    const resp = await axios.get(`${apiBase}/health`)
+    apiStatus.value = resp.data
+    console.log('[ChatAssistant] API状态更新:', resp.data)
   } catch (error) {
     console.error('获取API状态失败:', error)
     apiStatus.value = {
@@ -252,7 +288,10 @@ const fetchApiStatus = async () => {
   }
 }
 
-// RAG状态文本转换
+/**
+ * RAG状态文本转换函数
+ * 将英文状态转换为中文显示
+ */
 const getRAGStatusText = (status: string) => {
   const statusMap: Record<string, string> = {
     'ready': '就绪',
@@ -263,7 +302,10 @@ const getRAGStatusText = (status: string) => {
   return statusMap[status] || status
 }
 
-// 切换API状态显示
+/**
+ * 切换API状态弹窗显示
+ * 显示时自动获取最新状态信息
+ */
 const toggleApiStatus = () => {
   showApiStatus.value = !showApiStatus.value
   // 如果显示状态，立即获取最新状态
@@ -272,7 +314,10 @@ const toggleApiStatus = () => {
   }
 }
 
-// 切换工具记录显示
+/**
+ * 切换工具记录弹窗显示
+ * 显示时自动从localStorage加载记录
+ */
 const toggleToolRecords = () => {
   showToolRecords.value = !showToolRecords.value
   // 如果显示记录，从localStorage加载
@@ -281,12 +326,18 @@ const toggleToolRecords = () => {
   }
 }
 
-// 切换聊天历史显示
+/**
+ * 切换聊天历史弹窗显示
+ */
 const toggleChatHistory = () => {
   showChatHistory.value = !showChatHistory.value
 }
 
-// 加载工具记录
+// ==================== 工具记录管理函数 ====================
+
+/**
+ * 从localStorage加载工具调用记录
+ */
 const loadToolRecords = () => {
   try {
     const saved = localStorage.getItem('toolRecords')
@@ -299,7 +350,12 @@ const loadToolRecords = () => {
   }
 }
 
-// 保存工具记录
+/**
+ * 保存工具调用记录到localStorage
+ * @param name 工具名称
+ * @param argsStr 工具参数
+ * @param resultStr 工具执行结果
+ */
 const saveToolRecord = (name: string, argsStr: string, resultStr: string) => {
   const record = {
     name,
@@ -323,13 +379,21 @@ const saveToolRecord = (name: string, argsStr: string, resultStr: string) => {
   }
 }
 
-// 清空工具记录
+/**
+ * 清空所有工具调用记录
+ */
 const clearToolRecords = () => {
   toolRecords.value = []
   localStorage.removeItem('toolRecords')
 }
 
-// 格式化时间
+// ==================== 工具函数 ====================
+
+/**
+ * 格式化时间戳为中文格式
+ * @param timestamp 时间戳
+ * @returns 格式化的时间字符串
+ */
 const formatTime = (timestamp: number) => {
   const date = new Date(timestamp)
   return date.toLocaleString('zh-CN', {
@@ -341,7 +405,11 @@ const formatTime = (timestamp: number) => {
   })
 }
 
-// 获取状态文本
+/**
+ * 根据工具执行结果获取状态文本
+ * @param resultStr 工具执行结果字符串
+ * @returns 状态文本
+ */
 const getStatusText = (resultStr: string) => {
   if (!resultStr || resultStr.trim() === '') {
     return '执行中'
@@ -360,7 +428,11 @@ const getStatusText = (resultStr: string) => {
   return '已完成'
 }
 
-// 获取状态样式类
+/**
+ * 根据工具执行结果获取状态样式类
+ * @param resultStr 工具执行结果字符串
+ * @returns 状态样式类对象
+ */
 const getStatusClass = (resultStr: string) => {
   const status = getStatusText(resultStr)
   return {
@@ -369,7 +441,12 @@ const getStatusClass = (resultStr: string) => {
   }
 }
 
-// 键盘事件处理
+// ==================== 事件处理函数 ====================
+
+/**
+ * 键盘事件处理函数
+ * ESC键关闭所有弹窗
+ */
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     if (showApiStatus.value) {
@@ -384,15 +461,18 @@ const handleKeydown = (event: KeyboardEvent) => {
   }
 }
 
-// 任务管理相关函数
+// ==================== 任务管理函数 ====================
+
+/**
+ * 检查任务状态
+ * @param taskId 任务ID
+ * @returns 任务状态信息
+ */
 const checkTaskStatus = async (taskId: string) => {
   try {
     const apiBase = getAgentApiBaseUrl()
-    const resp = await fetch(`${apiBase}/agent/task/${taskId}/status`)
-    if (resp.ok) {
-      const taskStatus = await resp.json()
-      return taskStatus
-    }
+    const resp = await axios.get(`${apiBase}/agent/task/${taskId}/status`)
+    return resp.data
   } catch (error) {
     console.error('检查任务状态失败:', error)
   }
@@ -402,6 +482,12 @@ const checkTaskStatus = async (taskId: string) => {
 
 
 
+// ==================== 初始化函数 ====================
+
+/**
+ * 显示初始欢迎消息
+ * 只在首次加载时显示，避免重复显示
+ */
 const maybeAnnounceInitiallayers = () => {
   // 显示初始欢迎语
   if (!hasAnnounced.value) {
@@ -435,7 +521,10 @@ const maybeAnnounceInitiallayers = () => {
   }
 }
 
-// 恢复历史对话的方法
+/**
+ * 恢复历史对话消息
+ * @param historyMessages 历史消息数组
+ */
 const restoreHistoryMessages = (historyMessages: any[]) => {
   if (historyMessages && historyMessages.length > 0) {
     messages.value = [...historyMessages]
@@ -455,13 +544,21 @@ const restoreHistoryMessages = (historyMessages: any[]) => {
   }
 }
 
-// 监听历史记录恢复事件
+/**
+ * 监听历史记录恢复事件
+ * 从ChatHistory组件接收历史消息并恢复
+ */
 const handleChatHistoryRestored = (event: CustomEvent) => {
   const { messages: historyMessages } = event.detail
   restoreHistoryMessages(historyMessages)
 }
 
-// 监听查询结果事件
+// ==================== 事件监听器函数 ====================
+
+/**
+ * 监听属性查询结果事件
+ * 处理属性查询完成后的结果反馈和上下文记忆
+ */
 const handleQueryResult = (event: CustomEvent) => {
   const { success, message, layerName, field, operator, value, count, error } = event.detail
   
@@ -503,106 +600,284 @@ const handleQueryResult = (event: CustomEvent) => {
 }
 
 // 监听保存结果事件
-const handleSaveResult = (event: CustomEvent) => {
+const handleSaveResult = async (event: CustomEvent) => {
   const { success, message, layerName, count, error } = event.detail
   
-  // 构造保存结果消息
-  let resultMessage = ''
-  if (success) {
-    resultMessage = `保存完成：${message}`
-    
-    // 将结果添加到聊天记录中
-    messages.value.push({ 
-      id: Date.now(), 
-      text: resultMessage, 
-      sender: 'system' 
-    })
-    
-    // 滚动到底部显示新消息
-    nextTick(() => {
-      messagesPanelRef.value?.scrollToBottom()
-    })
-  }
-  // 移除失败情况的处理，不再显示"保存失败：未知错误"
+  console.log('[ChatAssistant] 收到保存结果事件:', { success, message, layerName, count, error })
+  
+  // 移除回调消息显示逻辑，不再显示保存完成消息
 }
 
 // 监听导出结果事件
-const handleExportResult = (event: CustomEvent) => {
+const handleExportResult = async (event: CustomEvent) => {
   const { success, message, fileName, count, error } = event.detail
   
-  // 构造导出结果消息
-  let resultMessage = ''
-  if (success) {
-    resultMessage = `导出完成：${message}`
+  console.log('[ChatAssistant] 收到导出结果事件:', { success, message, fileName, count, error })
+  
+  // 移除回调消息显示逻辑，不再显示导出完成消息
+}
+
+// 具体的事件处理器函数
+const handleSaveBufferResultsAsLayer = async (event: CustomEvent) => {
+  const { layerName } = event.detail
+  console.log('[ChatAssistant] 处理保存缓冲区分析结果事件:', { layerName })
+  
+  try {
+    const result = await saveBufferResultsAsLayer(layerName)
+    console.log('[ChatAssistant] 缓冲区分析结果保存完成:', result)
     
-    // 将结果添加到聊天记录中
-    messages.value.push({ 
-      id: Date.now(), 
-      text: resultMessage, 
-      sender: 'system' 
+    // 发送保存结果事件
+    const saveEvent = new CustomEvent('agent:saveResult', {
+      detail: { 
+        success: result, 
+        message: result ? '缓冲区分析结果保存成功' : '缓冲区分析结果保存失败',
+        layerName,
+        count: 0
+      }
     })
-    
-    // 滚动到底部显示新消息
-    nextTick(() => {
-      messagesPanelRef.value?.scrollToBottom()
+    window.dispatchEvent(saveEvent)
+  } catch (error) {
+    console.error('[ChatAssistant] 保存缓冲区分析结果失败:', error)
+    const saveEvent = new CustomEvent('agent:saveResult', {
+      detail: { 
+        success: false, 
+        message: '缓冲区分析结果保存失败',
+        layerName,
+        error: error instanceof Error ? error.message : '未知错误'
+      }
     })
+    window.dispatchEvent(saveEvent)
   }
-  // 移除失败情况的处理，不再显示"导出失败：未知错误"
+}
+
+const handleExportBufferResultsAsJson = async (event: CustomEvent) => {
+  const { fileName } = event.detail
+  console.log('[ChatAssistant] 处理导出缓冲区分析结果事件:', { fileName })
+  
+  try {
+    const result = await exportBufferResultsAsJSON(fileName)
+    console.log('[ChatAssistant] 缓冲区分析结果导出完成:', result)
+    
+    // 发送导出结果事件
+    const exportEvent = new CustomEvent('agent:exportResult', {
+      detail: { 
+        success: !!result, 
+        message: result ? '缓冲区分析结果导出成功' : '缓冲区分析结果导出失败',
+        fileName,
+        count: 0
+      }
+    })
+    window.dispatchEvent(exportEvent)
+  } catch (error) {
+    console.error('[ChatAssistant] 导出缓冲区分析结果失败:', error)
+    const exportEvent = new CustomEvent('agent:exportResult', {
+      detail: { 
+        success: false, 
+        message: '缓冲区分析结果导出失败',
+        fileName,
+        error: error instanceof Error ? error.message : '未知错误'
+      }
+    })
+    window.dispatchEvent(exportEvent)
+  }
+}
+
+const handleSaveIntersectionResultsAsLayer = async (event: CustomEvent) => {
+  const { layerName } = event.detail
+  console.log('[ChatAssistant] 处理保存相交分析结果事件:', { layerName })
+  
+  try {
+    const result = await saveIntersectionResultsAsLayer(layerName)
+    console.log('[ChatAssistant] 相交分析结果保存完成:', result)
+    
+    const saveEvent = new CustomEvent('agent:saveResult', {
+      detail: { 
+        success: result, 
+        message: result ? '相交分析结果保存成功' : '相交分析结果保存失败',
+        layerName,
+        count: 0
+      }
+    })
+    window.dispatchEvent(saveEvent)
+  } catch (error) {
+    console.error('[ChatAssistant] 保存相交分析结果失败:', error)
+    const saveEvent = new CustomEvent('agent:saveResult', {
+      detail: { 
+        success: false, 
+        message: '相交分析结果保存失败',
+        layerName,
+        error: error instanceof Error ? error.message : '未知错误'
+      }
+    })
+    window.dispatchEvent(saveEvent)
+  }
+}
+
+const handleExportIntersectionResultsAsJson = async (event: CustomEvent) => {
+  const { fileName } = event.detail
+  console.log('[ChatAssistant] 处理导出相交分析结果事件:', { fileName })
+  
+  try {
+    const result = await exportIntersectionResultsAsJSON(fileName)
+    console.log('[ChatAssistant] 相交分析结果导出完成:', result)
+    
+    const exportEvent = new CustomEvent('agent:exportResult', {
+      detail: { 
+        success: !!result, 
+        message: result ? '相交分析结果导出成功' : '相交分析结果导出失败',
+        fileName,
+        count: 0
+      }
+    })
+    window.dispatchEvent(exportEvent)
+  } catch (error) {
+    console.error('[ChatAssistant] 导出相交分析结果失败:', error)
+    const exportEvent = new CustomEvent('agent:exportResult', {
+      detail: { 
+        success: false, 
+        message: '相交分析结果导出失败',
+        fileName,
+        error: error instanceof Error ? error.message : '未知错误'
+      }
+    })
+    window.dispatchEvent(exportEvent)
+  }
+}
+
+const handleSaveEraseResultsAsLayer = async (event: CustomEvent) => {
+  const { layerName } = event.detail
+  console.log('[ChatAssistant] 处理保存擦除分析结果事件:', { layerName })
+  
+  try {
+    const result = await saveEraseResultsAsLayer(layerName)
+    console.log('[ChatAssistant] 擦除分析结果保存完成:', result)
+    
+    const saveEvent = new CustomEvent('agent:saveResult', {
+      detail: { 
+        success: result, 
+        message: result ? '擦除分析结果保存成功' : '擦除分析结果保存失败',
+        layerName,
+        count: 0
+      }
+    })
+    window.dispatchEvent(saveEvent)
+  } catch (error) {
+    console.error('[ChatAssistant] 保存擦除分析结果失败:', error)
+    const saveEvent = new CustomEvent('agent:saveResult', {
+      detail: { 
+        success: false, 
+        message: '擦除分析结果保存失败',
+        layerName,
+        error: error instanceof Error ? error.message : '未知错误'
+      }
+    })
+    window.dispatchEvent(saveEvent)
+  }
+}
+
+const handleExportEraseResultsAsJson = async (event: CustomEvent) => {
+  const { fileName } = event.detail
+  console.log('[ChatAssistant] 处理导出擦除分析结果事件:', { fileName })
+  
+  try {
+    const result = await exportEraseResultsAsJSON(fileName)
+    console.log('[ChatAssistant] 擦除分析结果导出完成:', result)
+    
+    const exportEvent = new CustomEvent('agent:exportResult', {
+      detail: { 
+        success: !!result, 
+        message: result ? '擦除分析结果导出成功' : '擦除分析结果导出失败',
+        fileName,
+        count: 0
+      }
+    })
+    window.dispatchEvent(exportEvent)
+  } catch (error) {
+    console.error('[ChatAssistant] 导出擦除分析结果失败:', error)
+    const exportEvent = new CustomEvent('agent:exportResult', {
+      detail: { 
+        success: false, 
+        message: '擦除分析结果导出失败',
+        fileName,
+        error: error instanceof Error ? error.message : '未知错误'
+      }
+    })
+    window.dispatchEvent(exportEvent)
+  }
+}
+
+const handleSavePathResultsAsLayer = async (event: CustomEvent) => {
+  const { layerName } = event.detail
+  console.log('[ChatAssistant] 处理保存最短路径分析结果事件:', { layerName })
+  
+  try {
+    const result = await savePathResultsAsLayer(layerName)
+    console.log('[ChatAssistant] 最短路径分析结果保存完成:', result)
+    
+    const saveEvent = new CustomEvent('agent:saveResult', {
+      detail: { 
+        success: result, 
+        message: result ? '最短路径分析结果保存成功' : '最短路径分析结果保存失败',
+        layerName,
+        count: 0
+      }
+    })
+    window.dispatchEvent(saveEvent)
+  } catch (error) {
+    console.error('[ChatAssistant] 保存最短路径分析结果失败:', error)
+    const saveEvent = new CustomEvent('agent:saveResult', {
+      detail: { 
+        success: false, 
+        message: '最短路径分析结果保存失败',
+        layerName,
+        error: error instanceof Error ? error.message : '未知错误'
+      }
+    })
+    window.dispatchEvent(saveEvent)
+  }
+}
+
+const handleExportPathResultsAsJson = async (event: CustomEvent) => {
+  const { fileName } = event.detail
+  console.log('[ChatAssistant] 处理导出最短路径分析结果事件:', { fileName })
+  
+  try {
+    const result = await exportPathResultsAsJSON(fileName)
+    console.log('[ChatAssistant] 最短路径分析结果导出完成:', result)
+    
+    const exportEvent = new CustomEvent('agent:exportResult', {
+      detail: { 
+        success: !!result, 
+        message: result ? '最短路径分析结果导出成功' : '最短路径分析结果导出失败',
+        fileName,
+        count: 0
+      }
+    })
+    window.dispatchEvent(exportEvent)
+  } catch (error) {
+    console.error('[ChatAssistant] 导出最短路径分析结果失败:', error)
+    const exportEvent = new CustomEvent('agent:exportResult', {
+      detail: { 
+        success: false, 
+        message: '最短路径分析结果导出失败',
+        fileName,
+        error: error instanceof Error ? error.message : '未知错误'
+      }
+    })
+    window.dispatchEvent(exportEvent)
+  }
 }
 
 // 监听缓冲区分析结果事件
 const handleBufferAnalysisResult = (event: CustomEvent) => {
   const { success, message, layerName, radius, unit, error } = event.detail
   
-  // 构造缓冲区分析结果消息
-  let resultMessage = ''
-  if (success) {
-    resultMessage = `[缓冲区分析] 缓冲区分析完成：${message}
-
-🌊 长江水域监测分析概况：
-当前缓冲区分析已成功完成，为武汉市长江段水资源监测提供了重要的空间影响范围评估。该分析结果可用于污染扩散评估、生态保护范围划定、取水口安全距离分析等水资源管理决策。
-
-💡 后续操作建议：
-您可以选择以下操作来进一步处理分析结果：
-- 导出为图层：保存分析结果为新的地图图层，便于后续叠加分析
-- 导出为JSON：将分析结果导出为GeoJSON格式，用于数据共享和进一步处理
-
-请告诉我您希望进行哪种操作？`
-    
-    // 添加工具调用信息到消息中
-    const toolInfoMessage = `工具调用：execute_buffer_analysis，参数：图层"${layerName}"，半径${radius}${unit}`
-    messages.value.push({ 
-      id: Date.now(), 
-      text: toolInfoMessage, 
-      sender: 'system' 
-    })
-  } else {
-    resultMessage = `[缓冲区分析] 缓冲区分析失败：${error || '未知错误'}`
-  }
-  
-  // 将结果添加到聊天记录中
-  messages.value.push({ 
-    id: Date.now(), 
-    text: resultMessage, 
-    sender: 'system' 
-  })
-  
-  // 滚动到底部显示新消息
-  nextTick(() => {
-    messagesPanelRef.value?.scrollToBottom()
-  })
+  // 移除回调消息显示逻辑，不再显示详细的分析完成消息
   
   // 任务完成，重置状态
   currentTaskId.value = null
   isLLMResponding.value = false
   console.log('缓冲区分析完成，任务状态已重置')
-  
-  // 更新系统消息状态到Pinia（分析结果作为系统消息）
-  const analysisResultMessage = { 
-    id: Date.now(), 
-    text: resultMessage, 
-    sender: 'system' as const 
-  }
   
   // 发送分析结果上下文给AI，让AI记住刚才的分析类型
   if (success) {
@@ -615,55 +890,12 @@ const handleBufferAnalysisResult = (event: CustomEvent) => {
 const handleIntersectionAnalysisResult = (event: CustomEvent) => {
   const { success, message, targetLayerName, maskLayerName, error } = event.detail
   
-  // 构造相交分析结果消息
-  let resultMessage = ''
-  if (success) {
-    resultMessage = `[相交分析] 相交分析完成：${message}
-
-🌊 长江水域监测分析概况：
-当前相交分析已成功完成，为武汉市长江段水资源监测提供了重要的空间叠加分析结果。该分析结果可用于识别受影响的关键设施、评估污染影响范围、确定应急响应区域等水资源管理决策。
-
-💡 后续操作建议：
-您可以选择以下操作来进一步处理分析结果：
-- 导出为图层：保存分析结果为新的地图图层，便于后续叠加分析
-- 导出为JSON：将分析结果导出为GeoJSON格式，用于数据共享和进一步处理
-
-请告诉我您希望进行哪种操作？`
-    
-    // 添加工具调用信息到消息中
-    const toolInfoMessage = `工具调用：execute_intersection_analysis，参数：目标图层"${targetLayerName}"，掩膜图层"${maskLayerName}"`
-    messages.value.push({ 
-      id: Date.now(), 
-      text: toolInfoMessage, 
-      sender: 'system' 
-    })
-  } else {
-    resultMessage = `[相交分析] 相交分析失败：${error || '未知错误'}`
-  }
-  
-  // 将结果添加到聊天记录中
-  messages.value.push({ 
-    id: Date.now(), 
-    text: resultMessage, 
-    sender: 'system' 
-  })
-  
-  // 滚动到底部显示新消息
-  nextTick(() => {
-    messagesPanelRef.value?.scrollToBottom()
-  })
+  // 移除回调消息显示逻辑，不再显示详细的分析完成消息
   
   // 任务完成，重置状态
   currentTaskId.value = null
   isLLMResponding.value = false
   console.log('相交分析完成，任务状态已重置')
-  
-  // 更新系统消息状态到Pinia（分析结果作为系统消息）
-  const analysisResultMessage = { 
-    id: Date.now(), 
-    text: resultMessage, 
-    sender: 'system' as const 
-  }
   
   // 发送分析结果上下文给AI，让AI记住刚才的分析类型
   if (success) {
@@ -676,55 +908,12 @@ const handleIntersectionAnalysisResult = (event: CustomEvent) => {
 const handleEraseAnalysisResult = (event: CustomEvent) => {
   const { success, message, targetLayerName, eraseLayerName, error } = event.detail
   
-  // 构造擦除分析结果消息
-  let resultMessage = ''
-  if (success) {
-    resultMessage = `[擦除分析] 擦除分析完成：${message}
-
-🌊 长江水域监测分析概况：
-当前擦除分析已成功完成，为武汉市长江段水资源监测提供了重要的空间排除分析结果。该分析结果可用于确定实际可治理区域、排除生态保护红线、识别可用取水范围等水资源管理决策。
-
-💡 后续操作建议：
-您可以选择以下操作来进一步处理分析结果：
-- 导出为图层：保存分析结果为新的地图图层，便于后续叠加分析
-- 导出为JSON：将分析结果导出为GeoJSON格式，用于数据共享和进一步处理
-
-请告诉我您希望进行哪种操作？`
-    
-    // 添加工具调用信息到消息中
-    const toolInfoMessage = `工具调用：execute_erase_analysis，参数：目标图层"${targetLayerName}"，擦除图层"${eraseLayerName}"`
-    messages.value.push({ 
-      id: Date.now(), 
-      text: toolInfoMessage, 
-      sender: 'system' 
-    })
-  } else {
-    resultMessage = `[擦除分析] 擦除分析失败：${error || '未知错误'}`
-  }
-  
-  // 将结果添加到聊天记录中
-  messages.value.push({ 
-    id: Date.now(), 
-    text: resultMessage, 
-    sender: 'system' 
-  })
-  
-  // 滚动到底部显示新消息
-  nextTick(() => {
-    messagesPanelRef.value?.scrollToBottom()
-  })
+  // 移除回调消息显示逻辑，不再显示详细的分析完成消息
   
   // 任务完成，重置状态
   currentTaskId.value = null
   isLLMResponding.value = false
   console.log('擦除分析完成，任务状态已重置')
-  
-  // 更新系统消息状态到Pinia（分析结果作为系统消息）
-  const analysisResultMessage = { 
-    id: Date.now(), 
-    text: resultMessage, 
-    sender: 'system' as const 
-  }
   
   // 发送分析结果上下文给AI，让AI记住刚才的分析类型
   if (success) {
@@ -737,55 +926,12 @@ const handleEraseAnalysisResult = (event: CustomEvent) => {
 const handlePathAnalysisResult = (event: CustomEvent) => {
   const { success, message, startLayerName, endLayerName, error } = event.detail
   
-  // 构造最短路径分析结果消息
-  let resultMessage = ''
-  if (success) {
-    resultMessage = `[最短路径分析] 最短路径分析完成：${message}
-
-🌊 长江水域监测分析概况：
-当前最短路径分析已成功完成，为武汉市长江段水资源监测提供了重要的路径规划结果。该分析结果可用于应急送水路线规划、无人机航测路径优化、物资运输路线选择等水资源管理决策。
-
-💡 后续操作建议：
-您可以选择以下操作来进一步处理分析结果：
-- 导出为图层：保存分析结果为新的地图图层，便于后续叠加分析
-- 导出为JSON：将分析结果导出为GeoJSON格式，用于数据共享和进一步处理
-
-请告诉我您希望进行哪种操作？`
-    
-    // 添加工具调用信息到消息中
-    const toolInfoMessage = `工具调用：execute_shortest_path_analysis，参数：起点图层"${startLayerName}"，终点图层"${endLayerName}"`
-    messages.value.push({ 
-      id: Date.now(), 
-      text: toolInfoMessage, 
-      sender: 'system' 
-    })
-  } else {
-    resultMessage = `[最短路径分析] 最短路径分析失败：${error || '未知错误'}`
-  }
-  
-  // 将结果添加到聊天记录中
-  messages.value.push({ 
-    id: Date.now(), 
-    text: resultMessage, 
-    sender: 'system' 
-  })
-  
-  // 滚动到底部显示新消息
-  nextTick(() => {
-    messagesPanelRef.value?.scrollToBottom()
-  })
+  // 移除回调消息显示逻辑，不再显示详细的分析完成消息
   
   // 任务完成，重置状态
   currentTaskId.value = null
   isLLMResponding.value = false
   console.log('最短路径分析完成，任务状态已重置')
-  
-  // 更新系统消息状态到Pinia（分析结果作为系统消息）
-  const analysisResultMessage = { 
-    id: Date.now(), 
-    text: resultMessage, 
-    sender: 'system' as const 
-  }
   
   // 发送分析结果上下文给AI，让AI记住刚才的分析类型
   if (success) {
@@ -798,25 +944,7 @@ const handlePathAnalysisResult = (event: CustomEvent) => {
 const handleGetOpenLayersResult = (event: CustomEvent) => {
   const { success, message, layerCount, layers, layerNames, error } = event.detail
   
-  // 构造图层查询结果消息
-  let resultMessage = ''
-  if (success) {
-    resultMessage = `图层查询完成：${message}`
-  } else {
-    resultMessage = `图层查询失败：${error || '未知错误'}`
-  }
-  
-  // 将结果添加到聊天记录中
-  messages.value.push({ 
-    id: Date.now(), 
-    text: resultMessage, 
-    sender: 'system' 
-  })
-  
-  // 滚动到底部显示新消息
-  nextTick(() => {
-    messagesPanelRef.value?.scrollToBottom()
-  })
+  // 移除回调消息显示逻辑，不再显示图层查询完成消息
   
   // 任务完成，重置状态
   currentTaskId.value = null
@@ -1043,8 +1171,8 @@ onMounted(() => {
   if (!(window as any).__queryResultListenerRegistered) {
     (window as any).__queryResultListenerRegistered = true
     window.addEventListener('agent:queryResult', handleQueryResult as EventListener)
-    window.addEventListener('agent:saveResult', handleSaveResult as EventListener)
-    window.addEventListener('agent:exportResult', handleExportResult as EventListener)
+    window.addEventListener('agent:saveResult', handleSaveResult as unknown as EventListener)
+    window.addEventListener('agent:exportResult', handleExportResult as unknown as EventListener)
     window.addEventListener('agent:bufferAnalysisResult', handleBufferAnalysisResult as EventListener)
     window.addEventListener('agent:intersectionAnalysisResult', handleIntersectionAnalysisResult as EventListener)
     window.addEventListener('llm:analysisResultReceived', handleLLMAnalysisResultReceived as EventListener)
@@ -1053,14 +1181,14 @@ onMounted(() => {
     window.addEventListener('agent:pathAnalysisResult', handlePathAnalysisResult as EventListener)
     window.addEventListener('agent:getOpenLayersResult', handleGetOpenLayersResult as EventListener)
     // 监听保存和导出结果事件
-    window.addEventListener('agent:saveBufferResultsAsLayer', handleSaveResult as EventListener)
-    window.addEventListener('agent:exportBufferResultsAsJson', handleExportResult as EventListener)
-    window.addEventListener('agent:saveIntersectionResultsAsLayer', handleSaveResult as EventListener)
-    window.addEventListener('agent:exportIntersectionResultsAsJson', handleExportResult as EventListener)
-    window.addEventListener('agent:saveEraseResultsAsLayer', handleSaveResult as EventListener)
-    window.addEventListener('agent:exportEraseResultsAsJson', handleExportResult as EventListener)
-    window.addEventListener('agent:savePathResultsAsLayer', handleSaveResult as EventListener)
-    window.addEventListener('agent:exportPathResultsAsJson', handleExportResult as EventListener)
+    window.addEventListener('agent:saveBufferResultsAsLayer', handleSaveBufferResultsAsLayer as unknown as EventListener)
+    window.addEventListener('agent:exportBufferResultsAsJson', handleExportBufferResultsAsJson as unknown as EventListener)
+    window.addEventListener('agent:saveIntersectionResultsAsLayer', handleSaveIntersectionResultsAsLayer as unknown as EventListener)
+    window.addEventListener('agent:exportIntersectionResultsAsJson', handleExportIntersectionResultsAsJson as unknown as EventListener)
+    window.addEventListener('agent:saveEraseResultsAsLayer', handleSaveEraseResultsAsLayer as unknown as EventListener)
+    window.addEventListener('agent:exportEraseResultsAsJson', handleExportEraseResultsAsJson as unknown as EventListener)
+    window.addEventListener('agent:savePathResultsAsLayer', handleSavePathResultsAsLayer as unknown as EventListener)
+    window.addEventListener('agent:exportPathResultsAsJson', handleExportPathResultsAsJson as unknown as EventListener)
     // 监听图层可见性变化事件，显示消息但不发送给AI
     window.addEventListener('agent:layerVisibilityChanged', ((e: any) => {
       const { layerName, visible } = e.detail || {}
@@ -1109,22 +1237,22 @@ onUnmounted(() => {
   
   if ((window as any).__queryResultListenerRegistered) {
     window.removeEventListener('agent:queryResult', handleQueryResult as EventListener)
-    window.removeEventListener('agent:saveResult', handleSaveResult as EventListener)
-    window.removeEventListener('agent:exportResult', handleExportResult as EventListener)
+    window.removeEventListener('agent:saveResult', handleSaveResult as unknown as EventListener)
+    window.removeEventListener('agent:exportResult', handleExportResult as unknown as EventListener)
     window.removeEventListener('agent:bufferAnalysisResult', handleBufferAnalysisResult as EventListener)
     window.removeEventListener('agent:intersectionAnalysisResult', handleIntersectionAnalysisResult as EventListener)
     window.removeEventListener('agent:eraseAnalysisResult', handleEraseAnalysisResult as EventListener)
     window.removeEventListener('agent:pathAnalysisResult', handlePathAnalysisResult as EventListener)
     window.removeEventListener('agent:getOpenLayersResult', handleGetOpenLayersResult as EventListener)
     // 清理保存和导出结果事件监听器
-    window.removeEventListener('agent:saveBufferResultsAsLayer', handleSaveResult as EventListener)
-    window.removeEventListener('agent:exportBufferResultsAsJson', handleExportResult as EventListener)
-    window.removeEventListener('agent:saveIntersectionResultsAsLayer', handleSaveResult as EventListener)
-    window.removeEventListener('agent:exportIntersectionResultsAsJson', handleExportResult as EventListener)
-    window.removeEventListener('agent:saveEraseResultsAsLayer', handleSaveResult as EventListener)
-    window.removeEventListener('agent:exportEraseResultsAsJson', handleExportResult as EventListener)
-    window.removeEventListener('agent:savePathResultsAsLayer', handleSaveResult as EventListener)
-    window.removeEventListener('agent:exportPathResultsAsJson', handleExportResult as EventListener)
+    window.removeEventListener('agent:saveBufferResultsAsLayer', handleSaveBufferResultsAsLayer as unknown as EventListener)
+    window.removeEventListener('agent:exportBufferResultsAsJson', handleExportBufferResultsAsJson as unknown as EventListener)
+    window.removeEventListener('agent:saveIntersectionResultsAsLayer', handleSaveIntersectionResultsAsLayer as unknown as EventListener)
+    window.removeEventListener('agent:exportIntersectionResultsAsJson', handleExportIntersectionResultsAsJson as unknown as EventListener)
+    window.removeEventListener('agent:saveEraseResultsAsLayer', handleSaveEraseResultsAsLayer as unknown as EventListener)
+    window.removeEventListener('agent:exportEraseResultsAsJson', handleExportEraseResultsAsJson as unknown as EventListener)
+    window.removeEventListener('agent:savePathResultsAsLayer', handleSavePathResultsAsLayer as unknown as EventListener)
+    window.removeEventListener('agent:exportPathResultsAsJson', handleExportPathResultsAsJson as unknown as EventListener)
     window.removeEventListener('agent:layerVisibilityChanged', (() => {}) as EventListener)
     window.removeEventListener('llm:analysisResultReceived', handleLLMAnalysisResultReceived as EventListener)
     window.removeEventListener('llm:analysisResultError', handleLLMAnalysisResultError as EventListener)
@@ -1201,17 +1329,8 @@ const sendImplicitMessageToLLM = async (resultMessage: string, showResponse: boo
       conversation_id: convId
     }
     
-    const resp = await fetch(`${apiBase}/agent/tool-chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
-    })
-
-    if (resp.ok) {
-      const data = await resp.json()
-      const content = data?.data?.final_answer || '[空响应]'
+    const resp = await axios.post(`${apiBase}/agent/tool-chat`, payload)
+    const content = resp.data?.data?.final_answer || '[空响应]'
       
       // 根据showResponse参数决定是否将LLM的回应添加到聊天记录中
       if (showResponse) {
@@ -1226,11 +1345,8 @@ const sendImplicitMessageToLLM = async (resultMessage: string, showResponse: boo
           messagesPanelRef.value?.scrollToBottom()
         })
       }
-    } else {
-      console.error('隐式LLM请求失败:', resp.status, await resp.text())
-    }
   } catch (e: any) {
-    console.error('隐式LLM请求异常:', e?.message || e)
+    console.error('隐式LLM请求异常:', e?.response?.data?.message || e?.message || e)
   }
 }
 
@@ -1271,17 +1387,8 @@ const sendQuickMessageToLLM = async (resultMessage: string) => {
       conversation_id: convId
     }
     
-    const resp = await fetch(`${apiBase}/agent/tool-chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
-    })
-
-    if (resp.ok) {
-      const data = await resp.json()
-      const content = data?.data?.final_answer || '未得到结果。'
+    const resp = await axios.post(`${apiBase}/agent/tool-chat`, payload)
+    const content = resp.data?.data?.final_answer || '未得到结果。'
       
       // 直接添加AI回复到消息列表
       messages.value.push({
@@ -1300,19 +1407,25 @@ const sendQuickMessageToLLM = async (resultMessage: string) => {
       
       // 重置响应状态
       isLLMResponding.value = false
-    } else {
-      console.error('LLM API请求失败:', resp.status, resp.statusText)
-      // 重置响应状态
-      isLLMResponding.value = false
-    }
-  } catch (error) {
+  } catch (error: any) {
     console.error('快速发送消息到LLM失败:', error)
+    const errorMessage = error?.response?.data?.message || error?.message || error
+    messages.value.push({ 
+      id: Date.now() + 1, 
+      text: `LLM请求失败: ${errorMessage}`, 
+      sender: 'system' 
+    })
     // 重置响应状态
     isLLMResponding.value = false
   }
 }
 
-// 发送消息
+// ==================== 核心消息发送函数 ====================
+
+/**
+ * 发送消息到Agent服务
+ * 这是整个聊天系统的核心函数，处理用户输入并调用Agent工具
+ */
 const sendMessage = async () => {
   const message = newMessage.value.trim()
   
@@ -1342,6 +1455,7 @@ const sendMessage = async () => {
   }
   
 
+  // 获取Agent API基础URL
   const apiBase = getAgentApiBaseUrl()
   // 使用路由路径+时间戳派生一个稳定会话ID（同页会话期间不变）
   const convId = sessionStorage.getItem('agent_conv_id') || (() => {
@@ -1353,6 +1467,7 @@ const sendMessage = async () => {
   const userMsg = { role: 'user', content: messageToSend }
 
   try {
+    // 构建请求参数
     const llm = getLLMApiConfig()
     const payload = {
       model: 'qwen-plus',
@@ -1361,55 +1476,45 @@ const sendMessage = async () => {
       stream: false,
       conversation_id: convId
     }
-    const resp = await fetch(`${apiBase}/agent/tool-chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
-    })
-
-
-    if (!resp.ok) {
-      const errText = await resp.text()
-      messages.value.push({ id: Date.now() + 1, text: `LLM请求失败(${resp.status}): ${errText}`, sender: 'system' })
-      currentTaskId.value = null
-      isLLMResponding.value = false
-      // 重置消息监控状态
-    } else {
-      const data = await resp.json()
+    
+    // 发送请求到Agent服务
+    const resp = await axios.post(`${apiBase}/agent/tool-chat`, payload)
+    const data = resp.data
       
-      // 保存任务ID
-      if (data.task_id) {
-        currentTaskId.value = data.task_id
-        console.log('任务已创建:', data.task_id)
+    // 保存任务ID
+    if (data.task_id) {
+      currentTaskId.value = data.task_id
+      console.log('任务已创建:', data.task_id)
+    }
+      
+    // 解析工具调用信息
+    const firstCall = data?.data?.first_call
+    const toolCalls = firstCall?.tool_calls || []
+    if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+      const call = toolCalls[0]
+      const name = call?.name || 'unknown'
+      const argsStr = call?.args ? JSON.stringify(call.args) : ''
+      const resultStr = data?.data?.tool_result != null ? 
+        (typeof data.data.tool_result === 'object' ? 
+          JSON.stringify(data.data.tool_result, null, 2) : 
+          String(data.data.tool_result)) : ''
+      
+      // 所有工具调用都不显示工具调用结果框
+      toolCallInfo.value = null
+      // 保存工具调用记录
+      saveToolRecord(name, argsStr, resultStr)
+        
+      // 对于知识库相关工具，不显示工具调用信息，直接等待AI回复
+      if (name === 'query_knowledge_base' || name === 'update_knowledge_base') {
+        console.log(`[Agent] ${name}工具调用，等待AI回复，不显示工具调用信息`)
+        // 知识库工具不需要前端处理，直接等待AI的最终回复
       }
+        
+      // ==================== 工具调用分发处理 ====================
+      // 根据不同的工具名称，分发对应的自定义事件到前端处理
       
-      const firstCall = data?.data?.first_call
-      const toolCalls = firstCall?.tool_calls || []
-      if (Array.isArray(toolCalls) && toolCalls.length > 0) {
-        const call = toolCalls[0]
-        const name = call?.name || 'unknown'
-        const argsStr = call?.args ? JSON.stringify(call.args) : ''
-        const resultStr = data?.data?.tool_result != null ? 
-          (typeof data.data.tool_result === 'object' ? 
-            JSON.stringify(data.data.tool_result, null, 2) : 
-            String(data.data.tool_result)) : ''
-        
-        // 所有工具调用都不显示工具调用结果框
-        toolCallInfo.value = null
-        // 保存工具调用记录
-        saveToolRecord(name, argsStr, resultStr)
-        
-        // 对于知识库相关工具，不显示工具调用信息，直接等待AI回复
-        if (name === 'query_knowledge_base' || name === 'update_knowledge_base') {
-          console.log(`[Agent] ${name}工具调用，等待AI回复，不显示工具调用信息`)
-          // 知识库工具不需要前端处理，直接等待AI的最终回复
-        }
-        
-        // 调试：打印AI实际调用的工具名称
-        // 如果是切换图层可见性的工具，则在前端本地执行具体动作
-        if (name === 'toggle_layer_visibility') {
+      // 如果是切换图层可见性的工具，则在前端本地执行具体动作
+      if (name === 'toggle_layer_visibility') {
           try {
             const parsed = call?.args || {}
             // 仅使用 layer_name 参数
@@ -1725,6 +1830,7 @@ const sendMessage = async () => {
           }
         }
         
+        // ==================== 处理AI最终回复 ====================
         // 处理AI的最终回复（无论是否有工具调用）
         const finalAnswer = data?.data?.final_answer
         if (finalAnswer && finalAnswer.trim()) {
@@ -1745,6 +1851,7 @@ const sendMessage = async () => {
         isLLMResponding.value = false
         console.log('[ChatAssistant] 工具调用完成，任务状态已重置')
       } else {
+        // ==================== 无工具调用处理 ====================
         toolCallInfo.value = null
         // 没有工具调用，直接重置任务状态
         currentTaskId.value = null
@@ -1760,12 +1867,12 @@ const sendMessage = async () => {
       // 更新系统消息状态到Pinia
 
       nextAssistantOverride.value = null
-    }
     
     // 注意：有工具调用时不在这里重置任务状态，让工具调用结果事件来重置
     // 没有工具调用时在上面已经重置了任务状态
   } catch (e: any) {
-    messages.value.push({ id: Date.now() + 2, text: `LLM请求异常: ${e?.message || e}`, sender: 'system' })
+    const errorMessage = e?.response?.data?.message || e?.message || e
+    messages.value.push({ id: Date.now() + 2, text: `LLM请求异常: ${errorMessage}`, sender: 'system' })
     // 任务失败，重置状态
     currentTaskId.value = null
     isLLMResponding.value = false
@@ -1777,7 +1884,12 @@ const sendMessage = async () => {
 
 
 
-// 新增：开启新对话功能
+// ==================== 对话管理函数 ====================
+
+/**
+ * 开启新对话功能
+ * 保存当前对话到历史记录，清空当前状态，重新初始化
+ */
 const startNewConversation = () => {
   // 保存当前对话到历史记录（只要有消息就保存，包括欢迎消息）
   if (messages.value.length > 0) {
@@ -1835,6 +1947,8 @@ const startNewConversation = () => {
     messagesPanelRef.value?.scrollToBottom();
   });
 };
+
+// ==================== 组件暴露方法 ====================
 
 // 暴露方法给父组件
 defineExpose({
