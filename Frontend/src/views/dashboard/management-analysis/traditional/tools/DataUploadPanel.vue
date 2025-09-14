@@ -232,16 +232,16 @@ function getStatusText(status: string): string {
 
 .format-item {
   font-size: 11px;
-  color: var(--upload-color);
+  color: var(--accent);
   font-weight: 600;
   background: var(--surface);
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid var(--upload-color);
+  border: 1px solid var(--accent);
 }
 
 .upload-area {
-  border: 2px dashed var(--upload-color);
+  border: 2px dashed var(--accent);
   border-radius: 12px;
   padding: 32px 16px;
   text-align: center;
@@ -251,8 +251,8 @@ function getStatusText(status: string): string {
 }
 
 .upload-area:hover {
-  border-color: var(--upload-color);
-  background: rgba(var(--upload-rgb), 0.05);
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.05);
 }
 
 .upload-content {

@@ -17,7 +17,9 @@
     "paths": { "@/*": ["./src/*"] },
     "allowJs": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo"
   },
   "plugins": [
     {

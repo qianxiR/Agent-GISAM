@@ -96,7 +96,6 @@
           @click="handleExecuteAnalysis"
         />
         <SecondaryButton 
-          v-if="hasResults || startPointInfo || endPointInfo"
           text="清除结果"
           @click="handleClearState"
         />

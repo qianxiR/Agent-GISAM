@@ -54,6 +54,7 @@ import { useLayerUIStore } from '@/stores/layerUIStore'
 import { useMonitoringDataLayers } from '@/composables/useMonitoringDataLayers'
 import { useYangtzeWaterLayers } from '@/composables/useYangtzeWaterLayers'
 import { useMonitoringThreshold } from '@/composables/useMonitoringThreshold'
+import { useMonitoringPlatformStore } from '@/stores/monitoringPlatformStore'
 import FeatureQueryPanel from '@/views/dashboard/management-analysis/traditional/tools/FeatureQueryPanel.vue'
 import AreaSelectionTools from '@/views/dashboard/management-analysis/traditional/tools/AreaSelectionTools.vue'
 import ShortestPathAnalysisPanel from '@/views/dashboard/management-analysis/traditional/tools/ShortestPathAnalysisPanel.vue'
@@ -72,6 +73,7 @@ const modeStateStore = useModeStateStore()
 const mapStore = useMapStore()
 const monitoringLayers = useMonitoringDataLayers()
 const yangtzeLayers = useYangtzeWaterLayers()
+const monitoringPlatformStore = useMonitoringPlatformStore()
 
 // 工具配置对象
 const toolConfigs = {
@@ -226,6 +228,9 @@ watch(() => analysisStore.toolPanel.activeTool, (newTool, oldTool) => {
 onMounted(() => {
   // 恢复传统模式状态
   modeStateStore.restoreModeState('traditional')
+  
+  // 初始化监测平台store
+  monitoringPlatformStore.initializeStore()
   
   // 加载监测点图层 - 添加延迟确保地图完全初始化
   const loadMonitoringLayers = () => {

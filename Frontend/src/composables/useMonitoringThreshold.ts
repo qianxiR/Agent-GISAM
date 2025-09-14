@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { useMonitoringDataStore } from '@/stores/monitoringDataStore'
+import { useMonitoringPlatformStore } from '@/stores/monitoringPlatformStore'
 import { getMonitoringSiteData } from '@/data/waterQualityMockData'
 
 // 水质参数阈值配置
@@ -59,16 +59,7 @@ const PARAMETER_UNITS: Record<string, string> = {
 }
 
 export function useMonitoringThreshold() {
-  const monitoringStore = useMonitoringDataStore()
-  const isMonitoring = ref(false)
-  const lastCheckTime = ref<Date | null>(null)
-  const thresholdViolations = ref<Array<{
-    siteName: string
-    parameter: string
-    value: number
-    threshold: { min: number; max: number }
-    timestamp: Date
-  }>>([])
+  const monitoringPlatformStore = useMonitoringPlatformStore()
   
   // 防重复触发机制：记录每个监测点最后一次发送通知的时间
   const lastNotificationTime = ref<Map<string, Date>>(new Map())
@@ -118,8 +109,7 @@ export function useMonitoringThreshold() {
    * 获取监测点对应的图层名称
    */
   const getLayerNameBySiteName = (siteName: string): string | null => {
-    const sites = monitoringStore.getAllSites()
-    const site = sites.find(s => s.name === siteName)
+    const site = monitoringPlatformStore.getSiteByName(siteName)
     return site ? site.layerName : null
   }
 
@@ -223,7 +213,7 @@ export function useMonitoringThreshold() {
    */
   const checkAllThresholds = async () => {
     try {
-      const sites = monitoringStore.getAllSites()
+      const sites = monitoringPlatformStore.getAllSites
       
       for (const site of sites) {
         const siteData = getMonitoringSiteData(site.name)
@@ -232,9 +222,9 @@ export function useMonitoringThreshold() {
           const violations = checkSiteThresholds(site.name, latestData)
           
           if (violations.length > 0) {
-            // 记录违规情况
+            // 记录违规情况到store
             violations.forEach(violation => {
-              thresholdViolations.value.push({
+              monitoringPlatformStore.addThresholdViolation({
                 siteName: site.name,
                 parameter: violation.parameter,
                 value: violation.value,
@@ -249,7 +239,7 @@ export function useMonitoringThreshold() {
         }
       }
       
-      lastCheckTime.value = new Date()
+      monitoringPlatformStore.lastCheckTime = new Date()
     } catch (error) {
       console.error('阈值检查失败:', error)
     }
@@ -267,9 +257,9 @@ export function useMonitoringThreshold() {
     const violations = checkSiteThresholds(siteName, newDataPoint)
     
     if (violations.length > 0) {
-      // 记录违规情况
+      // 记录违规情况到store
       violations.forEach(violation => {
-        thresholdViolations.value.push({
+        monitoringPlatformStore.addThresholdViolation({
           siteName,
           parameter: violation.parameter,
           value: violation.value,
@@ -282,16 +272,16 @@ export function useMonitoringThreshold() {
       sendThresholdNotification(siteName, violations)
     }
     
-    lastCheckTime.value = new Date()
+    monitoringPlatformStore.lastCheckTime = new Date()
   }
 
   /**
    * 开始自动监测（基于实时数据更新）
    */
   const startMonitoring = () => { 
-    if (isMonitoring.value) return
+    if (monitoringPlatformStore.isMonitoring) return
     
-    isMonitoring.value = true
+    monitoringPlatformStore.startMonitoring()
     console.log('开始水质阈值自动监测（基于实时数据更新）...')
     
     // 监听新水质数据事件
@@ -304,7 +294,7 @@ export function useMonitoringThreshold() {
    * 停止自动监测
    */
   const stopMonitoring = () => {
-    isMonitoring.value = false
+    monitoringPlatformStore.stopMonitoring()
     console.log('停止水质阈值自动监测')
     
     // 移除事件监听器
@@ -318,21 +308,21 @@ export function useMonitoringThreshold() {
    * 获取违规历史记录
    */
   const getViolationHistory = computed(() => {
-    return thresholdViolations.value.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+    return monitoringPlatformStore.getViolationHistory
   })
 
   /**
    * 清除违规历史记录
    */
   const clearViolationHistory = () => {
-    thresholdViolations.value = []
+    monitoringPlatformStore.clearViolationHistory()
   }
 
   return {
-    // 状态
-    isMonitoring,
-    lastCheckTime,
-    thresholdViolations,
+    // 状态 - 从store获取
+    isMonitoring: computed(() => monitoringPlatformStore.isMonitoring),
+    lastCheckTime: computed(() => monitoringPlatformStore.lastCheckTime),
+    thresholdViolations: computed(() => monitoringPlatformStore.thresholdViolations),
     getViolationHistory,
     
     // 方法

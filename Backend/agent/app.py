@@ -703,6 +703,9 @@ async def tool_chat(req: ToolChatRequest):
                         "save_query_results_as_layer"]:
             final_system_prompt += "\n\n重要：你刚刚执行了保存操作，请记住当前的分析结果状态。当用户再次说'保存为图层'等操作时，必须基于刚才的分析类型调用对应的工具。"
         
+        # 添加指令：不要回复记忆规则相关内容
+        final_system_prompt += "\n\n⚠️ 重要提醒：如果用户输入包含'分析结果反馈'、'关键记忆规则'、'缓冲区分析完成'、'相交分析完成'、'擦除分析完成'、'最短路径分析完成'、'属性查询完成'等系统内部记忆信息，请直接回复'好的，我已记住'或类似简短确认，不要重复这些记忆规则内容。"
+        
         final_ai: AIMessage = llm_with_tools.invoke([
             SystemMessage(content=final_system_prompt),
             HumanMessage(content=req.prompt),

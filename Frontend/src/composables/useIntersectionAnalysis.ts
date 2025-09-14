@@ -13,7 +13,6 @@ import { Style, Stroke, Fill } from 'ol/style'
 import GeoJSON from 'ol/format/GeoJSON'
 import { ref as vueRef } from 'vue'
 import { useLayerExport } from '@/composables/useLayerExport'
-import axios from 'axios'
 
 declare global {
   interface Window {
@@ -186,8 +185,19 @@ export function useIntersectionAnalysis() {
 
       // 调用后端API
       const API_BASE_URL = getAnalysisServiceConfig().baseUrl
-      const response = await axios.post(`${API_BASE_URL}/intersection`, requestData)
-      const apiResponse = response.data
+      const response = await fetch(`${API_BASE_URL}/intersection`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const apiResponse = await response.json()
 
       // 后端现在直接返回 FeatureCollection 格式
       if (!apiResponse.features) {
@@ -284,10 +294,10 @@ export function useIntersectionAnalysis() {
       features: intersectionFeatures
     })
     
-    // 获取分析专用颜色
+    // 获取相交分析专用颜色
     const rootStyle = getComputedStyle(document.documentElement)
-    const strokeColor = rootStyle.getPropertyValue('--map-highlight-color')?.trim() || '#4a5568'
-    const fillColor = rootStyle.getPropertyValue('--analysis-color')?.trim() || '#0078D4'
+    const strokeColor = rootStyle.getPropertyValue('--intersect-stroke-color')?.trim() || '#00FFFF'
+    const fillColor = rootStyle.getPropertyValue('--intersect-stroke-color')?.trim() || '#00FFFF'
     const fillVar = fillColor + '4D' // 蓝色，70%透明度
 
     const layer = new Vectorlayer({

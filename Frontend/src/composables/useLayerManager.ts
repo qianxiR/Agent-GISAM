@@ -4,7 +4,18 @@ import { useSelectionStore } from '@/stores/selectionStore'
 import { usePopupStore } from '@/stores/popupStore'
 import { useAnalysisStore } from '@/stores/analysisStore'
 import { useLayerDataStore } from '@/stores/layerDataStore'
+import { useMonitoringPlatformStore } from '@/stores/monitoringPlatformStore'
 import type { Maplayer, DrawlayerSaveType, Polygon, Feature, FeatureCollection } from '@/types/map';
+
+// 获取CSS变量的辅助函数
+const getCSSVariable = (variable: string, fallback: string = ''): string => {
+  try {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim()
+    return value || fallback
+  } catch (error) {
+    return fallback
+  }
+}
 
 export function uselayermanager() {
   const mapStore = useMapStore()
@@ -12,6 +23,7 @@ export function uselayermanager() {
   const popupStore = usePopupStore()
   const analysisStore = useAnalysisStore()
   const layerDataStore = useLayerDataStore()
+  const monitoringPlatformStore = useMonitoringPlatformStore()
   
   // 确认对话框状态
   const confirmDialogVisible = ref(false)
@@ -1404,19 +1416,20 @@ export function uselayermanager() {
           case 'upload':
             return createRedStyle('upload', 3)
           case 'path':
-            // 路径分析使用淡粉红色
+            // 路径分析使用绿色
+            const pathColor = getCSSVariable('--path-stroke-color') || '#00FF00'
             return new ol.style.Style({
               stroke: new ol.style.Stroke({
-                color: '#FFB6C1',
+                color: pathColor,
                 width: 4
               }),
               fill: new ol.style.Fill({
-                color: '#FFB6C14D' // 淡粉红色，70%透明度
+                color: pathColor + '4D' // 绿色，70%透明度
               }),
               image: new ol.style.Circle({
                 radius: 8,
                 fill: new ol.style.Fill({
-                  color: '#FFB6C1'
+                  color: pathColor
                 }),
                 stroke: new ol.style.Stroke({
                   color: panelColor,

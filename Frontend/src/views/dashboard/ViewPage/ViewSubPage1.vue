@@ -14,8 +14,6 @@
         <div ref="mapContainer" class="map-view"></div>
         <!-- 基础地图控件 -->
         <FeaturePopup />
-        <CoordinateDisplay />
-        <ScaleBar />
         <OverviewMap />
         <!-- 交通水系一体化图例 -->
         <TrafficWaterLegend />
@@ -37,9 +35,8 @@ import { useMap } from '@/composables/useMap'
 import { useMapStore } from '@/stores/mapStore'
 import { usePageStateStore } from '@/stores/pageStateStore'
 import { useMonitoringThreshold } from '@/composables/useMonitoringThreshold'
+import { useMonitoringPlatformStore } from '@/stores/monitoringPlatformStore'
 import FeaturePopup from '@/components/Map/FeaturePopup.vue'
-import CoordinateDisplay from '@/components/Map/CoordinateDisplay.vue'
-import ScaleBar from '@/components/Map/ScaleBar.vue'
 import OverviewMap from '@/components/Map/OverviewMap.vue'
 import TrafficWaterLegend from '@/components/Map/TrafficWaterLegend.vue'
 import ButtonGroup from '@/components/UI/ButtonGroup.vue'
@@ -54,6 +51,7 @@ const route = useRoute()
 const { mapContainer, initMap, cleanup } = useMap()
 const mapStore = useMapStore()
 const pageStateStore = usePageStateStore()
+const monitoringPlatformStore = useMonitoringPlatformStore()
 
 let resizeObserver: ResizeObserver | null = null
 
@@ -105,7 +103,8 @@ onMounted(() => {
   // 设置当前页面为视图页面
   pageStateStore.switchToPage('view')
   
-  
+  // 初始化监测平台store
+  monitoringPlatformStore.initializeStore()
 
   // 当容器尺寸变化时，强制更新地图尺寸
   const el = mapContainer.value
@@ -173,4 +172,5 @@ onUnmounted(() => {
 :deep(.custom-zoom-control) {
   display: none !important;
 }
+
 </style>

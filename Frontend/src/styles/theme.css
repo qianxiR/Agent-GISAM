@@ -77,35 +77,34 @@
   --area-point-stroke-width: 2;
   
   /* ===== 查询结果图层样式配置 - 浅色模式 ===== */
-  --query-stroke-color: #FFB6C1;
+  --query-stroke-color: #0078D4;
   --query-stroke-width: 2;
   --query-fill-opacity: 0.3;
   --query-point-radius: 6;
   --query-point-stroke-width: 2;
   
   /* ===== 缓冲区分析图层样式配置 - 浅色模式 ===== */
-  --buffer-stroke-color: #FFB6C1;
+  --buffer-stroke-color: #FF0000;
   --buffer-stroke-width: 3;
   --buffer-fill-opacity: 0.3;
   --buffer-point-radius: 6;
   --buffer-point-stroke-width: 2;
   
   /* ===== 相交分析图层样式配置 - 浅色模式 ===== */
-  --intersect-stroke-color: #FFB6C1;
+  --intersect-stroke-color: #00FFFF;
   --intersect-stroke-width: 3;
   --intersect-fill-opacity: 0.3;
   --intersect-point-radius: 6;
   --intersect-point-stroke-width: 2;
   
   /* ===== 擦除分析图层样式配置 - 浅色模式 ===== */
-  --erase-stroke-color: #FFB6C1;
-  --erase-stroke-width: 3;
+  --erase-stroke-color: #FF69B4;
   --erase-fill-opacity: 0.3;
   --erase-point-radius: 6;
   --erase-point-stroke-width: 2;
   
   /* ===== 路径分析图层样式配置 - 浅色模式 ===== */
-  --path-stroke-color: #FFB6C1;
+  --path-stroke-color: #00FF00;
   --path-stroke-width: 4;
   --path-fill-opacity: 0.3;
   --path-point-radius: 8;
@@ -277,35 +276,35 @@ html {
   --area-point-stroke-width: 2;
   
   /* ===== 查询结果图层样式配置 - 深色模式 ===== */
-  --query-stroke-color: #FFB6C1;
+  --query-stroke-color: #0078D4;
   --query-stroke-width: 2;
   --query-fill-opacity: 0.3;
   --query-point-radius: 6;
   --query-point-stroke-width: 2;
   
   /* ===== 缓冲区分析图层样式配置 - 深色模式 ===== */
-  --buffer-stroke-color: #FFB6C1;
+  --buffer-stroke-color: #FF0000;
   --buffer-stroke-width: 3;
   --buffer-fill-opacity: 0.3;
   --buffer-point-radius: 6;
   --buffer-point-stroke-width: 2;
   
   /* ===== 相交分析图层样式配置 - 深色模式 ===== */
-  --intersect-stroke-color: #FFB6C1;
+  --intersect-stroke-color: #00FFFF;
   --intersect-stroke-width: 3;
   --intersect-fill-opacity: 0.3;
   --intersect-point-radius: 6;
   --intersect-point-stroke-width: 2;
   
   /* ===== 擦除分析图层样式配置 - 深色模式 ===== */
-  --erase-stroke-color: #FFB6C1;
+  --erase-stroke-color: #FF69B4;
   --erase-stroke-width: 3;
   --erase-fill-opacity: 0.3;
   --erase-point-radius: 6;
   --erase-point-stroke-width: 2;
   
   /* ===== 路径分析图层样式配置 - 深色模式 ===== */
-  --path-stroke-color: #FFB6C1;
+  --path-stroke-color: #00FF00;
   --path-stroke-width: 4;
   --path-fill-opacity: 0.3;
   --path-point-radius: 8;

@@ -53,6 +53,7 @@
         <span class="button-text">工具记录</span>
       </SecondaryButton>
       
+      
     </div>
     
     <!-- API状态弹窗：显示Agent服务的详细状态信息 -->
@@ -100,6 +101,27 @@
               <div class="feature-tag secondary">知识库系统</div>
               <div class="feature-tag accent">空间分析</div>
               <div class="feature-tag info">智能对话</div>
+            </div>
+          </div>
+          
+          <!-- 监测数据推送控制 -->
+          <div class="status-item monitoring-control">
+            <div class="status-label">监测数据推送</div>
+            <div class="monitoring-control-content">
+              <div class="monitoring-status">
+                <span class="status-indicator" :class="{ active: isAutoPushEnabled }"></span>
+                <span class="status-text">{{ isAutoPushEnabled ? '已启用' : '已禁用' }}</span>
+              </div>
+              <button 
+                class="monitoring-toggle-btn"
+                :class="{ active: isAutoPushEnabled }"
+                @click="toggleAutoPush"
+              >
+                {{ isAutoPushEnabled ? '停止推送' : '启动推送' }}
+              </button>
+            </div>
+            <div class="monitoring-description">
+              每5分钟自动推送一个监测点的水质数据给AI进行分析
             </div>
           </div>
         </div>
@@ -202,6 +224,7 @@ import { useRouter } from 'vue-router';
 // 状态管理相关导入
 import { useThemeStore } from '@/stores/themeStore';
 import { useModeStateStore } from '@/stores/modeStateStore';
+import { useMonitoringPlatformStore } from '@/stores/monitoringPlatformStore';
 
 // 组件导入
 import LLMInputWindow from '@/components/Agent/LLMInputWindow.vue';
@@ -212,6 +235,7 @@ import ChatHistory from './ChatHistory.vue';
 // 工具函数导入
 import { getAgentApiBaseUrl, getLLMApiConfig } from '@/utils/config'
 import { getEnvironmentalBackground, getUseCases } from '@/utils/domainBackground'
+import { getMonitoringSiteData } from '@/data/waterQualityMockData'
 
 // 空间分析功能组合式函数导入
 import { useBufferAnalysis } from '@/composables/useBufferAnalysis'
@@ -232,6 +256,7 @@ interface Message {
 // 初始化状态管理
 useThemeStore();
 const modeStateStore = useModeStateStore();
+const monitoringPlatformStore = useMonitoringPlatformStore();
 const router = useRouter();
 
 // 初始化空间分析功能组合式函数
@@ -257,6 +282,11 @@ const isLLMResponding = ref<boolean>(false); // LLM是否正在响应
 const apiStatus = ref<any>(null); // API状态信息
 const showApiStatus = ref<boolean>(false); // 是否显示API状态弹窗
 const showToolRecords = ref<boolean>(false); // 是否显示工具记录弹窗
+
+// 监测数据自动推送相关状态
+const autoPushInterval = ref<number | null>(null); // 自动推送定时器
+const currentSiteIndex = ref(0); // 当前推送的监测点索引
+const isAutoPushEnabled = ref(true); // 是否启用自动推送
 const showChatHistory = ref<boolean>(false); // 是否显示聊天历史弹窗
 const toolRecords = ref<Array<{name: string, argsStr: string, resultStr: string, timestamp: number}>>([]); // 工具调用记录
 let statusInterval: number | null = null; // 状态更新定时器
@@ -492,7 +522,7 @@ const maybeAnnounceInitiallayers = () => {
     hasAnnounced.value = true;
     
     // 添加欢迎消息
-    const welcomeMessage = `您好，我是您的武汉市长江水域与水资源管理的自主智能助手。我能够帮助您进行城市空间分析、水资源管理、数据可视化以及多源信息整合等工作。
+    const welcomeMessage = `您好，我是您的武汉市长江水域与水资源管理的自主智能体助手。我能够自主完成感知、决策、分析、执行工作，可以帮助您进行城市空间分析、水资源管理、数据可视化以及多源信息整合等工作。
 
 您可以进行以下功能，我将为您执行具体任务。
 
@@ -600,7 +630,49 @@ const handleSaveResult = async (event: CustomEvent) => {
   
   console.log('[ChatAssistant] 收到保存结果事件:', { success, message, layerName, count, error })
   
-  // 移除回调消息显示逻辑，不再显示保存完成消息
+  // 如果保存失败，显示错误消息
+  if (!success) {
+    const errorMessage = `保存失败：${message || '未知错误'}`
+    messages.value.push({ 
+      id: Date.now(), 
+      text: errorMessage, 
+      sender: 'system' 
+    })
+    
+    // 滚动到底部显示新消息
+    nextTick(() => {
+      messagesPanelRef.value?.scrollToBottom()
+    })
+  }
+  // 如果保存成功，不显示消息，等待系统弹窗确认
+}
+
+// 监听系统弹窗事件，确认保存操作完成
+const handleSystemNotification = (event: CustomEvent) => {
+  const { title, message, type } = event.detail
+  
+  // 检查是否是保存成功的弹窗
+  if (type === 'success' && title && title.includes('保存成功')) {
+    console.log('[ChatAssistant] 检测到保存成功弹窗:', { title, message })
+    
+    // 显示保存成功消息
+    const successMessage = `✅ ${title}${message ? ` - ${message}` : ''}`
+    messages.value.push({ 
+      id: Date.now(), 
+      text: successMessage, 
+      sender: 'system' 
+    })
+    
+    // 滚动到底部显示新消息
+    nextTick(() => {
+      messagesPanelRef.value?.scrollToBottom()
+    })
+    
+    // 任务完成，重置状态
+    currentTaskId.value = null
+    isLLMResponding.value = false
+    console.log('[ChatAssistant] 保存操作完成，任务状态已重置')
+  }
 }
 
 // 监听导出结果事件
@@ -918,6 +990,14 @@ onMounted(() => {
     newMessage.value = llmState.inputText
   }
   
+  // 初始化监测平台store
+  monitoringPlatformStore.initializeStore()
+  
+  // 启动监测数据自动推送
+  if (isAutoPushEnabled.value) {
+    startAutoPush()
+  }
+  
   // 重置任务状态
   currentTaskId.value = null
   isLLMResponding.value = false
@@ -980,7 +1060,81 @@ onMounted(() => {
       // 不发送给AI，避免占据端口
     }) as EventListener)
   }
-});
+  
+    // 监听系统弹窗事件，确认保存操作完成
+    window.addEventListener('showNotification', handleSystemNotification as unknown as EventListener)
+    
+    // 监听监测点选择事件，自动发送监测点信息
+    window.addEventListener('monitoring:siteSelected', ((e: any) => {
+      const { site } = e.detail || {}
+      if (site) {
+        console.log('[ChatAssistant] 收到监测点选择事件:', site.name)
+        // 自动发送监测点信息给AI
+        sendMonitoringSiteInfo(site, false)
+      }
+    }) as EventListener)
+    
+    // 监听阈值超限警告事件
+    window.addEventListener('system:thresholdAlert', ((e: any) => {
+      const { siteName, layerName, violations } = e.detail || {}
+      if (siteName && violations) {
+        console.log('[ChatAssistant] 收到阈值超限警告:', siteName)
+        
+        // 构造阈值超限消息
+        const violationMessages = violations.map((v: any) => {
+          const paramName = v.parameter === 'water_temperature' ? '水温' :
+                           v.parameter === 'ph_value' ? 'pH值' :
+                           v.parameter === 'dissolved_oxygen' ? '溶解氧' :
+                           v.parameter === 'turbidity' ? '浊度' :
+                           v.parameter === 'permanganate_index' ? '高锰酸盐指数' :
+                           v.parameter === 'ammonia_nitrogen' ? '氨氮' :
+                           v.parameter === 'total_phosphorus' ? '总磷' :
+                           v.parameter === 'total_nitrogen' ? '总氮' :
+                           v.parameter === 'chlorophyll_a' ? '叶绿素a' :
+                           v.parameter === 'algae_density' ? '藻类密度' : v.parameter
+          
+          const unit = v.parameter === 'water_temperature' ? '°C' :
+                      v.parameter === 'ph_value' ? '' :
+                      v.parameter === 'dissolved_oxygen' ? 'mg/L' :
+                      v.parameter === 'turbidity' ? 'NTU' :
+                      v.parameter === 'permanganate_index' ? 'mg/L' :
+                      v.parameter === 'ammonia_nitrogen' ? 'mg/L' :
+                      v.parameter === 'total_phosphorus' ? 'mg/L' :
+                      v.parameter === 'total_nitrogen' ? 'mg/L' :
+                      v.parameter === 'chlorophyll_a' ? 'mg/L' :
+                      v.parameter === 'algae_density' ? '个/L' : ''
+          
+          const currentValue = v.parameter === 'algae_density' 
+            ? v.value.toLocaleString() 
+            : v.value.toFixed(3)
+          
+          let status = ''
+          if (v.value < v.threshold.min) {
+            status = `低于最小值 ${v.threshold.min}${unit}`
+          } else if (v.value > v.threshold.max) {
+            status = `超过最大值 ${v.threshold.max}${unit}`
+          }
+          
+          return `${paramName}: ${currentValue}${unit} (${status})`
+        }).join('\n')
+        
+        const alertMessage = `[水质预警] 监测点 ${siteName} 的以下参数超过阈值：
+${violationMessages}
+
+请立即关注这些异常指标，建议进行进一步的水质分析和处理。`
+        
+        // 发送预警消息给AI
+        sendQuickMessageToLLM(alertMessage)
+        
+        // 显示系统通知
+        showSystemNotification(
+          '水质参数超限预警',
+          `监测点 ${siteName} 有 ${violations.length} 个参数超过阈值`,
+          'error'
+        )
+      }
+    }) as EventListener)
+  });
 
 // 保存LLM模式状态
 const saveLLMState = () => {
@@ -999,6 +1153,12 @@ onUnmounted(() => {
   // 清理定时器
   if (statusInterval) {
     clearInterval(statusInterval)
+  }
+  
+  // 清理自动推送定时器
+  if (autoPushInterval.value) {
+    clearInterval(autoPushInterval.value)
+    autoPushInterval.value = null
   }
   
   // 清理事件监听器
@@ -1044,7 +1204,7 @@ watch(messages, async () => {
 }, { deep: true });
 
 // 隐式发送消息到LLM（用于分析结果反馈）
-const sendImplicitMessageToLLM = async (resultMessage: string, showResponse: boolean = true) => {
+const sendImplicitMessageToLLM = async (resultMessage: string, showResponse: boolean = false) => {
   try {
     const apiBase = getAgentApiBaseUrl()
     // 使用相同的会话ID
@@ -1156,6 +1316,148 @@ const sendQuickMessageToLLM = async (resultMessage: string) => {
     })
     // 重置响应状态
     isLLMResponding.value = false
+  }
+}
+
+// ==================== 监测数据自动推送功能 ====================
+
+/**
+ * 发送监测点信息到AI
+ * @param siteInfo 监测点信息
+ * @param isAutoPush 是否为自动推送
+ */
+const sendMonitoringSiteInfo = async (siteInfo: any, isAutoPush: boolean = false) => {
+  try {
+    // 获取监测点的最新数据
+    const siteData = getMonitoringSiteData(siteInfo.name)
+    if (!siteData || !siteData.data || siteData.data.length === 0) {
+      console.warn(`[ChatAssistant] 监测点 ${siteInfo.name} 没有数据`)
+      return
+    }
+
+    const latestData = siteData.data[siteData.data.length - 1]
+    
+    // 构造监测点信息消息
+    const monitoringMessage = `[${isAutoPush ? '自动推送' : '监测点信息'}] 监测点：${siteInfo.name} (${siteInfo.location})
+坐标：${siteInfo.coordinates[0]}, ${siteInfo.coordinates[1]}
+图层名称：${siteInfo.layerName}
+水质类别：${siteInfo.waterQualityClass}
+
+最新监测数据：
+- 时间：${latestData.time}
+- 水温：${latestData.water_temperature}°C
+- pH值：${latestData.ph_value}
+- 溶解氧：${latestData.dissolved_oxygen} mg/L
+- 浊度：${latestData.turbidity} NTU
+- 高锰酸盐指数：${latestData.permanganate_index} mg/L
+- 氨氮：${latestData.ammonia_nitrogen} mg/L
+- 总磷：${latestData.total_phosphorus} mg/L
+- 总氮：${latestData.total_nitrogen} mg/L
+- 叶绿素a：${latestData.chlorophyll_a} mg/L
+- 藻类密度：${latestData.algae_density.toLocaleString()} 个/L
+
+请分析这些水质数据，关注是否有异常指标需要预警。`
+
+    // 发送给AI
+    await sendQuickMessageToLLM(monitoringMessage)
+    
+    // 显示系统通知
+    showSystemNotification(
+      isAutoPush ? '自动推送监测数据' : '监测点信息已发送',
+      `已向AI发送监测点"${siteInfo.location}"的最新数据`,
+      'info'
+    )
+    
+    console.log(`[ChatAssistant] ${isAutoPush ? '自动推送' : '手动发送'}监测点信息: ${siteInfo.name}`)
+    
+  } catch (error) {
+    console.error('[ChatAssistant] 发送监测点信息失败:', error)
+    showSystemNotification(
+      '发送失败',
+      `发送监测点"${siteInfo.location}"信息时发生错误`,
+      'error'
+    )
+  }
+}
+
+/**
+ * 自动推送监测点数据（每5分钟推送一个监测点）
+ */
+const autoPushMonitoringData = () => {
+  if (!isAutoPushEnabled.value) return
+  
+  const sites = monitoringPlatformStore.getAllSites
+  if (sites.length === 0) return
+  
+  // 获取当前要推送的监测点
+  const currentSite = sites[currentSiteIndex.value]
+  if (currentSite) {
+    sendMonitoringSiteInfo(currentSite, true)
+    
+    // 更新索引，循环推送
+    currentSiteIndex.value = (currentSiteIndex.value + 1) % sites.length
+  }
+}
+
+/**
+ * 启动自动推送定时器
+ */
+const startAutoPush = () => {
+  if (autoPushInterval.value) return
+  
+  // 每5分钟推送一次
+  autoPushInterval.value = setInterval(autoPushMonitoringData, 5 * 60 * 1000)
+  console.log('[ChatAssistant] 监测数据自动推送已启动，每5分钟推送一次')
+  
+  showSystemNotification(
+    '自动推送已启动',
+    '系统将每5分钟自动推送一个监测点的数据给AI',
+    'success'
+  )
+}
+
+/**
+ * 停止自动推送定时器
+ */
+const stopAutoPush = () => {
+  if (autoPushInterval.value) {
+    clearInterval(autoPushInterval.value)
+    autoPushInterval.value = null
+    console.log('[ChatAssistant] 监测数据自动推送已停止')
+    
+    showSystemNotification(
+      '自动推送已停止',
+      '系统不再自动推送监测数据',
+      'info'
+    )
+  }
+}
+
+/**
+ * 显示系统通知
+ */
+const showSystemNotification = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info') => {
+  const notificationEvent = new CustomEvent('showNotification', {
+    detail: {
+      title,
+      message,
+      type,
+      duration: 4000
+    }
+  })
+  window.dispatchEvent(notificationEvent)
+}
+
+/**
+ * 切换自动推送状态
+ */
+const toggleAutoPush = () => {
+  isAutoPushEnabled.value = !isAutoPushEnabled.value
+  
+  if (isAutoPushEnabled.value) {
+    startAutoPush()
+  } else {
+    stopAutoPush()
   }
 }
 
@@ -1759,6 +2061,81 @@ defineExpose({
   font-weight: 500;
   color: var(--text);
   min-width: 80px;
+}
+
+/* 监测数据推送控制样式 */
+.monitoring-control {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.monitoring-control-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
+.monitoring-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sub);
+  transition: all 0.3s ease;
+}
+
+.status-indicator.active {
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.4);
+}
+
+.status-text {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.monitoring-toggle-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.monitoring-toggle-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+}
+
+.monitoring-toggle-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.monitoring-toggle-btn.active:hover {
+  background: var(--accent-hover);
+}
+
+.monitoring-description {
+  font-size: 12px;
+  color: var(--sub);
+  line-height: 1.4;
+  margin-top: 4px;
 }
 
 .status-value {

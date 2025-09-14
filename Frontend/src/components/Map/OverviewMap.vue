@@ -474,7 +474,7 @@ onUnmounted(() => {
 .overview-title {
   font-size: 13px;
   font-weight: 500;
-  color: var(--text);
+  color: var(--accent);
   user-select: none;
 }
 

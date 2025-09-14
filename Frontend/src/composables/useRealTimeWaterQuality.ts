@@ -1,9 +1,11 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { WaterQualityData } from '@/data/waterQualityMockData'
+import { useMonitoringPlatformStore } from '@/stores/monitoringPlatformStore'
 
 
 // 实时水质数据管理
 export function useRealTimeWaterQuality(siteName: string) {
+  const monitoringPlatformStore = useMonitoringPlatformStore()
   const data = ref<WaterQualityData[]>([])
   const isLoading = ref(false)
   const lastUpdateTime = ref<Date>(new Date())
@@ -136,6 +138,9 @@ export function useRealTimeWaterQuality(siteName: string) {
       
       lastUpdateTime.value = new Date()
       isLoading.value = false
+      
+      // 同步到监测平台store
+      monitoringPlatformStore.addRealTimeDataPoint(siteName, newDataPoint)
       
       // 触发阈值检测事件
       const thresholdEvent = new CustomEvent('waterQuality:newData', {

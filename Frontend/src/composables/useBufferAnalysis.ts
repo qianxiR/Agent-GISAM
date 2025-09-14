@@ -13,7 +13,6 @@ import type OlFeature from 'ol/Feature'
 import { ref as vueRef } from 'vue'
 import { uselayermanager } from '@/composables/useLayerManager'
 import { useLayerExport } from '@/composables/useLayerExport'
-import axios from 'axios'
 
 // API配置 - 动态获取以避免缓存问题
 
@@ -199,8 +198,19 @@ export function useBufferAnalysis() {
 
 
     const API_BASE_URL = getAnalysisServiceConfig().baseUrl
-    const response = await axios.post(`${API_BASE_URL}/buffer`, requestData)
-    const apiResponse = response.data
+    const response = await fetch(`${API_BASE_URL}/buffer`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const apiResponse = await response.json()
 
     // 规范化：将 geometry.type 为 FeatureCollection 的要素扁平化为标准 Feature（合并父/子属性）
     const flattenedFeatures = (() => {
@@ -310,9 +320,9 @@ export function useBufferAnalysis() {
       features: bufferFeatures
     })
     
-    // 获取分析专用颜色
+    // 获取缓冲区分析专用颜色
     const rootStyle = getComputedStyle(document.documentElement)
-    const analysisColor = rootStyle.getPropertyValue('--analysis-color')?.trim() || '#0078D4'
+    const analysisColor = rootStyle.getPropertyValue('--buffer-stroke-color')?.trim() || '#FF0000'
     
     const bufferlayer = new Vectorlayer({
       source: bufferSource,
@@ -381,11 +391,30 @@ export function useBufferAnalysis() {
       console.log('[BufferAnalysis] 从状态管理读取缓冲区分析结果数据')
     }
     
+    // 如果仍然没有数据，尝试从地图上的缓冲区图层中获取
+    if (!fc || !fc.features || fc.features.length === 0) {
+      console.log('[BufferAnalysis] 尝试从地图缓冲区图层获取数据')
+      const bufferLayers = mapStore.map.getLayers().getArray().filter((layer: any) => layer.get('isBufferlayer'))
+      if (bufferLayers.length > 0) {
+        const bufferLayer = bufferLayers[0]
+        const bufferResults = bufferLayer.get('bufferResults')
+        if (bufferResults && bufferResults.length > 0) {
+          fc = {
+            type: 'FeatureCollection',
+            features: bufferResults
+          }
+          console.log('[BufferAnalysis] 从地图缓冲区图层获取到数据:', {
+            featuresCount: bufferResults.length
+          })
+        }
+      }
+    }
+    
     console.log('[BufferAnalysis] 开始保存缓冲区分析结果:', {
       hasFeatureCollection: !!fc,
       featuresCount: fc?.features?.length || 0,
       featureCollection: fc,
-      dataSource: lastFeatureCollection.value ? 'composable' : (bufferAnalysisStore.state.lastFeatureCollection ? 'store' : 'none')
+      dataSource: lastFeatureCollection.value ? 'composable' : (bufferAnalysisStore.state.lastFeatureCollection ? 'store' : 'mapLayer')
     })
     
     if (!fc || !fc.features || fc.features.length === 0) {

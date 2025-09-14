@@ -279,15 +279,18 @@ export function useShortestPathAnalysis() {
     }
   }
 
-  // 获取分析及绘制图层样式 - 使用主题色
+  // 获取分析及绘制图层样式 - 使用路径分析专用颜色
   const getAnalysislayerStyle = () => {
+    const rootStyle = getComputedStyle(document.documentElement)
+    const pathColor = rootStyle.getPropertyValue('--path-stroke-color')?.trim() || '#00FF00'
+    
     return new window.ol.style.Style({
       stroke: new window.ol.style.Stroke({
-        color: '#FFB6C1', // 淡粉红色
+        color: pathColor, // 浅绿色
         width: 4
       }),
       fill: new window.ol.style.Fill({
-        color: '#FFB6C14D' // 淡粉红色，70%透明度
+        color: pathColor + '4D' // 浅绿色，70%透明度
       })
     })
   }

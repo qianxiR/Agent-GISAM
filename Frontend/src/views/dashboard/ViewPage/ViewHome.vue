@@ -15,10 +15,6 @@
         <div ref="mapContainer" class="map-view"></div>
         <!-- 要素弹窗 -->
         <FeaturePopup />
-        <!-- 坐标显示（左下角） -->
-        <CoordinateDisplay />
-        <!-- 比例尺显示（右下角） -->
-        <ScaleBar />
         <!-- 鹰眼（右下角） -->
         <OverviewMap />
         <!-- 距离量算面板 -->
@@ -52,12 +48,11 @@ import { useMapStore } from '@/stores/mapStore'
 import { useGlobalModalStore } from '@/stores/modalStore'
 import { usePageStateStore } from '@/stores/pageStateStore'
 import { useMonitoringThreshold } from '@/composables/useMonitoringThreshold'
+import { useMonitoringPlatformStore } from '@/stores/monitoringPlatformStore'
 import DashboardViewHeader from '@/views/dashboard/ViewPage/layout/DashboardViewHeader.vue'
 import UserProfile from '@/views/dashboard/management-analysis/profile/UserProfile.vue'
 import AIManagement from '@/views/dashboard/management-analysis/management/AIManagement.vue'
 import FeaturePopup from '@/components/Map/FeaturePopup.vue'
-import CoordinateDisplay from '@/components/Map/CoordinateDisplay.vue'
-import ScaleBar from '@/components/Map/ScaleBar.vue'
 import OverviewMap from '@/components/Map/OverviewMap.vue'
 import DistanceMeasurePanel from '@/components/Map/DistanceMeasurePanel.vue'
 import AreaMeasurePanel from '@/components/Map/AreaMeasurePanel.vue'
@@ -75,6 +70,7 @@ const { mapContainer, initMap, cleanup } = useMap()
 const mapStore = useMapStore()
 const globalModal = useGlobalModalStore()
 const pageStateStore = usePageStateStore()
+const monitoringPlatformStore = useMonitoringPlatformStore()
 
 let resizeObserver: ResizeObserver | null = null
 let eventCleanup: (() => void) | null = null
@@ -132,7 +128,8 @@ onMounted(() => {
   // 设置当前页面为视图页面
   pageStateStore.switchToPage('view')
   
-  
+  // 初始化监测平台store
+  monitoringPlatformStore.initializeStore()
 
   // 当容器尺寸变化时，强制更新地图尺寸，避免容器初始为0导致"无地图可见"
   const el = mapContainer.value
@@ -202,4 +199,5 @@ onUnmounted(() => {
 :deep(.custom-zoom-control) {
   display: none !important;
 }
+
 </style>

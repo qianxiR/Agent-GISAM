@@ -16,7 +16,7 @@
 
       <div class="analysis-actions">
         <SecondaryButton text="开始执行擦除" @click="handleExecute" />
-        <SecondaryButton v-if="results.length > 0" text="清除结果" @click="handleClear" />
+        <SecondaryButton text="清除结果" @click="handleClear" />
         <SecondaryButton text="保存为图层" @click="onSaveAsLayer" />
       </div>
 
@@ -184,6 +184,7 @@ const handleExecute = async () => {
 
 const handleClear = () => {
   clearState()
+  analysisStore.setAnalysisStatus('已清除擦除分析结果')
 }
 
 // 保存/导出与命名弹窗

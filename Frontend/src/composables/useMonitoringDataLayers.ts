@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { useMapStore } from '@/stores/mapStore'
-import { useMonitoringDataStore } from '@/stores/monitoringDataStore'
+import { useMonitoringPlatformStore } from '@/stores/monitoringPlatformStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { useLayerDataStore } from '@/stores/layerDataStore'
 import { useMapStyles } from '@/composables/useMapStyles'
@@ -16,7 +16,7 @@ const ol = window.ol
  */
 export function useMonitoringDataLayers() {
   const mapStore = useMapStore()
-  const monitoringDataStore = useMonitoringDataStore()
+  const monitoringPlatformStore = useMonitoringPlatformStore()
   const themeStore = useThemeStore()
   const layerDataStore = useLayerDataStore()
   const { createLocalLayerStyle } = useMapStyles()
@@ -144,6 +144,10 @@ export function useMonitoringDataLayers() {
 
       // 存储图层引用
       monitoringLayers.value.set(siteInfo.id, vectorLayer)
+      
+      // 同步到监测平台store
+      monitoringPlatformStore.setMonitoringLayer(siteInfo.id, vectorLayer)
+      monitoringPlatformStore.setLayerVisibility(siteInfo.id, true)
 
       // 保存属性数据到layerDataStore，用于管理分析平台的要素信息显示
       const featureData = {
@@ -175,7 +179,7 @@ export function useMonitoringDataLayers() {
     // 先清理已存在的监测点图层，避免重复加载
     unloadAllMonitoringLayers()
     
-    const sites = monitoringDataStore.getAllSites()
+    const sites = monitoringPlatformStore.getAllSites
     
     sites.forEach(site => {
       loadMonitoringSiteLayer(site)
@@ -207,6 +211,9 @@ export function useMonitoringDataLayers() {
       }
       
       monitoringLayers.value.delete(siteId)
+      
+      // 同步到监测平台store
+      monitoringPlatformStore.removeMonitoringLayer(siteId)
     }
   }
 
@@ -235,6 +242,9 @@ export function useMonitoringDataLayers() {
       // 强制触发响应式更新
       mapStore.vectorlayers = [...mapStore.vectorlayers]
       monitoringLayers.value.clear()
+      
+      // 同步到监测平台store
+      monitoringPlatformStore.clearAllMonitoringLayers()
     }
   }
 
@@ -247,6 +257,8 @@ export function useMonitoringDataLayers() {
     const layer = monitoringLayers.value.get(siteId)
     if (layer) {
       layer.setVisible(visible)
+      // 同步到监测平台store
+      monitoringPlatformStore.setLayerVisibility(siteId, visible)
     }
   }
 
@@ -257,7 +269,7 @@ export function useMonitoringDataLayers() {
    */
   const updateMonitoringLayerStyle = (siteId: string, newWaterQualityClass: string) => {
     const layer = monitoringLayers.value.get(siteId)
-    const siteInfo = monitoringDataStore.getSiteById(siteId)
+    const siteInfo = monitoringPlatformStore.getSiteById(siteId)
     
     if (layer && siteInfo) {
       const newStyle = createMonitoringPointStyle(newWaterQualityClass, siteInfo.location)
@@ -269,18 +281,7 @@ export function useMonitoringDataLayers() {
    * 获取监测点图层状态
    */
   const getMonitoringLayersStatus = computed(() => {
-    const status: Record<string, any> = {}
-    
-    monitoringLayers.value.forEach((layer, siteId) => {
-      const siteInfo = monitoringDataStore.getSiteById(siteId)
-      status[siteId] = {
-        visible: layer.getVisible(),
-        layerName: layer.get('layerName'),
-        siteInfo
-      }
-    })
-    
-    return status
+    return monitoringPlatformStore.getLayersStatus
   })
 
   return {
