@@ -179,7 +179,9 @@
       v-model="newMessage"
       placeholder="请输入您的需求..."
       :rows="3"
-      :disabled="isLLMResponding"
+      :disabled="false"
+      :send-disabled="isLLMResponding"
+      :send-button-title="isLLMResponding ? '请等待上一次对话完成！' : '发送消息'"
       @send="sendMessage"
     />
   </div>
@@ -454,9 +456,19 @@ const handleQueryResult = (event: CustomEvent) => {
   // 构造查询结果消息
   let resultMessage = ''
   if (success) {
-    resultMessage = `查询完成：${message}`
+    resultMessage = `[属性查询] 查询完成：${message}
+
+🌊 长江水域监测分析概况：
+当前属性查询已成功完成，为武汉市长江段水资源监测提供了重要的要素筛选结果。该查询结果可用于快速定位关键监测点、识别异常水质区域、筛选重要设施等水资源管理决策。
+
+💡 后续操作建议：
+您可以选择以下操作来进一步处理查询结果：
+- 导出为图层：保存查询结果为新的地图图层，便于后续叠加分析
+- 导出为JSON：将查询结果导出为GeoJSON格式，用于数据共享和进一步处理
+
+请告诉我您希望进行哪种操作？`
   } else {
-    resultMessage = `查询失败：${error || '未知错误'}`
+    resultMessage = `[属性查询] 查询失败：${error || '未知错误'}`
   }
   
   // 将结果添加到聊天记录中
@@ -529,7 +541,17 @@ const handleBufferAnalysisResult = (event: CustomEvent) => {
   // 构造缓冲区分析结果消息
   let resultMessage = ''
   if (success) {
-    resultMessage = `缓冲区分析完成：${message}`
+    resultMessage = `[缓冲区分析] 缓冲区分析完成：${message}
+
+🌊 长江水域监测分析概况：
+当前缓冲区分析已成功完成，为武汉市长江段水资源监测提供了重要的空间影响范围评估。该分析结果可用于污染扩散评估、生态保护范围划定、取水口安全距离分析等水资源管理决策。
+
+💡 后续操作建议：
+您可以选择以下操作来进一步处理分析结果：
+- 导出为图层：保存分析结果为新的地图图层，便于后续叠加分析
+- 导出为JSON：将分析结果导出为GeoJSON格式，用于数据共享和进一步处理
+
+请告诉我您希望进行哪种操作？`
     
     // 添加工具调用信息到消息中
     const toolInfoMessage = `工具调用：execute_buffer_analysis，参数：图层"${layerName}"，半径${radius}${unit}`
@@ -539,7 +561,7 @@ const handleBufferAnalysisResult = (event: CustomEvent) => {
       sender: 'system' 
     })
   } else {
-    resultMessage = `缓冲区分析失败：${error || '未知错误'}`
+    resultMessage = `[缓冲区分析] 缓冲区分析失败：${error || '未知错误'}`
   }
   
   // 将结果添加到聊天记录中
@@ -576,7 +598,17 @@ const handleIntersectionAnalysisResult = (event: CustomEvent) => {
   // 构造相交分析结果消息
   let resultMessage = ''
   if (success) {
-    resultMessage = `相交分析完成：${message}`
+    resultMessage = `[相交分析] 相交分析完成：${message}
+
+🌊 长江水域监测分析概况：
+当前相交分析已成功完成，为武汉市长江段水资源监测提供了重要的空间叠加分析结果。该分析结果可用于识别受影响的关键设施、评估污染影响范围、确定应急响应区域等水资源管理决策。
+
+💡 后续操作建议：
+您可以选择以下操作来进一步处理分析结果：
+- 导出为图层：保存分析结果为新的地图图层，便于后续叠加分析
+- 导出为JSON：将分析结果导出为GeoJSON格式，用于数据共享和进一步处理
+
+请告诉我您希望进行哪种操作？`
     
     // 添加工具调用信息到消息中
     const toolInfoMessage = `工具调用：execute_intersection_analysis，参数：目标图层"${targetLayerName}"，掩膜图层"${maskLayerName}"`
@@ -586,7 +618,7 @@ const handleIntersectionAnalysisResult = (event: CustomEvent) => {
       sender: 'system' 
     })
   } else {
-    resultMessage = `相交分析失败：${error || '未知错误'}`
+    resultMessage = `[相交分析] 相交分析失败：${error || '未知错误'}`
   }
   
   // 将结果添加到聊天记录中
@@ -623,7 +655,17 @@ const handleEraseAnalysisResult = (event: CustomEvent) => {
   // 构造擦除分析结果消息
   let resultMessage = ''
   if (success) {
-    resultMessage = `擦除分析完成：${message}`
+    resultMessage = `[擦除分析] 擦除分析完成：${message}
+
+🌊 长江水域监测分析概况：
+当前擦除分析已成功完成，为武汉市长江段水资源监测提供了重要的空间排除分析结果。该分析结果可用于确定实际可治理区域、排除生态保护红线、识别可用取水范围等水资源管理决策。
+
+💡 后续操作建议：
+您可以选择以下操作来进一步处理分析结果：
+- 导出为图层：保存分析结果为新的地图图层，便于后续叠加分析
+- 导出为JSON：将分析结果导出为GeoJSON格式，用于数据共享和进一步处理
+
+请告诉我您希望进行哪种操作？`
     
     // 添加工具调用信息到消息中
     const toolInfoMessage = `工具调用：execute_erase_analysis，参数：目标图层"${targetLayerName}"，擦除图层"${eraseLayerName}"`
@@ -633,7 +675,7 @@ const handleEraseAnalysisResult = (event: CustomEvent) => {
       sender: 'system' 
     })
   } else {
-    resultMessage = `擦除分析失败：${error || '未知错误'}`
+    resultMessage = `[擦除分析] 擦除分析失败：${error || '未知错误'}`
   }
   
   // 将结果添加到聊天记录中
@@ -670,7 +712,17 @@ const handlePathAnalysisResult = (event: CustomEvent) => {
   // 构造最短路径分析结果消息
   let resultMessage = ''
   if (success) {
-    resultMessage = `最短路径分析完成：${message}`
+    resultMessage = `[最短路径分析] 最短路径分析完成：${message}
+
+🌊 长江水域监测分析概况：
+当前最短路径分析已成功完成，为武汉市长江段水资源监测提供了重要的路径规划结果。该分析结果可用于应急送水路线规划、无人机航测路径优化、物资运输路线选择等水资源管理决策。
+
+💡 后续操作建议：
+您可以选择以下操作来进一步处理分析结果：
+- 导出为图层：保存分析结果为新的地图图层，便于后续叠加分析
+- 导出为JSON：将分析结果导出为GeoJSON格式，用于数据共享和进一步处理
+
+请告诉我您希望进行哪种操作？`
     
     // 添加工具调用信息到消息中
     const toolInfoMessage = `工具调用：execute_shortest_path_analysis，参数：起点图层"${startLayerName}"，终点图层"${endLayerName}"`
@@ -680,7 +732,7 @@ const handlePathAnalysisResult = (event: CustomEvent) => {
       sender: 'system' 
     })
   } else {
-    resultMessage = `最短路径分析失败：${error || '未知错误'}`
+    resultMessage = `[最短路径分析] 最短路径分析失败：${error || '未知错误'}`
   }
   
   // 将结果添加到聊天记录中
@@ -1068,7 +1120,23 @@ const sendImplicitMessageToLLM = async (resultMessage: string, showResponse: boo
     }
     
     // 构造完整的prompt
-    const fullPrompt = `${conversationContext}分析结果反馈：${resultMessage}。请根据这个结果给出适当的回应或建议。`
+    const fullPrompt = `${conversationContext}分析结果反馈：${resultMessage}
+
+重要提示：当用户说"导出为图层"、"保存为图层"、"另存为图层"时，请根据刚才完成的分析类型自动调用对应的保存工具：
+- 缓冲区分析完成 → 调用 save_buffer_results_as_layer
+- 相交分析完成 → 调用 save_intersection_results_as_layer  
+- 擦除分析完成 → 调用 save_erase_results_as_layer
+- 最短路径分析完成 → 调用 save_path_results_as_layer
+- 属性查询完成 → 调用 save_query_results_as_layer
+
+当用户说"导出为JSON"、"导出为GeoJSON"、"导出结果"时，请根据刚才完成的分析类型自动调用对应的导出工具：
+- 缓冲区分析完成 → 调用 export_buffer_results_as_json
+- 相交分析完成 → 调用 export_intersection_results_as_json
+- 擦除分析完成 → 调用 export_erase_results_as_json  
+- 最短路径分析完成 → 调用 export_path_results_as_json
+- 属性查询完成 → 调用 export_query_results_as_json
+
+请结合武汉市长江水域监测管理的专业背景，给出友好、专业的回复，并主动询问用户希望进行哪种后续操作。`
     
     const llm = getLLMApiConfig()
     const payload = {

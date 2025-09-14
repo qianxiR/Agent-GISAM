@@ -108,7 +108,18 @@ def query_knowledge_base(question: str) -> str:
         rag_system = get_rag_system()
         result = rag_system.query(question, include_sources=True)
         
-        return result['answer']
+        # 构建包含来源信息的完整回答
+        answer = result['answer']
+        
+        # 如果RAG系统没有自动添加来源信息，手动添加
+        if '**📚 参考来源：**' not in answer and result.get('source_documents'):
+            source_info = "\n\n**📚 参考来源：**\n"
+            for i, doc in enumerate(result['source_documents'], 1):
+                filename = doc.get('filename', '未知文件')
+                source_info += f"{i}. {filename}\n"
+            answer += source_info
+        
+        return answer
         
     except Exception as e:
         return f"知识库查询失败: {str(e)}"
@@ -502,7 +513,7 @@ async def tool_chat(req: ToolChatRequest):
         # 构建最终回复的系统提示词，特别强调知识库查询后的回复要求
         final_system_prompt = full_system_prompt
         if tool_name == "query_knowledge_base":
-            final_system_prompt += "\n\n重要：你刚刚查询了知识库，现在必须基于查询结果给用户一个完整、有用的回复。不要只是重复工具返回的内容，要结合用户的问题提供有价值的回答。"
+            final_system_prompt += "\n\n重要：你刚刚查询了知识库，现在必须基于查询结果给用户一个完整、有用的回复。工具返回的结果已经包含了参考来源信息，请直接使用这些信息，不要重复添加来源。要结合用户的问题提供有价值的回答，并确保来源信息清晰可见。"
         
         final_ai: AIMessage = llm_with_tools.invoke([
             SystemMessage(content=final_system_prompt),

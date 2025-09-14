@@ -6,7 +6,7 @@
         :placeholder="placeholder"
         as="textarea"
         :rows="rows"
-        :disabled="disabled"
+        :disabled="false"
         @enter="handleSend"
         @update:modelValue="handleInputChange"
       />
@@ -67,7 +67,7 @@
       <button 
         class="action-button" 
         @click="handleSend" 
-        :disabled="!inputValue.trim() || disabled"
+        :disabled="!inputValue.trim() || sendDisabled"
         :title="sendButtonTitle"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -92,6 +92,7 @@ interface Props {
   placeholder?: string;
   rows?: number;
   disabled?: boolean;
+  sendDisabled?: boolean;
   sendButtonTitle?: string;
 }
 
@@ -100,6 +101,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: '请输入您的需求...',
   rows: 3,
   disabled: false,
+  sendDisabled: false,
   sendButtonTitle: '发送消息'
 });
 
@@ -162,7 +164,7 @@ const handleInputChange = (value: string) => {
 
 const handleSend = () => {
   const message = inputValue.value.trim();
-  if (message && !props.disabled) {
+  if (message && !props.sendDisabled) {
     emit('send', message);
     inputValue.value = '';
     mention.close()

@@ -777,11 +777,19 @@ export function useShortestPathAnalysis() {
     }
   }
   
-  const setObstaclelayer = (layerName: string | null): void => {
-    if (layerName) {
-      const obstacles = convertlayerToObstacles(layerName)
+  const setObstaclelayer = (layerId: string | null): void => {
+    if (layerId) {
+      // 通过layerId查找图层信息
+      const layerInfo = mapStore.vectorlayers.find(l => l.id === layerId)
+      if (!layerInfo || !layerInfo.layer) {
+        console.warn(`[ShortestPath] 未找到图层ID: ${layerId}`)
+        updateAnalysisOptions({ obstacles: null })
+        return
+      }
+      
+      const obstacles = convertlayerToObstacles(layerInfo.name)
       updateAnalysisOptions({ obstacles })
-      console.log(`[ShortestPath] 设置障碍物图层: ${layerName}`)
+      console.log(`[ShortestPath] 设置障碍物图层: ${layerInfo.name} (ID: ${layerId})`)
     } else {
       updateAnalysisOptions({ obstacles: null })
       console.log('[ShortestPath] 清除障碍物图层')
