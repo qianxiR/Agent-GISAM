@@ -687,10 +687,22 @@ export function uselayermanager() {
 
         const finalName = layerName || await buildDefaultQueryLayerName()
 
-        // 保存结果为新图层
-        const success = await saveFeaturesAslayer(featuresToSave, finalName, sourceType as 'query' | 'buffer')
-        if (success) {
-          const successMessage = `${sourceType === 'buffer' ? '缓冲区分析结果' : '查询结果'}已保存为新图层"${finalName}"，共${featuresToSave.length}个要素`
+        // 同时执行保存为图层和导出为JSON
+        const { useLayerExport } = await import('@/composables/useLayerExport')
+        const { exportFeaturesAsGeoJSON } = useLayerExport()
+        
+        const [layerResult, jsonResult] = await Promise.all([
+          saveFeaturesAslayer(featuresToSave, finalName, sourceType as 'query' | 'buffer'),
+          exportFeaturesAsGeoJSON(featuresToSave, finalName, {
+            analysisType: sourceType,
+            description: `${sourceType === 'buffer' ? '缓冲区分析结果' : '查询结果'}导出 - ${finalName}`
+          })
+        ])
+        
+        console.log('[Agent] 保存结果:', { layerResult, jsonResult })
+        
+        if (layerResult) {
+          const successMessage = `${sourceType === 'buffer' ? '缓冲区分析结果' : '查询结果'}已保存为新图层"${finalName}"并导出为JSON文件，共${featuresToSave.length}个要素`
           console.log(`[Agent] ${successMessage}`)
           
           // 发送保存成功事件
@@ -699,7 +711,8 @@ export function uselayermanager() {
               success: true,
               message: successMessage,
               layerName: finalName,
-              count: featuresToSave.length
+              count: featuresToSave.length,
+              jsonExported: true
             }
           })
           window.dispatchEvent(successEvent)
@@ -733,60 +746,102 @@ export function uselayermanager() {
       }
     })
     
-    // 监听导出查询结果为JSON事件
-    window.addEventListener('agent:exportQueryResultsAsJson', async (e: any) => {
-      const { fileName } = e.detail || {}
-      if (!fileName) {
-        console.warn('[Agent] 导出查询结果参数不完整:', { fileName })
-        return
-      }
+    // 监听保存区域选择结果为图层事件（未提供名称则使用默认名）
+    window.addEventListener('agent:saveSelectionResultsAsLayer', async (e: any) => {
+      const { layerName } = e.detail || {}
       
       try {
-        // 动态导入useFeatureQuery以获取查询结果
-        const { useFeatureQuery } = await import('@/composables/useFeatureQuery')
-        const featureQuery = useFeatureQuery()
+        // 动态导入useFeatureSelection以获取区域选择结果
+        const { useFeatureSelection } = await import('@/composables/useFeatureSelection')
+        const featureSelection = useFeatureSelection()
+        const selectedFeatures = featureSelection.selectedFeatures.value
         
-        // 获取当前查询结果
-        const queryResults = featureQuery.queryResults.value
+        console.log(`[Agent] 从区域选择结果中获取数据:`, {
+          layerName,
+          selectedFeaturesType: Array.isArray(selectedFeatures) ? 'array' : typeof selectedFeatures,
+          selectedFeaturesLength: Array.isArray(selectedFeatures) ? selectedFeatures.length : 'not-array'
+        })
         
-        // 动态导入useLayerExport以获取导出功能
+        // 检查是否有数据可保存
+        if (!selectedFeatures || selectedFeatures.length === 0) {
+          const errorMessage = `无法保存图层"${layerName}"：当前没有可保存的区域选择数据。请先进行区域选择操作。`
+          console.warn(`[Agent] ${errorMessage}`)
+          
+          // 发送保存失败事件
+          const errorEvent = new CustomEvent('agent:saveResult', {
+            detail: {
+              success: false,
+              message: errorMessage,
+              layerName,
+              error: '没有可保存的数据'
+            }
+          })
+          window.dispatchEvent(errorEvent)
+          return
+        }
+        
+        // 生成默认图层名称
+        const finalName = layerName || `区域选择结果_${new Date().toISOString().slice(0, 10)}`
+
+        // 同时执行保存为图层和导出为JSON
         const { useLayerExport } = await import('@/composables/useLayerExport')
         const { exportFeaturesAsGeoJSON } = useLayerExport()
         
-        // 导出查询结果为GeoJSON
-        await exportFeaturesAsGeoJSON(queryResults, fileName, {
-          analysisType: 'query',
-          description: `查询结果导出 - ${fileName}`
-        })
+        const [layerResult, jsonResult] = await Promise.all([
+          saveFeaturesAslayer(selectedFeatures, finalName, 'area'),
+          exportFeaturesAsGeoJSON(selectedFeatures, finalName, {
+            analysisType: 'area_selection',
+            description: `区域选择结果导出 - ${finalName}`
+          })
+        ])
         
-        const successMessage = `查询结果已导出为"${fileName}.json"，共${queryResults.length}个要素`
-        console.log(`[Agent] ${successMessage}`)
+        console.log('[Agent] 区域选择保存结果:', { layerResult, jsonResult })
         
-        // 发送导出成功事件
-        const successEvent = new CustomEvent('agent:exportResult', {
-          detail: {
-            success: true,
-            message: successMessage,
-            fileName,
-            count: queryResults.length
-          }
-        })
-        window.dispatchEvent(successEvent)
+        if (layerResult) {
+          const successMessage = `区域选择结果已保存为新图层"${finalName}"并导出为JSON文件，共${selectedFeatures.length}个要素`
+          console.log(`[Agent] ${successMessage}`)
+          
+          // 发送保存成功事件
+          const successEvent = new CustomEvent('agent:saveResult', {
+            detail: {
+              success: true,
+              message: successMessage,
+              layerName: finalName,
+              count: selectedFeatures.length,
+              jsonExported: true
+            }
+          })
+          window.dispatchEvent(successEvent)
+        } else {
+          const errorMessage = `保存图层"${finalName}"失败`
+          console.error(`[Agent] ${errorMessage}`)
+          
+          // 发送保存失败事件
+          const errorEvent = new CustomEvent('agent:saveResult', {
+            detail: {
+              success: false,
+              message: errorMessage,
+              layerName: finalName
+            }
+          })
+          window.dispatchEvent(errorEvent)
+        }
         
       } catch (error) {
-        console.error('[Agent] 执行导出查询结果时出错:', error)
+        console.error('[Agent] 执行保存区域选择结果时出错:', error)
         
-        // 发送导出失败事件
-        const errorEvent = new CustomEvent('agent:exportResult', {
+        // 发送保存失败事件
+        const errorEvent = new CustomEvent('agent:saveResult', {
           detail: {
             success: false,
-            message: `导出失败: ${error instanceof Error ? error.message : '未知错误'}`,
-            fileName
+            message: `保存失败: ${error instanceof Error ? error.message : '未知错误'}`,
+            layerName
           }
         })
         window.dispatchEvent(errorEvent)
       }
     })
+    
     
     // 监听缓冲区分析事件
     window.addEventListener('agent:executeBufferAnalysis', async (e: any) => {
@@ -964,27 +1019,6 @@ export function uselayermanager() {
       }
     })
     
-    // 监听导出缓冲区分析结果为JSON事件
-    window.addEventListener('agent:exportBufferResultsAsJson', async (e: any) => {
-      const { fileName } = e.detail || {}
-      if (!fileName) return
-      
-      try {
-        const { useBufferAnalysis } = await import('@/composables/useBufferAnalysis')
-        const bufferAnalysis = useBufferAnalysis()
-        const ok = await bufferAnalysis.exportBufferResultsAsJSON(fileName)
-        const eventName = 'agent:exportResult'
-        const detail = ok
-          ? { success: true, message: `已导出为"${fileName}.json"`, fileName }
-          : { success: false, message: `导出失败：${fileName}.json`, fileName }
-        window.dispatchEvent(new CustomEvent(eventName, { detail }))
-      } catch (error) {
-        console.error('[Agent] 导出缓冲区分析结果失败:', error)
-        window.dispatchEvent(new CustomEvent('agent:exportResult', {
-          detail: { success: false, message: `导出失败：${fileName}.json`, fileName }
-        }))
-      }
-    })
     
     // 监听保存相交分析结果为图层事件（未提供名称则使用默认名）
     window.addEventListener('agent:saveIntersectionResultsAsLayer', async (e: any) => {
@@ -1007,26 +1041,6 @@ export function uselayermanager() {
       }
     })
     
-    // 监听导出相交分析结果为JSON事件
-    window.addEventListener('agent:exportIntersectionResultsAsJson', async (e: any) => {
-      const { fileName } = e.detail || {}
-      if (!fileName) return
-      
-      try {
-        const { useIntersectionAnalysis } = await import('@/composables/useIntersectionAnalysis')
-        const intersectionAnalysis = useIntersectionAnalysis()
-        const ok = await intersectionAnalysis.exportIntersectionResultsAsJSON(fileName)
-        const detail = ok
-          ? { success: true, message: `已导出为"${fileName}.json"`, fileName }
-          : { success: false, message: `导出失败：${fileName}.json`, fileName }
-        window.dispatchEvent(new CustomEvent('agent:exportResult', { detail }))
-      } catch (error) {
-        console.error('[Agent] 导出相交分析结果失败:', error)
-        window.dispatchEvent(new CustomEvent('agent:exportResult', {
-          detail: { success: false, message: `导出失败：${fileName}.json`, fileName }
-        }))
-      }
-    })
     
     // 监听保存擦除分析结果为图层事件（未提供名称则使用默认名）
     window.addEventListener('agent:saveEraseResultsAsLayer', async (e: any) => {
@@ -1049,26 +1063,6 @@ export function uselayermanager() {
       }
     })
     
-    // 监听导出擦除分析结果为JSON事件
-    window.addEventListener('agent:exportEraseResultsAsJson', async (e: any) => {
-      const { fileName } = e.detail || {}
-      if (!fileName) return
-      
-      try {
-        const { useEraseAnalysis } = await import('@/composables/useEraseAnalysis')
-        const eraseAnalysis = useEraseAnalysis()
-        const ok = await eraseAnalysis.exportEraseResultsAsJSON(fileName)
-        const detail = ok
-          ? { success: true, message: `已导出为"${fileName}.json"`, fileName }
-          : { success: false, message: `导出失败：${fileName}.json`, fileName }
-        window.dispatchEvent(new CustomEvent('agent:exportResult', { detail }))
-      } catch (error) {
-        console.error('[Agent] 导出擦除分析结果失败:', error)
-        window.dispatchEvent(new CustomEvent('agent:exportResult', {
-          detail: { success: false, message: `导出失败：${fileName}.json`, fileName }
-        }))
-      }
-    })
     
     // 监听保存最短路径分析结果为图层事件（未提供名称则使用默认名）
     window.addEventListener('agent:savePathResultsAsLayer', async (e: any) => {
@@ -1091,26 +1085,6 @@ export function uselayermanager() {
       }
     })
     
-    // 监听导出最短路径分析结果为JSON事件
-    window.addEventListener('agent:exportPathResultsAsJson', async (e: any) => {
-      const { fileName } = e.detail || {}
-      if (!fileName) return
-      
-      try {
-        const { useShortestPathAnalysis } = await import('@/composables/useShortestPathAnalysis')
-        const shortestPathAnalysis = useShortestPathAnalysis()
-        const ok = await shortestPathAnalysis.exportPathResultsAsJSON(fileName)
-        const detail = ok
-          ? { success: true, message: `已导出为"${fileName}.json"`, fileName }
-          : { success: false, message: `导出失败：${fileName}.json`, fileName }
-        window.dispatchEvent(new CustomEvent('agent:exportResult', { detail }))
-      } catch (error) {
-        console.error('[Agent] 导出最短路径分析结果失败:', error)
-        window.dispatchEvent(new CustomEvent('agent:exportResult', {
-          detail: { success: false, message: `导出失败：${fileName}.json`, fileName }
-        }))
-      }
-    })
     
     console.log('[useLayerManager] 4个分析功能的Agent事件监听器注册完成')
     

@@ -54,18 +54,6 @@ def save_query_results_as_layer(layer_name: str) -> str:
     return f"save_layer:{layer_name}"
 
 
-@tool
-def export_query_results_as_json(file_name: str) -> str:
-    """
-    导出查询结果为GeoJSON文件（前端执行）。
-    输入参数：
-      - file_name: string 文件名（不包含扩展名）
-    业务处理：
-      - 后端不直接操作地图，仅返回导出指令供前端执行
-    输出数据格式：
-      - string: 格式 "export_json:file_name"
-    """
-    return f"export_json:{file_name}"
 
 
 @tool
@@ -166,19 +154,6 @@ def save_buffer_results_as_layer(layer_name: str) -> Dict[str, Any]:
     return result
 
 
-@tool
-def export_buffer_results_as_json(file_name: str) -> Dict[str, Any]:
-    """
-    导出缓冲区分析结果为GeoJSON文件（前端执行）。
-    输入参数：
-      - file_name: string 文件名（不包含扩展名）
-    业务处理：
-      - 后端不直接操作地图，仅返回导出指令供前端执行
-    输出数据格式：
-      - { action: 'buffer.export_json', params: { file_name: string } }
-    """
-    result = {"action": "buffer.export_json", "params": {"file_name": file_name}}
-    return result
 
 
 @tool
@@ -196,19 +171,6 @@ def save_intersection_results_as_layer(layer_name: str) -> Dict[str, Any]:
     return result
 
 
-@tool
-def export_intersection_results_as_json(file_name: str) -> Dict[str, Any]:
-    """
-    导出相交分析结果为GeoJSON文件（前端执行）。
-    输入参数：
-      - file_name: string 文件名（不包含扩展名）
-    业务处理：
-      - 后端不直接操作地图，仅返回导出指令供前端执行
-    输出数据格式：
-      - { action: 'intersection.export_json', params: { file_name: string } }
-    """
-    result = {"action": "intersection.export_json", "params": {"file_name": file_name}}
-    return result
 
 
 @tool
@@ -226,19 +188,6 @@ def save_erase_results_as_layer(layer_name: str) -> Dict[str, Any]:
     return result
 
 
-@tool
-def export_erase_results_as_json(file_name: str) -> Dict[str, Any]:
-    """
-    导出擦除分析结果为GeoJSON文件（前端执行）。
-    输入参数：
-      - file_name: string 文件名（不包含扩展名）
-    业务处理：
-      - 后端不直接操作地图，仅返回导出指令供前端执行
-    输出数据格式：
-      - { action: 'erase.export_json', params: { file_name: string } }
-    """
-    result = {"action": "erase.export_json", "params": {"file_name": file_name}}
-    return result
 
 
 @tool
@@ -256,19 +205,6 @@ def save_path_results_as_layer(layer_name: str) -> Dict[str, Any]:
     return result
 
 
-@tool
-def export_path_results_as_json(file_name: str) -> Dict[str, Any]:
-    """
-    导出最短路径分析结果为GeoJSON文件（前端执行）。
-    输入参数：
-      - file_name: string 文件名（不包含扩展名）
-    业务处理：
-      - 后端不直接操作地图，仅返回导出指令供前端执行
-    输出数据格式：
-      - { action: 'path.export_json', params: { file_name: string } }
-    """
-    result = {"action": "path.export_json", "params": {"file_name": file_name}}
-    return result
 
 
 # 导出所有工具函数
@@ -276,18 +212,13 @@ __all__ = [
     'toggle_layer_visibility',
     'query_features_by_attribute', 
     'save_query_results_as_layer',
-    'export_query_results_as_json',
     'get_open_layers',
     'execute_buffer_analysis',
     'execute_intersection_analysis',
     'execute_erase_analysis',
     'execute_shortest_path_analysis',
     'save_buffer_results_as_layer',
-    'export_buffer_results_as_json',
     'save_intersection_results_as_layer',
-    'export_intersection_results_as_json',
     'save_erase_results_as_layer',
-    'export_erase_results_as_json',
-    'save_path_results_as_layer',
-    'export_path_results_as_json'
+    'save_path_results_as_layer'
 ]

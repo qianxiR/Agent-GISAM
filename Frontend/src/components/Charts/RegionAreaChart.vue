@@ -62,12 +62,13 @@ const pieOption = {
   },
   legend: {
     orient: 'horizontal',
-    bottom: '5%',
+    bottom: '2%',
     left: 'center',
     textStyle: {
       color: '#1890ff',
-      fontSize: 10,
-      fontWeight: 'bold'
+      fontSize: 12,
+      fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif'
     },
     itemWidth: 12,
     itemHeight: 8
@@ -149,8 +150,9 @@ const barOption = {
     type: 'value',
     axisLabel: {
       color: '#1890ff',
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif',
       formatter: function(value: number) {
         return value.toFixed(0) + 'km²'
       }
@@ -303,6 +305,7 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 700;
   color: #1890ff;
+  font-family: 'Arial, sans-serif';
 }
 
 .chart-container {

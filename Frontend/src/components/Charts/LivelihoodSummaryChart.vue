@@ -48,12 +48,13 @@ const pieOption = {
   },
   legend: {
     orient: 'horizontal',
-    bottom: '5%',
+    bottom: '2%',
     left: 'center',
     textStyle: {
       color: '#1890ff',
-      fontSize: 10,
-      fontWeight: 'bold'
+      fontSize: 12,
+      fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif'
     },
     itemWidth: 12,
     itemHeight: 8
@@ -93,9 +94,10 @@ const pieOption = {
         formatter: function(params: any) {
           return `${params.percent}%`
         },
-        fontSize: 14,
+        fontSize: 12,
         color: '#1890ff',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        fontFamily: 'Arial, sans-serif'
       },
       labelLine: {
         show: true,
@@ -141,8 +143,9 @@ const barOption = {
     data: livelihoodData.map(item => item.name),
     axisLabel: {
       color: '#1890ff',
-      fontSize: 13,
-      fontWeight: 'bold'
+      fontSize: 12,
+      fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif'
     },
     axisLine: {
       lineStyle: {
@@ -306,6 +309,7 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 700;
   color: #1890ff;
+  font-family: 'Arial, sans-serif';
 }
 
 .chart-container {

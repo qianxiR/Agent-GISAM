@@ -65,11 +65,6 @@
         />
         <SecondaryButton 
           v-if="selectedFeatures.length > 0"
-          text="导出为GeoJSON"
-          @click="exportSelectedAsGeoJSON"
-        />
-        <SecondaryButton 
-          v-if="selectedFeatures.length > 0"
           text="清除选择"
           variant="danger"
           @click="clearSelection"
@@ -157,17 +152,23 @@ const handlelayerNameClose = () => {
   showLayerNameModalRef.value = false
 }
 
-// 保存选中要素为图层
+// 保存选中要素为图层（同时导出为JSON）
 const saveSelectedAslayer = async (customlayerName: string) => {
   if (selectedFeatures.value.length === 0) {
     return
   }
 
-  await saveFeaturesAslayer(selectedFeatures.value, customlayerName, 'area')
+  // 同时执行保存为图层和导出为JSON
+  const [layerResult, jsonResult] = await Promise.all([
+    saveFeaturesAslayer(selectedFeatures.value, customlayerName, 'area'),
+    exportSelectedAsGeoJSON(customlayerName)
+  ])
+  
+  console.log('[AreaSelection] 保存结果:', { layerResult, jsonResult })
 }
 
 // 导出区域选择结果为 GeoJSON 文件
-const exportSelectedAsGeoJSON = async () => {
+const exportSelectedAsGeoJSON = async (fileName?: string) => {
   if (!selectedFeatures.value.length) {
     return
   }
@@ -179,7 +180,7 @@ const exportSelectedAsGeoJSON = async () => {
     dataProjection: 'EPSG:4326'
   })
 
-  await exportFeaturesAsGeoJSON(features.features, '区域选择结果', {
+  await exportFeaturesAsGeoJSON(features.features, fileName || '区域选择结果', {
     analysisType: 'area_selection',
     description: '按区域选择的要素结果',
     parameters: {

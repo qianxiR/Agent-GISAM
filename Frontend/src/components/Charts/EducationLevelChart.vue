@@ -72,12 +72,13 @@ const pieOption = {
   },
   legend: {
     orient: 'horizontal',
-    bottom: '5%',
+    bottom: '2%',
     left: 'center',
     textStyle: {
       color: '#1890ff',
-      fontSize: 10,
-      fontWeight: 'bold'
+      fontSize: 12,
+      fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif'
     },
     itemWidth: 12,
     itemHeight: 8
@@ -117,9 +118,10 @@ const pieOption = {
         formatter: function(params: any) {
           return `${params.percent}%`
         },
-        fontSize: 10,
-        color: '#0078D4',
-        fontWeight: 'bold'
+        fontSize: 12,
+        color: '#1890ff',
+        fontWeight: 'bold',
+        fontFamily: 'Arial, sans-serif'
       },
       labelLine: {
         show: true,
@@ -155,11 +157,12 @@ const barOption = {
   },
   legend: {
     orient: 'horizontal',
-    bottom: '2%',
+    bottom: '1%',
     textStyle: {
       color: '#1890ff',
-      fontSize: 10,
-      fontWeight: 'bold'
+      fontSize: 12,
+      fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif'
     },
     itemWidth: 12,
     itemHeight: 8
@@ -177,8 +180,9 @@ const barOption = {
     data: districtNames,
     axisLabel: {
       color: '#1890ff',
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif',
       rotate: 45
     },
     axisLine: {
@@ -191,8 +195,10 @@ const barOption = {
   yAxis: {
     type: 'value',
     axisLabel: {
-      color: '#0078D4',
-      fontSize: 11,
+      color: '#1890ff',
+      fontSize: 12,
+      fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif',
       formatter: function(value: number) {
         return (value / 10000).toFixed(0) + '万'
       }
@@ -377,6 +383,7 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 700;
   color: #1890ff;
+  font-family: 'Arial, sans-serif';
 }
 
 .chart-container {

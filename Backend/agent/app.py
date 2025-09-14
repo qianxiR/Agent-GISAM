@@ -66,20 +66,15 @@ from .tools import (
     toggle_layer_visibility,
     query_features_by_attribute,
     save_query_results_as_layer,
-    export_query_results_as_json,
     get_open_layers,
     execute_buffer_analysis,
     execute_intersection_analysis,
     execute_erase_analysis,
     execute_shortest_path_analysis,
     save_buffer_results_as_layer,
-    export_buffer_results_as_json,
     save_intersection_results_as_layer,
-    export_intersection_results_as_json,
     save_erase_results_as_layer,
-    export_erase_results_as_json,
-    save_path_results_as_layer,
-    export_path_results_as_json
+    save_path_results_as_layer
 )
 
 # 导入RAG系统
@@ -214,7 +209,7 @@ def detect_keywords_and_structure(user_input: str, conversation_id: str) -> str:
       - conversation_id: 对话ID
     
     数据处理方法：
-      - 检测关键词（导出为json、缓冲区分析、相交分析等）
+      - 检测关键词（缓冲区分析、相交分析等）
       - 提取图层名称和参数
       - 基于对话历史推断分析类型
       - 生成结构化的工具调用指令
@@ -224,7 +219,6 @@ def detect_keywords_and_structure(user_input: str, conversation_id: str) -> str:
     """
     # 关键词检测
     keywords = {
-        "导出为json": ["导出为json", "导出为JSON", "导出json", "导出JSON", "保存为json", "保存为JSON", "导出结果", "导出", "json", "JSON"],
         "导出为图层": ["导出为图层", "保存为图层", "导出图层", "保存图层"],
         "缓冲区分析": ["缓冲区分析", "缓冲区", "缓冲"],
         "相交分析": ["相交分析", "相交", "交集"],
@@ -312,40 +306,6 @@ def force_tool_call_based_on_keywords(user_input: str, conversation_id: str) -> 
     输出数据格式：
       - 工具调用字典或None
     """
-    # 检测导出相关关键词
-    if any(keyword in user_input for keyword in ["导出为json", "导出为JSON", "导出json", "导出JSON", "保存为json", "保存为JSON", "导出结果", "导出", "json", "JSON"]):
-        recent_analysis = get_recent_analysis_type(conversation_id)
-        
-        if recent_analysis == "缓冲区分析":
-            return {
-                "name": "export_buffer_results_as_json",
-                "args": {"file_name": "buffer_analysis_result"},
-                "id": f"call_{uuid.uuid4().hex[:8]}"
-            }
-        elif recent_analysis == "相交分析":
-            return {
-                "name": "export_intersection_results_as_json",
-                "args": {"file_name": "intersection_analysis_result"},
-                "id": f"call_{uuid.uuid4().hex[:8]}"
-            }
-        elif recent_analysis == "擦除分析":
-            return {
-                "name": "export_erase_results_as_json",
-                "args": {"file_name": "erase_analysis_result"},
-                "id": f"call_{uuid.uuid4().hex[:8]}"
-            }
-        elif recent_analysis == "最短路径分析":
-            return {
-                "name": "export_path_results_as_json",
-                "args": {"file_name": "path_analysis_result"},
-                "id": f"call_{uuid.uuid4().hex[:8]}"
-            }
-        elif recent_analysis == "属性查询":
-            return {
-                "name": "export_query_results_as_json",
-                "args": {"file_name": "query_result"},
-                "id": f"call_{uuid.uuid4().hex[:8]}"
-            }
     
     # 检测保存为图层相关关键词
     if any(keyword in user_input for keyword in ["导出为图层", "保存为图层", "导出图层", "保存图层"]):
@@ -567,7 +527,7 @@ async def tool_chat(req: ToolChatRequest):
       - 执行工具：根据 AIMessage 中的工具与参数，执行相应工具并得到结果
       - 第二步调用：将工具结果以 ToolMessage 形式回传给模型，生成最终回答
     输出数据格式：
-      - { success: true, data: { first_call: AIMessage(JSON), tool_result: string, final_answer: string }, task_id: string }
+      - { success: true, data: { first_call: AIMessage, tool_result: string, final_answer: string }, task_id: string }
     """
     # 创建任务
     task_id = await create_task()
@@ -577,7 +537,7 @@ async def tool_chat(req: ToolChatRequest):
     print(f"🆔 对话ID: {req.conversation_id}")
     print(f"🤖 模型: {req.model}")
     try:
-        # 创建OpenAI客户端用于JSON格式输出
+        # 创建OpenAI客户端
         client = OpenAI(
             api_key=settings.api_key,
             base_url=settings.base_url,
@@ -592,7 +552,6 @@ async def tool_chat(req: ToolChatRequest):
             toggle_layer_visibility, 
             query_features_by_attribute, 
             save_query_results_as_layer, 
-            export_query_results_as_json,
             get_open_layers,
             # 空间分析工具
             execute_buffer_analysis, 
@@ -601,13 +560,9 @@ async def tool_chat(req: ToolChatRequest):
             execute_shortest_path_analysis,
             # 结果保存工具
             save_buffer_results_as_layer,
-            export_buffer_results_as_json,
             save_intersection_results_as_layer,
-            export_intersection_results_as_json,
             save_erase_results_as_layer,
-            export_erase_results_as_json,
-            save_path_results_as_layer,
-            export_path_results_as_json
+            save_path_results_as_layer
         ])
         history_list = _conversation_layer_history.get(req.conversation_id, [])
         parsed_lines: List[str] = []
@@ -679,8 +634,6 @@ async def tool_chat(req: ToolChatRequest):
             tool_result = query_features_by_attribute.invoke(tool_args)
         elif tool_name == "save_query_results_as_layer":
             tool_result = save_query_results_as_layer.invoke(tool_args)
-        elif tool_name == "export_query_results_as_json":
-            tool_result = export_query_results_as_json.invoke(tool_args)
         elif tool_name == "get_open_layers":
             tool_result = get_open_layers.invoke(tool_args)
         elif tool_name == "execute_buffer_analysis":
@@ -693,20 +646,12 @@ async def tool_chat(req: ToolChatRequest):
             tool_result = execute_shortest_path_analysis.invoke(tool_args)
         elif tool_name == "save_buffer_results_as_layer":
             tool_result = save_buffer_results_as_layer.invoke(tool_args)
-        elif tool_name == "export_buffer_results_as_json":
-            tool_result = export_buffer_results_as_json.invoke(tool_args)
         elif tool_name == "save_intersection_results_as_layer":
             tool_result = save_intersection_results_as_layer.invoke(tool_args)
-        elif tool_name == "export_intersection_results_as_json":
-            tool_result = export_intersection_results_as_json.invoke(tool_args)
         elif tool_name == "save_erase_results_as_layer":
             tool_result = save_erase_results_as_layer.invoke(tool_args)
-        elif tool_name == "export_erase_results_as_json":
-            tool_result = export_erase_results_as_json.invoke(tool_args)
         elif tool_name == "save_path_results_as_layer":
             tool_result = save_path_results_as_layer.invoke(tool_args)
-        elif tool_name == "export_path_results_as_json":
-            tool_result = export_path_results_as_json.invoke(tool_args)
         else:
             tool_result = f"未知工具: {tool_name}"
         
@@ -750,13 +695,13 @@ async def tool_chat(req: ToolChatRequest):
         if tool_name == "query_knowledge_base":
             final_system_prompt += "\n\n重要：你刚刚查询了知识库，现在必须基于查询结果给用户一个完整、有用的回复。工具返回的结果已经包含了参考来源信息，请直接使用这些信息，不要重复添加来源。要结合用户的问题提供有价值的回答，并确保来源信息清晰可见。"
         
-        # 加强上下文记忆规则，特别针对保存和导出操作
-        if tool_name in ["save_buffer_results_as_layer", "export_buffer_results_as_json", 
-                        "save_intersection_results_as_layer", "export_intersection_results_as_json",
-                        "save_erase_results_as_layer", "export_erase_results_as_json",
-                        "save_path_results_as_layer", "export_path_results_as_json",
-                        "save_query_results_as_layer", "export_query_results_as_json"]:
-            final_system_prompt += "\n\n重要：你刚刚执行了保存或导出操作，请记住当前的分析结果状态。当用户再次说'导出为JSON'、'保存为图层'等操作时，必须基于刚才的分析类型调用对应的工具。"
+        # 加强上下文记忆规则，特别针对保存操作
+        if tool_name in ["save_buffer_results_as_layer", 
+                        "save_intersection_results_as_layer",
+                        "save_erase_results_as_layer",
+                        "save_path_results_as_layer",
+                        "save_query_results_as_layer"]:
+            final_system_prompt += "\n\n重要：你刚刚执行了保存操作，请记住当前的分析结果状态。当用户再次说'保存为图层'等操作时，必须基于刚才的分析类型调用对应的工具。"
         
         final_ai: AIMessage = llm_with_tools.invoke([
             SystemMessage(content=final_system_prompt),
@@ -1008,7 +953,7 @@ async def health():
             "prompt_loaded": load_system_prompt() != "You are a helpful spatial analysis assistant.",
             "rag_system_status": rag_status,
             "rag_details": rag_details,
-            "tools_count": 19,  # 17个原有工具 + 2个知识库工具
+            "tools_count": 14,  # 12个原有工具 + 2个知识库工具
             "tool_call_statistics": _tool_call_stats,
             "total_tool_calls": sum(_tool_call_stats.values()),
             "tool_execution_history_count": len(_tool_execution_history),

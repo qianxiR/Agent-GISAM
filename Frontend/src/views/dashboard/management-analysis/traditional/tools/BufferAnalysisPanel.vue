@@ -85,10 +85,6 @@
           text="清除结果"
           @click="clearResults"
         />
-        <SecondaryButton 
-          text="导出为JSON"
-          @click="onExportAsJSON"
-        />
       </div>
       
       <!-- 运行时提示 -->
@@ -171,7 +167,6 @@ const {
   updateBufferSettings,
   executeBufferAnalysis,
   saveBufferResultsAsLayer,
-  exportBufferResultsAsJSON,
   clearState,
   lastFeatureCollection,
 } = useBufferAnalysis()
@@ -222,11 +217,6 @@ const onSaveAsLayer = async () => {
   showLayerNameModal()
 }
 
-// 导出为JSON
-const onExportAsJSON = async () => {
-  const name = generatelayerNameFromBuffer()
-  await exportBufferResultsAsJSON(name)
-}
 
 // 距离变化时的处理
 const onDistanceChange = () => {

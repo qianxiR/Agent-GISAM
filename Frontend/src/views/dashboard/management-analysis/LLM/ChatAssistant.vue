@@ -202,7 +202,6 @@ import { useRouter } from 'vue-router';
 // 状态管理相关导入
 import { useThemeStore } from '@/stores/themeStore';
 import { useModeStateStore } from '@/stores/modeStateStore';
-import { useMonitoringDataStore } from '@/stores/monitoringDataStore';
 
 // 组件导入
 import LLMInputWindow from '@/components/Agent/LLMInputWindow.vue';
@@ -233,14 +232,13 @@ interface Message {
 // 初始化状态管理
 useThemeStore();
 const modeStateStore = useModeStateStore();
-const monitoringDataStore = useMonitoringDataStore();
 const router = useRouter();
 
 // 初始化空间分析功能组合式函数
-const { saveBufferResultsAsLayer, exportBufferResultsAsJSON } = useBufferAnalysis();
-const { saveIntersectionResultsAsLayer, exportIntersectionResultsAsJSON } = useIntersectionAnalysis();
-const { saveEraseResultsAsLayer, exportEraseResultsAsJSON } = useEraseAnalysis();
-const { savePathResultsAsLayer, exportPathResultsAsJSON } = useShortestPathAnalysis();
+const { saveBufferResultsAsLayer } = useBufferAnalysis();
+const { saveIntersectionResultsAsLayer } = useIntersectionAnalysis();
+const { saveEraseResultsAsLayer } = useEraseAnalysis();
+const { savePathResultsAsLayer } = useShortestPathAnalysis();
 
 // 组件属性定义
 const props = defineProps<{
@@ -494,14 +492,13 @@ const maybeAnnounceInitiallayers = () => {
     hasAnnounced.value = true;
     
     // 添加欢迎消息
-    const welcomeMessage = `您好，我是您的武汉市长江水域与水资源监测管理的自主智能助手。我能够帮助您进行城市空间分析、水资源监测与综合管理、环境监测预警、数据可视化以及多源信息整合等工作。
+    const welcomeMessage = `您好，我是您的武汉市长江水域与水资源管理的自主智能助手。我能够帮助您进行城市空间分析、水资源管理、数据可视化以及多源信息整合等工作。
 
 您可以进行以下功能，我将为您执行具体任务。
 
 ## 主要功能
-- **知识库查询**：武汉市基本概况、水文资源条件概况、长江流域、监测点位置介绍
-- **监测点分析**：点击监测点查看实时水质数据
-- **缓冲区分析**：对异常监测点@图层名称进行影响范围分析
+- **知识库查询**：武汉市基本概况、水文资源条件概况、长江流域
+- **缓冲区分析**：对图层@图层名称进行影响范围分析
 - **相交分析**：@图层名称与@图层名称叠加，计算**人口数量、重要设施与土地类型**
 - **擦除分析**：剔除限制区，得到**真实可治理与可取水区域**
 - **最短路径分析**：规划**应急送水、物资运输、无人机航测**等最优路线以规避限制区
@@ -567,14 +564,12 @@ const handleQueryResult = (event: CustomEvent) => {
   if (success) {
     resultMessage = `[属性查询] 查询完成：${message}
 
-🌊 长江水域监测分析概况：
-当前属性查询已成功完成，为武汉市长江段水资源监测提供了重要的要素筛选结果。该查询结果可用于快速定位关键监测点、识别异常水质区域、筛选重要设施等水资源管理决策。
+🌊 长江水域分析概况：
+当前属性查询已成功完成，为武汉市长江段水资源管理提供了重要的要素筛选结果。该查询结果可用于快速定位关键区域、筛选重要设施等水资源管理决策。
 
 💡 后续操作建议：
 您可以选择以下操作来进一步处理查询结果：
 - 导出为图层：保存查询结果为新的地图图层，便于后续叠加分析
-- 导出为JSON：将查询结果导出为GeoJSON格式，用于数据共享和进一步处理
-
 请告诉我您希望进行哪种操作？`
   } else {
     resultMessage = `[属性查询] 查询失败：${error || '未知错误'}`
@@ -626,6 +621,13 @@ const handleSaveBufferResultsAsLayer = async (event: CustomEvent) => {
     const result = await saveBufferResultsAsLayer(layerName)
     console.log('[ChatAssistant] 缓冲区分析结果保存完成:', result)
     
+    // 保存成功后清空缓冲区分析状态
+    if (result) {
+      const { clearState } = useBufferAnalysis()
+      clearState()
+      console.log('[ChatAssistant] 缓冲区分析状态已清空')
+    }
+    
     // 发送保存结果事件
     const saveEvent = new CustomEvent('agent:saveResult', {
       detail: { 
@@ -650,37 +652,6 @@ const handleSaveBufferResultsAsLayer = async (event: CustomEvent) => {
   }
 }
 
-const handleExportBufferResultsAsJson = async (event: CustomEvent) => {
-  const { fileName } = event.detail
-  console.log('[ChatAssistant] 处理导出缓冲区分析结果事件:', { fileName })
-  
-  try {
-    const result = await exportBufferResultsAsJSON(fileName)
-    console.log('[ChatAssistant] 缓冲区分析结果导出完成:', result)
-    
-    // 发送导出结果事件
-    const exportEvent = new CustomEvent('agent:exportResult', {
-      detail: { 
-        success: !!result, 
-        message: result ? '缓冲区分析结果导出成功' : '缓冲区分析结果导出失败',
-        fileName,
-        count: 0
-      }
-    })
-    window.dispatchEvent(exportEvent)
-  } catch (error) {
-    console.error('[ChatAssistant] 导出缓冲区分析结果失败:', error)
-    const exportEvent = new CustomEvent('agent:exportResult', {
-      detail: { 
-        success: false, 
-        message: '缓冲区分析结果导出失败',
-        fileName,
-        error: error instanceof Error ? error.message : '未知错误'
-      }
-    })
-    window.dispatchEvent(exportEvent)
-  }
-}
 
 const handleSaveIntersectionResultsAsLayer = async (event: CustomEvent) => {
   const { layerName } = event.detail
@@ -689,6 +660,13 @@ const handleSaveIntersectionResultsAsLayer = async (event: CustomEvent) => {
   try {
     const result = await saveIntersectionResultsAsLayer(layerName)
     console.log('[ChatAssistant] 相交分析结果保存完成:', result)
+    
+    // 保存成功后清空相交分析状态
+    if (result) {
+      const { clearState } = useIntersectionAnalysis()
+      clearState()
+      console.log('[ChatAssistant] 相交分析状态已清空')
+    }
     
     const saveEvent = new CustomEvent('agent:saveResult', {
       detail: { 
@@ -713,36 +691,6 @@ const handleSaveIntersectionResultsAsLayer = async (event: CustomEvent) => {
   }
 }
 
-const handleExportIntersectionResultsAsJson = async (event: CustomEvent) => {
-  const { fileName } = event.detail
-  console.log('[ChatAssistant] 处理导出相交分析结果事件:', { fileName })
-  
-  try {
-    const result = await exportIntersectionResultsAsJSON(fileName)
-    console.log('[ChatAssistant] 相交分析结果导出完成:', result)
-    
-    const exportEvent = new CustomEvent('agent:exportResult', {
-      detail: { 
-        success: !!result, 
-        message: result ? '相交分析结果导出成功' : '相交分析结果导出失败',
-        fileName,
-        count: 0
-      }
-    })
-    window.dispatchEvent(exportEvent)
-  } catch (error) {
-    console.error('[ChatAssistant] 导出相交分析结果失败:', error)
-    const exportEvent = new CustomEvent('agent:exportResult', {
-      detail: { 
-        success: false, 
-        message: '相交分析结果导出失败',
-        fileName,
-        error: error instanceof Error ? error.message : '未知错误'
-      }
-    })
-    window.dispatchEvent(exportEvent)
-  }
-}
 
 const handleSaveEraseResultsAsLayer = async (event: CustomEvent) => {
   const { layerName } = event.detail
@@ -751,6 +699,13 @@ const handleSaveEraseResultsAsLayer = async (event: CustomEvent) => {
   try {
     const result = await saveEraseResultsAsLayer(layerName)
     console.log('[ChatAssistant] 擦除分析结果保存完成:', result)
+    
+    // 保存成功后清空擦除分析状态
+    if (result) {
+      const { clearState } = useEraseAnalysis()
+      clearState()
+      console.log('[ChatAssistant] 擦除分析状态已清空')
+    }
     
     const saveEvent = new CustomEvent('agent:saveResult', {
       detail: { 
@@ -775,36 +730,6 @@ const handleSaveEraseResultsAsLayer = async (event: CustomEvent) => {
   }
 }
 
-const handleExportEraseResultsAsJson = async (event: CustomEvent) => {
-  const { fileName } = event.detail
-  console.log('[ChatAssistant] 处理导出擦除分析结果事件:', { fileName })
-  
-  try {
-    const result = await exportEraseResultsAsJSON(fileName)
-    console.log('[ChatAssistant] 擦除分析结果导出完成:', result)
-    
-    const exportEvent = new CustomEvent('agent:exportResult', {
-      detail: { 
-        success: !!result, 
-        message: result ? '擦除分析结果导出成功' : '擦除分析结果导出失败',
-        fileName,
-        count: 0
-      }
-    })
-    window.dispatchEvent(exportEvent)
-  } catch (error) {
-    console.error('[ChatAssistant] 导出擦除分析结果失败:', error)
-    const exportEvent = new CustomEvent('agent:exportResult', {
-      detail: { 
-        success: false, 
-        message: '擦除分析结果导出失败',
-        fileName,
-        error: error instanceof Error ? error.message : '未知错误'
-      }
-    })
-    window.dispatchEvent(exportEvent)
-  }
-}
 
 const handleSavePathResultsAsLayer = async (event: CustomEvent) => {
   const { layerName } = event.detail
@@ -813,6 +738,13 @@ const handleSavePathResultsAsLayer = async (event: CustomEvent) => {
   try {
     const result = await savePathResultsAsLayer(layerName)
     console.log('[ChatAssistant] 最短路径分析结果保存完成:', result)
+    
+    // 保存成功后清空最短路径分析状态
+    if (result) {
+      const { clearState } = useShortestPathAnalysis()
+      clearState()
+      console.log('[ChatAssistant] 最短路径分析状态已清空')
+    }
     
     const saveEvent = new CustomEvent('agent:saveResult', {
       detail: { 
@@ -837,36 +769,6 @@ const handleSavePathResultsAsLayer = async (event: CustomEvent) => {
   }
 }
 
-const handleExportPathResultsAsJson = async (event: CustomEvent) => {
-  const { fileName } = event.detail
-  console.log('[ChatAssistant] 处理导出最短路径分析结果事件:', { fileName })
-  
-  try {
-    const result = await exportPathResultsAsJSON(fileName)
-    console.log('[ChatAssistant] 最短路径分析结果导出完成:', result)
-    
-    const exportEvent = new CustomEvent('agent:exportResult', {
-      detail: { 
-        success: !!result, 
-        message: result ? '最短路径分析结果导出成功' : '最短路径分析结果导出失败',
-        fileName,
-        count: 0
-      }
-    })
-    window.dispatchEvent(exportEvent)
-  } catch (error) {
-    console.error('[ChatAssistant] 导出最短路径分析结果失败:', error)
-    const exportEvent = new CustomEvent('agent:exportResult', {
-      detail: { 
-        success: false, 
-        message: '最短路径分析结果导出失败',
-        fileName,
-        error: error instanceof Error ? error.message : '未知错误'
-      }
-    })
-    window.dispatchEvent(exportEvent)
-  }
-}
 
 // 监听缓冲区分析结果事件
 const handleBufferAnalysisResult = (event: CustomEvent) => {
@@ -1001,110 +903,9 @@ const handleLLMAnalysisResultError = (event: CustomEvent) => {
   })
 }
 
-// 监听监测点选择事件
-const handleMonitoringSiteSelected: (event: CustomEvent) => Promise<void> = async (event: CustomEvent) => {
-  const { site, coordinates, layerName, timestamp } = event.detail
-  
-  console.log('[ChatAssistant] 监测点被选择:', {
-    site: site.name,
-    location: site.location,
-    coordinates,
-    layerName,
-    timestamp
-  })
-  
-  // 获取监测点的mock数据
-  let mockDataInfo = ''
-  try {
-    const { getMonitoringSiteData } = await import('@/data/waterQualityMockData')
-    const siteData = getMonitoringSiteData(site.name)
-    
-    if (siteData && siteData.data && siteData.data.length > 0) {
-      const latestData = siteData.data[siteData.data.length - 1] // 获取最新数据
-      mockDataInfo = `
-最新水质数据：
-- 水温：${latestData.water_temperature.toFixed(1)}°C
-- pH值：${latestData.ph_value.toFixed(2)}
-- 溶解氧：${latestData.dissolved_oxygen.toFixed(1)} mg/L
-- 浊度：${latestData.turbidity.toFixed(1)} NTU
-- 高锰酸盐指数：${latestData.permanganate_index.toFixed(1)} mg/L
-- 氨氮：${latestData.ammonia_nitrogen.toFixed(3)} mg/L
-- 总磷：${latestData.total_phosphorus.toFixed(3)} mg/L
-- 总氮：${latestData.total_nitrogen.toFixed(2)} mg/L
-- 叶绿素a：${latestData.chlorophyll_a.toFixed(3)} mg/L
-- 藻类密度：${latestData.algae_density.toLocaleString()} 个/L
-- 数据时间：${latestData.time}
-- 数据点数：${siteData.data.length}个（60分钟历史数据）`
-    }
-  } catch (error) {
-    console.warn('获取监测点mock数据失败:', error)
-    mockDataInfo = '（无法获取详细水质数据）'
-  }
-  
-  // 构造监测点选择消息
-  const selectionMessage = `${site.location} (${site.name})，坐标：${coordinates[0].toFixed(4)}, ${coordinates[1].toFixed(4)}，图层：${layerName}，水质类别：${site.waterQualityClass}类${mockDataInfo}
 
-请稍等，我将为您分析该结果并且给您相应的执行建议！`
-  
-  // 将选择消息添加到聊天记录中
-  messages.value.push({ 
-    id: Date.now(), 
-    text: selectionMessage, 
-    sender: 'system' 
-  })
-  
-  // 滚动到底部显示新消息
-  nextTick(() => {
-    messagesPanelRef.value?.scrollToBottom()
-  })
-  
-  // 立即发送消息到LLM，提供监测点上下文和详细数据
-  const contextMessage = `用户选择了监测点：${site.location}，该监测点位于坐标(${coordinates[0].toFixed(4)}, ${coordinates[1].toFixed(4)})，水质类别为${site.waterQualityClass}类。${mockDataInfo}请根据这个监测点的水质数据提供专业的分析建议和改善建议。`
-  
-  // 立即发送，不延迟
-  sendQuickMessageToLLM(contextMessage)
-}
 
-// 监听自动分析事件（模拟用户发送正常请求）
-const handleAutoAnalysis = async (event: CustomEvent) => {
-  const { siteName, layerName, violations, analysisRequest } = event.detail
-  
-  console.log('[ChatAssistant] 收到自动分析请求:', {
-    siteName,
-    layerName,
-    violations: violations.length,
-    analysisRequest
-  })
-  
-  
-  // 构造自动分析系统消息
-  const autoAnalysisMessage = `🚨 自动分析触发：监测点 ${siteName} 水质参数超限，正在执行1000米缓冲区分析...`
-  
-  // 将自动分析系统消息添加到聊天记录中
-  messages.value.push({ 
-    id: Date.now(), 
-    text: autoAnalysisMessage, 
-    sender: 'system' 
-  })
-  
-  // 模拟用户发送缓冲区分析请求
-  if (analysisRequest) {
-    // 将分析请求作为用户消息添加到聊天记录中
-    messages.value.push({
-      id: Date.now() + 1,
-      text: analysisRequest,
-      sender: 'user'
-    })
-    
-    // 滚动到底部显示新消息
-    nextTick(() => {
-      messagesPanelRef.value?.scrollToBottom()
-    })
-    
-    // 调用正常的发送消息流程（会自动获取最后一条用户消息）
-    await sendMessage()
-  }
-}
+
 
 onMounted(() => {
   // 恢复LLM模式状态
@@ -1148,24 +949,7 @@ onMounted(() => {
       messagesPanelRef.value?.scrollToBottom();
     }
   });
-  
-  // 监听历史记录恢复事件
-  window.addEventListener('chatHistoryRestored', handleChatHistoryRestored as EventListener)
-  
-  // 监听键盘事件
-  window.addEventListener('keydown', handleKeydown)
-  
-  // 监听监测点选择事件 - 只注册一次
-  if (!(window as any).__monitoringSiteSelectedListenerRegistered) {
-    (window as any).__monitoringSiteSelectedListenerRegistered = true
-    window.addEventListener('monitoring:siteSelected', handleMonitoringSiteSelected as unknown as EventListener)
-  }
-  
-  // 监听自动分析事件 - 只注册一次
-  if (!(window as any).__autoAnalysisListenerRegistered) {
-    (window as any).__autoAnalysisListenerRegistered = true
-    window.addEventListener('llm:autoAnalysis', handleAutoAnalysis as unknown as EventListener)
-  }
+
   
   // 监听查询结果事件 - 只注册一次
   if (!(window as any).__queryResultListenerRegistered) {
@@ -1182,13 +966,9 @@ onMounted(() => {
     window.addEventListener('agent:getOpenLayersResult', handleGetOpenLayersResult as EventListener)
     // 监听保存和导出结果事件
     window.addEventListener('agent:saveBufferResultsAsLayer', handleSaveBufferResultsAsLayer as unknown as EventListener)
-    window.addEventListener('agent:exportBufferResultsAsJson', handleExportBufferResultsAsJson as unknown as EventListener)
     window.addEventListener('agent:saveIntersectionResultsAsLayer', handleSaveIntersectionResultsAsLayer as unknown as EventListener)
-    window.addEventListener('agent:exportIntersectionResultsAsJson', handleExportIntersectionResultsAsJson as unknown as EventListener)
     window.addEventListener('agent:saveEraseResultsAsLayer', handleSaveEraseResultsAsLayer as unknown as EventListener)
-    window.addEventListener('agent:exportEraseResultsAsJson', handleExportEraseResultsAsJson as unknown as EventListener)
     window.addEventListener('agent:savePathResultsAsLayer', handleSavePathResultsAsLayer as unknown as EventListener)
-    window.addEventListener('agent:exportPathResultsAsJson', handleExportPathResultsAsJson as unknown as EventListener)
     // 监听图层可见性变化事件，显示消息但不发送给AI
     window.addEventListener('agent:layerVisibilityChanged', ((e: any) => {
       const { layerName, visible } = e.detail || {}
@@ -1225,15 +1005,7 @@ onUnmounted(() => {
   window.removeEventListener('chatHistoryRestored', handleChatHistoryRestored as EventListener)
   window.removeEventListener('keydown', handleKeydown)
   
-  if ((window as any).__monitoringSiteSelectedListenerRegistered) {
-    window.removeEventListener('monitoring:siteSelected', handleMonitoringSiteSelected as unknown as EventListener)
-    ;(window as any).__monitoringSiteSelectedListenerRegistered = false
-  }
   
-  if ((window as any).__autoAnalysisListenerRegistered) {
-    window.removeEventListener('llm:autoAnalysis', handleAutoAnalysis as unknown as EventListener)
-    ;(window as any).__autoAnalysisListenerRegistered = false
-  }
   
   if ((window as any).__queryResultListenerRegistered) {
     window.removeEventListener('agent:queryResult', handleQueryResult as EventListener)
@@ -1244,15 +1016,11 @@ onUnmounted(() => {
     window.removeEventListener('agent:eraseAnalysisResult', handleEraseAnalysisResult as EventListener)
     window.removeEventListener('agent:pathAnalysisResult', handlePathAnalysisResult as EventListener)
     window.removeEventListener('agent:getOpenLayersResult', handleGetOpenLayersResult as EventListener)
-    // 清理保存和导出结果事件监听器
+    // 清理保存结果事件监听器
     window.removeEventListener('agent:saveBufferResultsAsLayer', handleSaveBufferResultsAsLayer as unknown as EventListener)
-    window.removeEventListener('agent:exportBufferResultsAsJson', handleExportBufferResultsAsJson as unknown as EventListener)
     window.removeEventListener('agent:saveIntersectionResultsAsLayer', handleSaveIntersectionResultsAsLayer as unknown as EventListener)
-    window.removeEventListener('agent:exportIntersectionResultsAsJson', handleExportIntersectionResultsAsJson as unknown as EventListener)
     window.removeEventListener('agent:saveEraseResultsAsLayer', handleSaveEraseResultsAsLayer as unknown as EventListener)
-    window.removeEventListener('agent:exportEraseResultsAsJson', handleExportEraseResultsAsJson as unknown as EventListener)
     window.removeEventListener('agent:savePathResultsAsLayer', handleSavePathResultsAsLayer as unknown as EventListener)
-    window.removeEventListener('agent:exportPathResultsAsJson', handleExportPathResultsAsJson as unknown as EventListener)
     window.removeEventListener('agent:layerVisibilityChanged', (() => {}) as EventListener)
     window.removeEventListener('llm:analysisResultReceived', handleLLMAnalysisResultReceived as EventListener)
     window.removeEventListener('llm:analysisResultError', handleLLMAnalysisResultError as EventListener)
@@ -1286,19 +1054,8 @@ const sendImplicitMessageToLLM = async (resultMessage: string, showResponse: boo
       return v
     })()
     
-    // 构造包含历史记录的完整prompt
-    let conversationContext = ''
-    if (messages.value.length > 0) {
-      conversationContext = '对话历史：\n'
-      messages.value.forEach(msg => {
-        const role = msg.sender === 'user' ? '用户' : '助手'
-        conversationContext += `${role}: ${msg.text}\n`
-      })
-      conversationContext += '\n'
-    }
-    
     // 构造完整的prompt
-    const fullPrompt = `${conversationContext}分析结果反馈：${resultMessage}
+    const fullPrompt = `分析结果反馈：${resultMessage}
 
 🔥 关键记忆规则 - 必须严格执行：
 
@@ -1308,13 +1065,6 @@ const sendImplicitMessageToLLM = async (resultMessage: string, showResponse: boo
 - 擦除分析完成 → 调用 save_erase_results_as_layer
 - 最短路径分析完成 → 调用 save_path_results_as_layer
 - 属性查询完成 → 调用 save_query_results_as_layer
-
-当用户说"导出为JSON"、"导出为GeoJSON"、"导出结果"、"保存为json"、"导出为json"时，请根据刚才完成的分析类型自动调用对应的导出工具：
-- 缓冲区分析完成 → 调用 export_buffer_results_as_json
-- 相交分析完成 → 调用 export_intersection_results_as_json
-- 擦除分析完成 → 调用 export_erase_results_as_json  
-- 最短路径分析完成 → 调用 export_path_results_as_json
-- 属性查询完成 → 调用 export_query_results_as_json
 
 ⚡ 重要：检测到关键词后必须立即调用对应工具，不要询问用户确认！基于对话历史中的分析类型确定工具选择！
 
@@ -1364,19 +1114,8 @@ const sendQuickMessageToLLM = async (resultMessage: string) => {
       return v
     })()
     
-    // 构造包含历史记录的完整prompt
-    let conversationContext = ''
-    if (messages.value.length > 0) {
-      conversationContext = '对话历史：\n'
-      messages.value.forEach(msg => {
-        const role = msg.sender === 'user' ? '用户' : '助手'
-        conversationContext += `${role}: ${msg.text}\n`
-      })
-      conversationContext += '\n'
-    }
-    
     // 构造完整的prompt
-    const fullPrompt = `${conversationContext}${resultMessage}`
+    const fullPrompt = resultMessage
     
     const llm = getLLMApiConfig()
     const payload = {
@@ -1568,23 +1307,6 @@ const sendMessage = async () => {
           }
         }
         
-        // 如果是导出查询结果为JSON的工具
-        if (name === 'export_query_results_as_json') {
-          try {
-            const parsed = call?.args || {}
-            const fileName = parsed.file_name || parsed.fileName
-            
-            if (fileName) {
-              const ev = new CustomEvent('agent:exportQueryResultsAsJson', { 
-                detail: { fileName } 
-              })
-              window.dispatchEvent(ev)
-              console.log('[Agent] dispatched event: agent:exportQueryResultsAsJson', { fileName })
-            }
-          } catch (error) {
-            console.error('[Agent] 处理导出查询结果工具调用时出错:', error)
-          }
-        }
         
         // 如果是获取当前打开图层的工具
         if (name === 'get_open_layers') {
@@ -1656,23 +1378,6 @@ const sendMessage = async () => {
           }
         }
         
-        // 如果是导出相交分析结果为JSON的工具
-        if (name === 'export_intersection_results_as_json') {
-          try {
-            const parsed = call?.args || {}
-            const fileName = parsed.file_name || parsed.fileName
-            
-            if (fileName) {
-              const ev = new CustomEvent('agent:exportIntersectionResultsAsJson', { 
-                detail: { fileName } 
-              })
-              window.dispatchEvent(ev)
-              console.log('[Agent] dispatched event: agent:exportIntersectionResultsAsJson', { fileName })
-            }
-          } catch (error) {
-            console.error('[Agent] 处理导出相交分析结果工具调用时出错:', error)
-          }
-        }
         
         // 如果是擦除分析工具
         if (name === 'execute_erase_analysis') {
@@ -1740,23 +1445,6 @@ const sendMessage = async () => {
           }
         }
         
-        // 如果是导出缓冲区分析结果为JSON的工具
-        if (name === 'export_buffer_results_as_json') {
-          try {
-            const parsed = call?.args || {}
-            const fileName = parsed.file_name || parsed.fileName
-            
-            if (fileName) {
-              const ev = new CustomEvent('agent:exportBufferResultsAsJson', { 
-                detail: { fileName } 
-              })
-              window.dispatchEvent(ev)
-              console.log('[Agent] dispatched event: agent:exportBufferResultsAsJson', { fileName })
-            }
-          } catch (error) {
-            console.error('[Agent] 处理导出缓冲区分析结果工具调用时出错:', error)
-          }
-        }
         
         // 如果是保存擦除分析结果为图层的工具
         if (name === 'save_erase_results_as_layer') {
@@ -1776,23 +1464,6 @@ const sendMessage = async () => {
           }
         }
         
-        // 如果是导出擦除分析结果为JSON的工具
-        if (name === 'export_erase_results_as_json') {
-          try {
-            const parsed = call?.args || {}
-            const fileName = parsed.file_name || parsed.fileName
-            
-            if (fileName) {
-              const ev = new CustomEvent('agent:exportEraseResultsAsJson', { 
-                detail: { fileName } 
-              })
-              window.dispatchEvent(ev)
-              console.log('[Agent] dispatched event: agent:exportEraseResultsAsJson', { fileName })
-            }
-          } catch (error) {
-            console.error('[Agent] 处理导出擦除分析结果工具调用时出错:', error)
-          }
-        }
         
         // 如果是保存最短路径分析结果为图层的工具
         if (name === 'save_path_results_as_layer') {
@@ -1829,6 +1500,7 @@ const sendMessage = async () => {
             console.error('[Agent] 处理导出最短路径分析结果工具调用时出错:', error)
           }
         }
+        
         
         // ==================== 处理AI最终回复 ====================
         // 处理AI的最终回复（无论是否有工具调用）
@@ -2003,9 +1675,9 @@ defineExpose({
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  max-width: 40vw;
+  max-width: 50vw;
   width: 90%;
-  max-height: 70vh;
+  max-height: 85vh;
   overflow: hidden;
   animation: modalSlideIn 0.3s ease-out;
 }
@@ -2066,7 +1738,7 @@ defineExpose({
 
 .modal-content {
   padding: 20px;
-  max-height: 60vh;
+  max-height: 75vh;
   overflow-y: auto;
 }
 
@@ -2154,9 +1826,9 @@ defineExpose({
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  max-width: 50vw;
-  width: 80%;
-  max-height: 70vh;
+  max-width: 60vw;
+  width: 85%;
+  max-height: 85vh;
   overflow: hidden;
   animation: modalSlideIn 0.3s ease-out;
 }
@@ -2213,7 +1885,7 @@ defineExpose({
 }
 
 .records-list {
-  max-height: 40vh;
+  max-height: 55vh;
   overflow-y: auto;
 }
 

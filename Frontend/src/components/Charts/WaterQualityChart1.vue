@@ -97,11 +97,12 @@ const pieOption = computed(() => ({
   legend: {
     orient: 'horizontal',
     right: '2%',
-    bottom: '2%',
+    bottom: '1%',
     textStyle: {
       color: '#1890ff',
-      fontSize: 11,
-      fontWeight: 'bold'
+      fontSize: 12,
+      fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif'
     },
     itemWidth: 12,
     itemHeight: 8
@@ -112,7 +113,7 @@ const pieOption = computed(() => ({
       id: 'waterQuality',
       type: 'pie',
       radius: ['30%', '70%'],
-      center: ['50%', '45%'],
+      center: ['50%', '40%'],
       animationDurationUpdate: 1000,
       universalTransition: true,
       data: pieData.value,
@@ -141,9 +142,10 @@ const pieOption = computed(() => ({
         formatter: function(params: any) {
           return `${params.percent}%`
         },
-        fontSize: 14,
+        fontSize: 12,
         color: '#1890ff',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        fontFamily: 'Arial, sans-serif'
       },
       labelLine: {
         show: true,
@@ -191,11 +193,12 @@ const barOption = computed(() => ({
   },
   legend: {
     orient: 'horizontal',
-    top: '2%',
+    top: '1%',
     textStyle: {
       color: '#1890ff',
-      fontSize: 10,
-      fontWeight: 'bold'
+      fontSize: 12,
+      fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif'
     },
     itemWidth: 10,
     itemHeight: 6
@@ -213,8 +216,9 @@ const barOption = computed(() => ({
     data: timeSeriesData.value.times,
     axisLabel: {
       color: '#1890ff',
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif',
       rotate: 45
     },
     axisLine: {
@@ -228,8 +232,9 @@ const barOption = computed(() => ({
     type: 'value',
     axisLabel: {
       color: '#1890ff',
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: 'bold',
+      fontFamily: 'Arial, sans-serif',
       formatter: function(value: number) {
         return value.toFixed(2)
       }
@@ -457,6 +462,7 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 700;
   color: #1890ff;
+  font-family: 'Arial, sans-serif';
 }
 
 .chart-container {

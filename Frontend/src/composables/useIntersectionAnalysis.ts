@@ -412,6 +412,18 @@ export function useIntersectionAnalysis() {
     
     if (!fc || !fc.features || fc.features.length === 0) return false
     
+    const defaultName = (() => {
+      const tId = targetlayerId.value
+      const mId = masklayerId.value
+      const t = tId ? mapStore.vectorlayers.find(l => l.id === tId) : null
+      const m = mId ? mapStore.vectorlayers.find(l => l.id === mId) : null
+      const tn = t ? t.name : '目标'
+      const mn = m ? m.name : '掩膜'
+      return `相交分析结果_${tn}_掩膜${mn}`
+    })()
+    
+    const finalLayerName = layerName || defaultName
+    
     // 将FeatureCollection.features展开并转换为OL Feature后再保存
     const format = new GeoJSON()
     const olFeatures: any[] = []
@@ -434,25 +446,22 @@ export function useIntersectionAnalysis() {
       }
     })
     
-    const defaultName = (() => {
-      const tId = targetlayerId.value
-      const mId = masklayerId.value
-      const t = tId ? mapStore.vectorlayers.find(l => l.id === tId) : null
-      const m = mId ? mapStore.vectorlayers.find(l => l.id === mId) : null
-      const tn = t ? t.name : '目标'
-      const mn = m ? m.name : '掩膜'
-      return `相交分析结果_${tn}_掩膜${mn}`
-    })()
-    const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'intersect')
+    // 同时执行保存为图层和导出为JSON
+    const [layerResult, jsonResult] = await Promise.all([
+      saveFeaturesAslayer(olFeatures as any[], finalLayerName, 'intersect'),
+      exportFeaturesAsGeoJSON(fc.features, finalLayerName)
+    ])
+    
+    console.log('[IntersectionAnalysis] 保存结果:', { layerResult, jsonResult })
     
     // 保存成功后清除双重存储
-    if (result) {
+    if (layerResult) {
       lastFeatureCollection.value = null
       store.setLastFeatureCollection(null)
-      console.log('[IntersectionAnalysis] 保存图层成功，已清除composable变量和Store状态')
+      console.log('[IntersectionAnalysis] 保存图层和JSON成功，已清除composable变量和Store状态')
     }
     
-    return result
+    return layerResult
   }
 
   const exportIntersectionResultsAsJSON = async (fileName?: string): Promise<any> => {

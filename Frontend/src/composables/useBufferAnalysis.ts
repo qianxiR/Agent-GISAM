@@ -393,6 +393,20 @@ export function useBufferAnalysis() {
       return false
     }
     
+    // 生成默认名称（带参数后缀）
+    const defaultName = (() => {
+      const radius = bufferSettings.value.radius
+      const steps = bufferSettings.value.semicircleLineSegment
+      const srcLayer = (() => {
+        const id = selectedAnalysislayerId.value
+        const lyr = id ? mapStore.vectorlayers.find(l => l.id === id) : null
+        return lyr ? lyr.name : '未命名图层'
+      })()
+      return `缓冲区分析结果_${srcLayer}_半径${radius}_步数${steps}`
+    })()
+
+    const finalLayerName = layerName || (bufferAnalysisStore.state.layerName || defaultName)
+    
     // 将FeatureCollection.features展开并转换为OL Feature后再保存
     const format = new GeoJSON()
     const olFeatures: any[] = []
@@ -425,34 +439,23 @@ export function useBufferAnalysis() {
       count: olFeatures.length,
       features: olFeatures
     })
-    
-    // 生成默认名称（带参数后缀）
-    const defaultName = (() => {
-      const radius = bufferSettings.value.radius
-      const steps = bufferSettings.value.semicircleLineSegment
-      const srcLayer = (() => {
-        const id = selectedAnalysislayerId.value
-        const lyr = id ? mapStore.vectorlayers.find(l => l.id === id) : null
-        return lyr ? lyr.name : '未命名图层'
-      })()
-      return `缓冲区分析结果_${srcLayer}_半径${radius}_步数${steps}`
-    })()
 
-    const result = await saveFeaturesAslayer(
-      olFeatures as any[],
-      layerName || (bufferAnalysisStore.state.layerName || defaultName),
-      'buffer'
-    )
-    console.log('[BufferAnalysis] 保存结果:', result)
+    // 同时执行保存为图层和导出为JSON
+    const [layerResult, jsonResult] = await Promise.all([
+      saveFeaturesAslayer(olFeatures as any[], finalLayerName, 'buffer'),
+      exportFeaturesAsGeoJSON(fc.features, finalLayerName)
+    ])
+    
+    console.log('[BufferAnalysis] 保存结果:', { layerResult, jsonResult })
     
     // 保存成功后清除双重存储
-    if (result) {
+    if (layerResult) {
       lastFeatureCollection.value = null
       bufferAnalysisStore.setLastFeatureCollection(null)
-      console.log('[BufferAnalysis] 保存图层成功，已清除composable变量和Store状态')
+      console.log('[BufferAnalysis] 保存图层和JSON成功，已清除composable变量和Store状态')
     }
     
-    return result
+    return layerResult
   }
   
   const exportBufferResultsAsJSON = async (fileName?: string): Promise<any> => {

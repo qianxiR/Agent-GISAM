@@ -16,9 +16,8 @@
 
       <div class="analysis-actions">
         <SecondaryButton text="开始执行擦除" @click="handleExecute" />
-        <SecondaryButton v-if="results.length > 0" text="清除擦除结果" @click="handleClear" />
+        <SecondaryButton v-if="results.length > 0" text="清除结果" @click="handleClear" />
         <SecondaryButton text="保存为图层" @click="onSaveAsLayer" />
-        <SecondaryButton text="导出为JSON" @click="onExportAsJSON" />
       </div>
 
       <!-- 运行时提示 -->
@@ -110,7 +109,6 @@ const {
   eraseFeaturesCache,
   lastFeatureCollection,
   saveEraseResultsAsLayer,
-  exportEraseResultsAsJSON
 } = useEraseAnalysis()
 
 const mapStore = useMapStore()
@@ -205,9 +203,6 @@ const handlelayerNameConfirm = async (layerName: string) => {
 }
 const handlelayerNameClose = () => { showLayerNameModalRef.value = false }
 const onSaveAsLayer = async () => { showLayerNameModal() }
-const onExportAsJSON = async () => {
-  await exportEraseResultsAsJSON(generatelayerNameFromErase())
-}
 
 // 清理擦除分析状态（工具切换时调用）
 const clearEraseAnalysisState = () => {

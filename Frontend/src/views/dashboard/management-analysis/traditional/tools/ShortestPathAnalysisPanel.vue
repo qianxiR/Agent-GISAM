@@ -97,16 +97,12 @@
         />
         <SecondaryButton 
           v-if="hasResults || startPointInfo || endPointInfo"
-          text="清除状态"
+          text="清除结果"
           @click="handleClearState"
         />
         <SecondaryButton 
           text="保存为图层"
           @click="onSaveAsLayer"
-        />
-        <SecondaryButton 
-          text="导出为JSON"
-          @click="onExportAsJSON"
         />
       </div>
       
@@ -170,7 +166,6 @@ const {
   setObstaclelayer,
   updateAnalysisOptions,
   savePathResultsAsLayer,
-  exportPathResultsAsJSON,
   lastFeatureCollection
 } = useShortestPathAnalysis()
 
@@ -217,10 +212,6 @@ const onSaveAsLayer = async () => {
   showLayerNameModal()
 }
 
-const onExportAsJSON = async () => {
-  const name = generatelayerNameFromPath()
-  await exportPathResultsAsJSON(name)
-}
 
 // 分析状态
 const isAnalyzing = ref(false)
@@ -252,7 +243,7 @@ const obstaclelayerOptions = computed(() => {
     const geometryTypeStr = Array.from(geometryTypes).join(', ') || '未知'
     
     options.push({
-      value: layer.id,
+      value: layer.name,
       label: `${layer.name} (${featureCount}个要素, ${geometryTypeStr})`
     })
   })
@@ -272,25 +263,25 @@ const unitOptions = [
 ]
 
 // 监听障碍物图层选择变化
-watch(selectedObstaclelayer, (newlayerId) => {
+watch(selectedObstaclelayer, (newLayerName) => {
   console.log('=== 障碍物图层选择变化 ===')
-  console.log('新的layerId:', newlayerId)
+  console.log('新的图层名称:', newLayerName)
   console.log('当前可用图层数量:', mapStore.vectorlayers.length)
   console.log('可用图层列表:', mapStore.vectorlayers.map(l => ({ id: l.id, name: l.name, type: l.type })))
   
-  if (newlayerId === '') {
+  if (newLayerName === '') {
     console.log('清除障碍物图层')
     setObstaclelayer(null)
   } else {
-    console.log('设置障碍物图层:', newlayerId)
-    setObstaclelayer(newlayerId)
+    console.log('设置障碍物图层:', newLayerName)
+    setObstaclelayer(newLayerName)
   }
 })
 
 const getObstaclelayerName = () => {
   if (!selectedObstaclelayer.value) return ''
-  const layer = mapStore.vectorlayers.find(l => l.id === selectedObstaclelayer.value)
-  return layer ? layer.name : '未知图层'
+  // 现在 selectedObstaclelayer.value 直接就是图层名称
+  return selectedObstaclelayer.value
 }
 
 // 直接执行分析函数

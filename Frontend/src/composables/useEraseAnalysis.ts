@@ -380,6 +380,18 @@ export function useEraseAnalysis() {
     
     if (!fc || !fc.features || fc.features.length === 0) return false
     
+    const defaultName = (() => {
+      const tId = targetlayerId.value
+      const eId = eraselayerId.value
+      const t = tId ? mapStore.vectorlayers.find(l => l.id === tId) : null
+      const e = eId ? mapStore.vectorlayers.find(l => l.id === eId) : null
+      const tn = t ? t.name : '目标'
+      const en = e ? e.name : '擦除'
+      return `擦除分析结果_${tn}_擦除${en}`
+    })()
+    
+    const finalLayerName = layerName || defaultName
+    
     // 将FeatureCollection.features展开并转换为OL Feature后再保存
     const format = new GeoJSON()
     const olFeatures: any[] = []
@@ -402,25 +414,22 @@ export function useEraseAnalysis() {
       }
     })
     
-    const defaultName = (() => {
-      const tId = targetlayerId.value
-      const eId = eraselayerId.value
-      const t = tId ? mapStore.vectorlayers.find(l => l.id === tId) : null
-      const e = eId ? mapStore.vectorlayers.find(l => l.id === eId) : null
-      const tn = t ? t.name : '目标'
-      const en = e ? e.name : '擦除'
-      return `擦除分析结果_${tn}_擦除${en}`
-    })()
-    const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'erase')
+    // 同时执行保存为图层和导出为JSON
+    const [layerResult, jsonResult] = await Promise.all([
+      saveFeaturesAslayer(olFeatures as any[], finalLayerName, 'erase'),
+      exportFeaturesAsGeoJSON(fc.features, finalLayerName)
+    ])
+    
+    console.log('[EraseAnalysis] 保存结果:', { layerResult, jsonResult })
     
     // 保存成功后清除双重存储
-    if (result) {
+    if (layerResult) {
       lastFeatureCollection.value = null
       store.setLastFeatureCollection(null)
-      console.log('[EraseAnalysis] 保存图层成功，已清除composable变量和Store状态')
+      console.log('[EraseAnalysis] 保存图层和JSON成功，已清除composable变量和Store状态')
     }
     
-    return result
+    return layerResult
   }
 
   const exportEraseResultsAsJSON = async (fileName?: string): Promise<any> => {

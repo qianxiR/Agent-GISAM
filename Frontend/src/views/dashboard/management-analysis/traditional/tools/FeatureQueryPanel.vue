@@ -121,11 +121,6 @@
         />
         <SecondaryButton 
           v-if="queryResults.length > 0"
-          text="导出为GeoJSON"
-          @click="exportQueryResultsAsGeoJSON"
-        />
-        <SecondaryButton 
-          v-if="queryResults.length > 0"
           text="反选当前要素"
           @click="invertSelectedlayer"
         />
@@ -226,17 +221,23 @@ const handlelayerNameClose = () => {
   showLayerNameModalRef.value = false
 }
 
-// 保存查询结果为图层
+// 保存查询结果为图层（同时导出为JSON）
 const saveQueryResultsAslayer = async (customlayerName: string) => {
   if (queryResults.value.length === 0) {
     return
   }
 
-  await saveFeaturesAslayer(queryResults.value, customlayerName, 'query')
+  // 同时执行保存为图层和导出为JSON
+  const [layerResult, jsonResult] = await Promise.all([
+    saveFeaturesAslayer(queryResults.value, customlayerName, 'query'),
+    exportQueryResultsAsGeoJSON(customlayerName)
+  ])
+  
+  console.log('[FeatureQuery] 保存结果:', { layerResult, jsonResult })
 }
  
 // 导出查询结果为 GeoJSON 文件
-const exportQueryResultsAsGeoJSON = async () => {
+const exportQueryResultsAsGeoJSON = async (fileName?: string) => {
   if (!queryResults.value.length) {
     return
   }
@@ -248,7 +249,7 @@ const exportQueryResultsAsGeoJSON = async () => {
     dataProjection: 'EPSG:4326'
   })
 
-  await exportFeaturesAsGeoJSON(features.features, '属性查询结果', {
+  await exportFeaturesAsGeoJSON(features.features, fileName || '属性查询结果', {
     analysisType: 'attribute_query',
     sourceLayer: selectedlayerId.value,
     description: '按属性查询的要素结果',

@@ -235,16 +235,25 @@ export function useShortestPathAnalysis() {
       const resolution = state.analysisOptions.resolution || 1000
       return `最短路径分析结果_units-${units}_res-${resolution}`
     })()
-    const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'path')
+    
+    const finalLayerName = layerName || defaultName
+    
+    // 同时执行保存为图层和导出为JSON
+    const [layerResult, jsonResult] = await Promise.all([
+      saveFeaturesAslayer(olFeatures as any[], finalLayerName, 'path'),
+      exportFeaturesAsGeoJSON(fc.features, finalLayerName)
+    ])
+    
+    console.log('[ShortestPathAnalysis] 保存结果:', { layerResult, jsonResult })
     
     // 保存成功后清除双重存储
-    if (result) {
+    if (layerResult) {
       lastFeatureCollection.value = null
       shortestPathStore.setLastFeatureCollection(null)
       console.log('[ShortestPathAnalysis] 保存图层成功，已清除composable变量和Store状态')
     }
     
-    return result
+    return layerResult
   }
 
   const exportPathResultsAsJSON = async (fileName?: string): Promise<any> => {
@@ -777,19 +786,19 @@ export function useShortestPathAnalysis() {
     }
   }
   
-  const setObstaclelayer = (layerId: string | null): void => {
-    if (layerId) {
-      // 通过layerId查找图层信息
-      const layerInfo = mapStore.vectorlayers.find(l => l.id === layerId)
+  const setObstaclelayer = (layerName: string | null): void => {
+    if (layerName) {
+      // 直接通过图层名称查找图层信息
+      const layerInfo = mapStore.vectorlayers.find(l => l.name === layerName)
       if (!layerInfo || !layerInfo.layer) {
-        console.warn(`[ShortestPath] 未找到图层ID: ${layerId}`)
+        console.warn(`[ShortestPath] 未找到图层: ${layerName}`)
         updateAnalysisOptions({ obstacles: null })
         return
       }
       
-      const obstacles = convertlayerToObstacles(layerInfo.name)
+      const obstacles = convertlayerToObstacles(layerName)
       updateAnalysisOptions({ obstacles })
-      console.log(`[ShortestPath] 设置障碍物图层: ${layerInfo.name} (ID: ${layerId})`)
+      console.log(`[ShortestPath] 设置障碍物图层: ${layerName}`)
     } else {
       updateAnalysisOptions({ obstacles: null })
       console.log('[ShortestPath] 清除障碍物图层')
@@ -811,9 +820,16 @@ export function useShortestPathAnalysis() {
   
   // Agent事件驱动的最短路径分析执行方法
   const executeShortestPathAnalysisByAgent = async (startLayerName: string, endLayerName: string, obstacleLayerName?: string): Promise<void> => {
-    // 根据图层名称查找图层
-    const startLayer = mapStore.vectorlayers.find(l => l.name === startLayerName)
-    const endLayer = mapStore.vectorlayers.find(l => l.name === endLayerName)
+    // 处理图层名称，去除@符号后的部分进行匹配
+    const getBaseName = (n: string): string => {
+      if (!n) return n
+      const idx = n.indexOf('@')
+      return idx >= 0 ? n.slice(0, idx) : n
+    }
+    
+    // 根据图层名称查找图层（使用基础名称匹配）
+    const startLayer = mapStore.vectorlayers.find(l => getBaseName(l.name) === getBaseName(startLayerName))
+    const endLayer = mapStore.vectorlayers.find(l => getBaseName(l.name) === getBaseName(endLayerName))
     
     if (!startLayer) {
       throw new Error(`未找到起点图层: ${startLayerName}`)
@@ -877,10 +893,16 @@ export function useShortestPathAnalysis() {
     setStartPoint(startPointFeature)
     setEndPoint(endPointFeature)
     
-    // 如果有障碍物图层，设置障碍物
+    // 如果有障碍物图层，设置障碍物（使用基础名称匹配）
     if (obstacleLayerName) {
       console.log(`[Agent] 设置障碍物图层: ${obstacleLayerName}`)
-      setObstaclelayer(obstacleLayerName)
+      // 查找障碍物图层，使用基础名称匹配
+      const obstacleLayer = mapStore.vectorlayers.find(l => getBaseName(l.name) === getBaseName(obstacleLayerName))
+      if (obstacleLayer) {
+        setObstaclelayer(obstacleLayer.name)
+      } else {
+        console.warn(`[Agent] 未找到障碍物图层: ${obstacleLayerName}`)
+      }
     }
     
     // 执行最短路径分析
