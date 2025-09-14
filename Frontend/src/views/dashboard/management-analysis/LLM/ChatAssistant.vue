@@ -408,7 +408,19 @@ const maybeAnnounceInitiallayers = () => {
     hasAnnounced.value = true;
     
     // 添加欢迎消息
-    const welcomeMessage = "您好，我是您的武汉市长江水域与水资源监测管理的自主智能助手。我能够帮助您进行城市空间分析、水资源监测与综合管理、环境监测预警、数据可视化以及多源信息整合等工作。请告诉我您需要进行的具体任务或分析，我会为您提供支持。"
+    const welcomeMessage = `您好，我是您的武汉市长江水域与水资源监测管理的自主智能助手。我能够帮助您进行城市空间分析、水资源监测与综合管理、环境监测预警、数据可视化以及多源信息整合等工作。
+
+您可以进行以下功能，我将为您执行具体任务。
+
+## 主要功能
+- **知识库查询**：武汉市基本概况、水文资源条件概况、长江流域、监测点位置介绍
+- **监测点分析**：点击监测点查看实时水质数据
+- **缓冲区分析**：对异常监测点@图层名称进行影响范围分析
+- **相交分析**：@图层名称与@图层名称叠加，计算**人口数量、重要设施与土地类型**
+- **擦除分析**：剔除限制区，得到**真实可治理与可取水区域**
+- **最短路径分析**：规划**应急送水、物资运输、无人机航测**等最优路线以规避限制区
+
+请告诉我您需要进行的具体任务或分析，我会为您提供支持！`
     
     messages.value.push({
       id: Date.now(),
@@ -482,6 +494,12 @@ const handleQueryResult = (event: CustomEvent) => {
   nextTick(() => {
     messagesPanelRef.value?.scrollToBottom()
   })
+  
+  // 发送查询结果上下文给AI，让AI记住刚才的查询类型
+  if (success) {
+    const contextMessage = `[属性查询完成] 刚才执行了属性查询，图层"${layerName}"，字段"${field}"，操作符"${operator}"，值"${value}"。现在AI需要记住这个查询类型，当用户说"导出为json"、"导出为图层"、"保存为图层"等操作时，必须基于这个属性查询结果调用对应的工具。`
+    sendImplicitMessageToLLM(contextMessage, false)
+  }
 }
 
 // 监听保存结果事件
@@ -492,21 +510,20 @@ const handleSaveResult = (event: CustomEvent) => {
   let resultMessage = ''
   if (success) {
     resultMessage = `保存完成：${message}`
-  } else {
-    resultMessage = `保存失败：${error || '未知错误'}`
+    
+    // 将结果添加到聊天记录中
+    messages.value.push({ 
+      id: Date.now(), 
+      text: resultMessage, 
+      sender: 'system' 
+    })
+    
+    // 滚动到底部显示新消息
+    nextTick(() => {
+      messagesPanelRef.value?.scrollToBottom()
+    })
   }
-  
-  // 将结果添加到聊天记录中
-  messages.value.push({ 
-    id: Date.now(), 
-    text: resultMessage, 
-    sender: 'system' 
-  })
-  
-  // 滚动到底部显示新消息
-  nextTick(() => {
-    messagesPanelRef.value?.scrollToBottom()
-  })
+  // 移除失败情况的处理，不再显示"保存失败：未知错误"
 }
 
 // 监听导出结果事件
@@ -517,21 +534,20 @@ const handleExportResult = (event: CustomEvent) => {
   let resultMessage = ''
   if (success) {
     resultMessage = `导出完成：${message}`
-  } else {
-    resultMessage = `导出失败：${error || '未知错误'}`
+    
+    // 将结果添加到聊天记录中
+    messages.value.push({ 
+      id: Date.now(), 
+      text: resultMessage, 
+      sender: 'system' 
+    })
+    
+    // 滚动到底部显示新消息
+    nextTick(() => {
+      messagesPanelRef.value?.scrollToBottom()
+    })
   }
-  
-  // 将结果添加到聊天记录中
-  messages.value.push({ 
-    id: Date.now(), 
-    text: resultMessage, 
-    sender: 'system' 
-  })
-  
-  // 滚动到底部显示新消息
-  nextTick(() => {
-    messagesPanelRef.value?.scrollToBottom()
-  })
+  // 移除失败情况的处理，不再显示"导出失败：未知错误"
 }
 
 // 监听缓冲区分析结果事件
@@ -588,7 +604,11 @@ const handleBufferAnalysisResult = (event: CustomEvent) => {
     sender: 'system' as const 
   }
   
-  // 注意：不再发送隐式LLM请求，避免重复发送
+  // 发送分析结果上下文给AI，让AI记住刚才的分析类型
+  if (success) {
+    const contextMessage = `[缓冲区分析完成] 刚才执行了缓冲区分析，图层"${layerName}"，半径${radius}${unit}。现在AI需要记住这个分析类型，当用户说"导出为json"、"导出为图层"、"保存为图层"等操作时，必须基于这个缓冲区分析结果调用对应的工具。`
+    sendImplicitMessageToLLM(contextMessage, false)
+  }
 }
 
 // 监听相交分析结果事件
@@ -645,7 +665,11 @@ const handleIntersectionAnalysisResult = (event: CustomEvent) => {
     sender: 'system' as const 
   }
   
-  // 注意：不再发送隐式LLM请求，避免重复发送
+  // 发送分析结果上下文给AI，让AI记住刚才的分析类型
+  if (success) {
+    const contextMessage = `[相交分析完成] 刚才执行了相交分析，目标图层"${targetLayerName}"，掩膜图层"${maskLayerName}"。现在AI需要记住这个分析类型，当用户说"导出为json"、"导出为图层"、"保存为图层"等操作时，必须基于这个相交分析结果调用对应的工具。`
+    sendImplicitMessageToLLM(contextMessage, false)
+  }
 }
 
 // 监听擦除分析结果事件
@@ -702,7 +726,11 @@ const handleEraseAnalysisResult = (event: CustomEvent) => {
     sender: 'system' as const 
   }
   
-  // 注意：不再发送隐式LLM请求，避免重复发送
+  // 发送分析结果上下文给AI，让AI记住刚才的分析类型
+  if (success) {
+    const contextMessage = `[擦除分析完成] 刚才执行了擦除分析，目标图层"${targetLayerName}"，擦除图层"${eraseLayerName}"。现在AI需要记住这个分析类型，当用户说"导出为json"、"导出为图层"、"保存为图层"等操作时，必须基于这个擦除分析结果调用对应的工具。`
+    sendImplicitMessageToLLM(contextMessage, false)
+  }
 }
 
 // 监听最短路径分析结果事件
@@ -759,7 +787,11 @@ const handlePathAnalysisResult = (event: CustomEvent) => {
     sender: 'system' as const 
   }
   
-  // 注意：不再发送隐式LLM请求，避免重复发送
+  // 发送分析结果上下文给AI，让AI记住刚才的分析类型
+  if (success) {
+    const contextMessage = `[最短路径分析完成] 刚才执行了最短路径分析，起点图层"${startLayerName}"，终点图层"${endLayerName}"。现在AI需要记住这个分析类型，当用户说"导出为json"、"导出为图层"、"保存为图层"等操作时，必须基于这个最短路径分析结果调用对应的工具。`
+    sendImplicitMessageToLLM(contextMessage, false)
+  }
 }
 
 // 监听获取打开图层结果事件
@@ -1020,6 +1052,15 @@ onMounted(() => {
     window.addEventListener('agent:eraseAnalysisResult', handleEraseAnalysisResult as EventListener)
     window.addEventListener('agent:pathAnalysisResult', handlePathAnalysisResult as EventListener)
     window.addEventListener('agent:getOpenLayersResult', handleGetOpenLayersResult as EventListener)
+    // 监听保存和导出结果事件
+    window.addEventListener('agent:saveBufferResultsAsLayer', handleSaveResult as EventListener)
+    window.addEventListener('agent:exportBufferResultsAsJson', handleExportResult as EventListener)
+    window.addEventListener('agent:saveIntersectionResultsAsLayer', handleSaveResult as EventListener)
+    window.addEventListener('agent:exportIntersectionResultsAsJson', handleExportResult as EventListener)
+    window.addEventListener('agent:saveEraseResultsAsLayer', handleSaveResult as EventListener)
+    window.addEventListener('agent:exportEraseResultsAsJson', handleExportResult as EventListener)
+    window.addEventListener('agent:savePathResultsAsLayer', handleSaveResult as EventListener)
+    window.addEventListener('agent:exportPathResultsAsJson', handleExportResult as EventListener)
     // 监听图层可见性变化事件，显示消息但不发送给AI
     window.addEventListener('agent:layerVisibilityChanged', ((e: any) => {
       const { layerName, visible } = e.detail || {}
@@ -1075,6 +1116,15 @@ onUnmounted(() => {
     window.removeEventListener('agent:eraseAnalysisResult', handleEraseAnalysisResult as EventListener)
     window.removeEventListener('agent:pathAnalysisResult', handlePathAnalysisResult as EventListener)
     window.removeEventListener('agent:getOpenLayersResult', handleGetOpenLayersResult as EventListener)
+    // 清理保存和导出结果事件监听器
+    window.removeEventListener('agent:saveBufferResultsAsLayer', handleSaveResult as EventListener)
+    window.removeEventListener('agent:exportBufferResultsAsJson', handleExportResult as EventListener)
+    window.removeEventListener('agent:saveIntersectionResultsAsLayer', handleSaveResult as EventListener)
+    window.removeEventListener('agent:exportIntersectionResultsAsJson', handleExportResult as EventListener)
+    window.removeEventListener('agent:saveEraseResultsAsLayer', handleSaveResult as EventListener)
+    window.removeEventListener('agent:exportEraseResultsAsJson', handleExportResult as EventListener)
+    window.removeEventListener('agent:savePathResultsAsLayer', handleSaveResult as EventListener)
+    window.removeEventListener('agent:exportPathResultsAsJson', handleExportResult as EventListener)
     window.removeEventListener('agent:layerVisibilityChanged', (() => {}) as EventListener)
     window.removeEventListener('llm:analysisResultReceived', handleLLMAnalysisResultReceived as EventListener)
     window.removeEventListener('llm:analysisResultError', handleLLMAnalysisResultError as EventListener)
@@ -1122,21 +1172,25 @@ const sendImplicitMessageToLLM = async (resultMessage: string, showResponse: boo
     // 构造完整的prompt
     const fullPrompt = `${conversationContext}分析结果反馈：${resultMessage}
 
-重要提示：当用户说"导出为图层"、"保存为图层"、"另存为图层"时，请根据刚才完成的分析类型自动调用对应的保存工具：
+🔥 关键记忆规则 - 必须严格执行：
+
+当用户说"导出为图层"、"保存为图层"、"另存为图层"时，请根据刚才完成的分析类型自动调用对应的保存工具：
 - 缓冲区分析完成 → 调用 save_buffer_results_as_layer
 - 相交分析完成 → 调用 save_intersection_results_as_layer  
 - 擦除分析完成 → 调用 save_erase_results_as_layer
 - 最短路径分析完成 → 调用 save_path_results_as_layer
 - 属性查询完成 → 调用 save_query_results_as_layer
 
-当用户说"导出为JSON"、"导出为GeoJSON"、"导出结果"时，请根据刚才完成的分析类型自动调用对应的导出工具：
+当用户说"导出为JSON"、"导出为GeoJSON"、"导出结果"、"保存为json"、"导出为json"时，请根据刚才完成的分析类型自动调用对应的导出工具：
 - 缓冲区分析完成 → 调用 export_buffer_results_as_json
 - 相交分析完成 → 调用 export_intersection_results_as_json
 - 擦除分析完成 → 调用 export_erase_results_as_json  
 - 最短路径分析完成 → 调用 export_path_results_as_json
 - 属性查询完成 → 调用 export_query_results_as_json
 
-请结合武汉市长江水域监测管理的专业背景，给出友好、专业的回复，并主动询问用户希望进行哪种后续操作。`
+⚡ 重要：检测到关键词后必须立即调用对应工具，不要询问用户确认！基于对话历史中的分析类型确定工具选择！
+
+`
     
     const llm = getLLMApiConfig()
     const payload = {

@@ -5,14 +5,14 @@ from typing import Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from user.application.dto.user_dto import (
+from application.dto.user_dto import (
     UserRegisterDTO, UserLoginDTO, UserUpdateDTO, 
     PasswordChangeDTO, AuthResponseDTO
 )
-from user.application.use_cases.user.auth_use_case import AuthUseCase
-from user.core.database import get_db
-from user.core.security import get_current_user_id
-from user.core.container import build_auth_use_case
+from application.use_cases.user.auth_use_case import AuthUseCase
+from core.database import get_db
+from core.security import get_current_user_id
+from core.container import build_auth_use_case
 
 router = APIRouter()
 security = HTTPBearer()

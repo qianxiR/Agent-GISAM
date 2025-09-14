@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 from uuid import UUID, uuid4
-from user.domains.user.value_objects import (
+from domains.user.value_objects import (
     Email, Username, PhoneNumber, Password, 
     UserId, UserStatus, Timestamp
 )

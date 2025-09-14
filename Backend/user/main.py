@@ -7,13 +7,13 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
 
-from user.core.config import settings
-from user.api.v1 import api_v1_router
+from core.config import settings
+from api.v1 import api_v1_router
 
-'''
-python -m uvicorn user.main:app --reload --host 0.0.0.0 --port 8088
-
-'''
+"""
+cd Backend/user
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8088
+"""
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

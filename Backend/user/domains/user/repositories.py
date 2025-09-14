@@ -3,7 +3,7 @@
 """
 from typing import Dict, List, Optional, Any
 from uuid import UUID
-from user.domains.user.entities import UserEntity
+from domains.user.entities import UserEntity
 
 
 class UserRepository:

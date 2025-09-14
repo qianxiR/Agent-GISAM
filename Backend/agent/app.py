@@ -22,6 +22,7 @@ from langchain.chat_models import init_chat_model
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from langchain_tavily import TavilySearch
+from openai import OpenAI
 
 # 关闭全局SSL验证以规避企业网络或中间代理引起的握手问题
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -197,6 +198,185 @@ def get_current_timestamp() -> str:
     """获取当前时间戳"""
     from datetime import datetime
     return datetime.now().isoformat()
+
+def detect_keywords_and_structure(user_input: str, conversation_id: str) -> str:
+    """
+    关键词检测与结构化处理
+    
+    输入数据格式：
+      - user_input: 用户原始输入
+      - conversation_id: 对话ID
+    
+    数据处理方法：
+      - 检测关键词（导出为json、缓冲区分析、相交分析等）
+      - 提取图层名称和参数
+      - 基于对话历史推断分析类型
+      - 生成结构化的工具调用指令
+    
+    输出数据格式：
+      - 结构化的用户指令，包含明确的工具调用意图
+    """
+    # 关键词检测
+    keywords = {
+        "导出为json": ["导出为json", "导出为JSON", "导出json", "导出JSON", "保存为json", "保存为JSON"],
+        "导出为图层": ["导出为图层", "保存为图层", "导出图层", "保存图层"],
+        "缓冲区分析": ["缓冲区分析", "缓冲区", "缓冲"],
+        "相交分析": ["相交分析", "相交", "交集"],
+        "擦除分析": ["擦除分析", "擦除", "去除"],
+        "最短路径": ["最短路径", "路径分析", "路径规划"],
+        "显示图层": ["显示", "打开", "show"],
+        "隐藏图层": ["隐藏", "关闭", "hide"],
+        "查询属性": ["查询", "查找", "筛选"]
+    }
+    
+    # 图层名称关键词
+    layer_keywords = ["学校", "医院", "居民点", "水系", "道路", "铁路", "水文站点"]
+    
+    # 检测关键词
+    detected_keywords = []
+    for key, values in keywords.items():
+        for value in values:
+            if value in user_input:
+                detected_keywords.append(key)
+                break
+    
+    # 检测图层名称
+    detected_layers = []
+    for layer in layer_keywords:
+        if layer in user_input:
+            detected_layers.append(layer)
+    
+    # 获取对话历史中的最近分析类型
+    recent_analysis_type = get_recent_analysis_type(conversation_id)
+    
+    # 生成结构化指令
+    if detected_keywords:
+        structured_instruction = f"检测到关键词: {', '.join(detected_keywords)}"
+        if detected_layers:
+            structured_instruction += f"\n检测到图层: {', '.join(detected_layers)}"
+        if recent_analysis_type:
+            structured_instruction += f"\n最近分析类型: {recent_analysis_type}"
+        
+        structured_instruction += f"\n原始用户输入: {user_input}"
+        structured_instruction += "\n\n请基于关键词强制调用对应的工具，不要询问用户确认。"
+        
+        return structured_instruction
+    
+    return user_input
+
+def get_recent_analysis_type(conversation_id: str) -> str:
+    """获取最近的分析类型"""
+    if conversation_id not in _conversation_layer_history:
+        return ""
+    
+    history = _conversation_layer_history[conversation_id]
+    if not history:
+        return ""
+    
+    # 检查最近的操作
+    recent_operations = history[-3:]  # 检查最近3个操作
+    
+    for operation in reversed(recent_operations):
+        if "buffer" in operation.lower():
+            return "缓冲区分析"
+        elif "intersection" in operation.lower():
+            return "相交分析"
+        elif "erase" in operation.lower():
+            return "擦除分析"
+        elif "shortest_path" in operation.lower():
+            return "最短路径分析"
+        elif "query" in operation.lower():
+            return "属性查询"
+    
+    return ""
+
+def force_tool_call_based_on_keywords(user_input: str, conversation_id: str) -> Optional[Dict[str, Any]]:
+    """
+    基于关键词强制生成工具调用
+    
+    输入数据格式：
+      - user_input: 用户输入
+      - conversation_id: 对话ID
+    
+    数据处理方法：
+      - 检测关键词并确定工具类型
+      - 基于对话历史推断分析类型
+      - 生成对应的工具调用结构
+    
+    输出数据格式：
+      - 工具调用字典或None
+    """
+    # 检测导出相关关键词
+    if any(keyword in user_input for keyword in ["导出为json", "导出为JSON", "导出json", "导出JSON", "保存为json", "保存为JSON"]):
+        recent_analysis = get_recent_analysis_type(conversation_id)
+        
+        if recent_analysis == "缓冲区分析":
+            return {
+                "name": "export_buffer_results_as_json",
+                "args": {"file_name": "buffer_analysis_result"},
+                "id": f"call_{uuid.uuid4().hex[:8]}"
+            }
+        elif recent_analysis == "相交分析":
+            return {
+                "name": "export_intersection_results_as_json",
+                "args": {"file_name": "intersection_analysis_result"},
+                "id": f"call_{uuid.uuid4().hex[:8]}"
+            }
+        elif recent_analysis == "擦除分析":
+            return {
+                "name": "export_erase_results_as_json",
+                "args": {"file_name": "erase_analysis_result"},
+                "id": f"call_{uuid.uuid4().hex[:8]}"
+            }
+        elif recent_analysis == "最短路径分析":
+            return {
+                "name": "export_path_results_as_json",
+                "args": {"file_name": "path_analysis_result"},
+                "id": f"call_{uuid.uuid4().hex[:8]}"
+            }
+        elif recent_analysis == "属性查询":
+            return {
+                "name": "export_query_results_as_json",
+                "args": {"file_name": "query_result"},
+                "id": f"call_{uuid.uuid4().hex[:8]}"
+            }
+    
+    # 检测保存为图层相关关键词
+    if any(keyword in user_input for keyword in ["导出为图层", "保存为图层", "导出图层", "保存图层"]):
+        recent_analysis = get_recent_analysis_type(conversation_id)
+        
+        if recent_analysis == "缓冲区分析":
+            return {
+                "name": "save_buffer_results_as_layer",
+                "args": {"layer_name": "缓冲区分析结果"},
+                "id": f"call_{uuid.uuid4().hex[:8]}"
+            }
+        elif recent_analysis == "相交分析":
+            return {
+                "name": "save_intersection_results_as_layer",
+                "args": {"layer_name": "相交分析结果"},
+                "id": f"call_{uuid.uuid4().hex[:8]}"
+            }
+        elif recent_analysis == "擦除分析":
+            return {
+                "name": "save_erase_results_as_layer",
+                "args": {"layer_name": "擦除分析结果"},
+                "id": f"call_{uuid.uuid4().hex[:8]}"
+            }
+        elif recent_analysis == "最短路径分析":
+            return {
+                "name": "save_path_results_as_layer",
+                "args": {"layer_name": "最短路径分析结果"},
+                "id": f"call_{uuid.uuid4().hex[:8]}"
+            }
+        elif recent_analysis == "属性查询":
+            return {
+                "name": "save_query_results_as_layer",
+                "args": {"layer_name": "查询结果"},
+                "id": f"call_{uuid.uuid4().hex[:8]}"
+            }
+    
+    return None
 
 async def create_task() -> str:
     """创建新任务"""
@@ -386,6 +566,12 @@ async def tool_chat(req: ToolChatRequest):
     # 创建任务
     task_id = await create_task()
     try:
+        # 创建OpenAI客户端用于JSON格式输出
+        client = OpenAI(
+            api_key=settings.api_key,
+            base_url=settings.base_url,
+        )
+        
         model = init_chat_model(f"openai:{req.model}")
         llm_with_tools = model.bind_tools([
             # 知识库工具
@@ -445,12 +631,21 @@ async def tool_chat(req: ToolChatRequest):
         # 添加用户消息到对话历史
         add_to_conversation_history(req.conversation_id, "user", req.prompt)
         
+        # 关键词检测与结构化处理
+        structured_prompt = detect_keywords_and_structure(req.prompt, req.conversation_id)
+        
         first_ai: AIMessage = llm_with_tools.invoke([
             SystemMessage(content=full_system_prompt),
-            HumanMessage(content=req.prompt)
+            HumanMessage(content=structured_prompt)
         ])
+        
+        # 如果没有工具调用，尝试强制调用基于关键词检测
         if not first_ai.tool_calls:
-            return ChatResponse(success=True, data={"first_call": {"tool_calls": []}, "tool_result": None, "final_answer": first_ai.content}, task_id=task_id)
+            forced_tool_call = force_tool_call_based_on_keywords(req.prompt, req.conversation_id)
+            if forced_tool_call:
+                first_ai.tool_calls = [forced_tool_call]
+            else:
+                return ChatResponse(success=True, data={"first_call": {"tool_calls": []}, "tool_result": None, "final_answer": first_ai.content}, task_id=task_id)
         
         tool_call = first_ai.tool_calls[0]
         tool_args = tool_call.get("args", {})
@@ -514,6 +709,14 @@ async def tool_chat(req: ToolChatRequest):
         final_system_prompt = full_system_prompt
         if tool_name == "query_knowledge_base":
             final_system_prompt += "\n\n重要：你刚刚查询了知识库，现在必须基于查询结果给用户一个完整、有用的回复。工具返回的结果已经包含了参考来源信息，请直接使用这些信息，不要重复添加来源。要结合用户的问题提供有价值的回答，并确保来源信息清晰可见。"
+        
+        # 加强上下文记忆规则，特别针对保存和导出操作
+        if tool_name in ["save_buffer_results_as_layer", "export_buffer_results_as_json", 
+                        "save_intersection_results_as_layer", "export_intersection_results_as_json",
+                        "save_erase_results_as_layer", "export_erase_results_as_json",
+                        "save_path_results_as_layer", "export_path_results_as_json",
+                        "save_query_results_as_layer", "export_query_results_as_json"]:
+            final_system_prompt += "\n\n重要：你刚刚执行了保存或导出操作，请记住当前的分析结果状态。当用户再次说'导出为JSON'、'保存为图层'等操作时，必须基于刚才的分析类型调用对应的工具。"
         
         final_ai: AIMessage = llm_with_tools.invoke([
             SystemMessage(content=final_system_prompt),

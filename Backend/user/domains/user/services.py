@@ -3,8 +3,8 @@
 """
 from typing import Dict, List, Optional
 from uuid import UUID
-from user.domains.user.entities import UserEntity
-from user.domains.user.repositories import UserRepository
+from domains.user.entities import UserEntity
+from domains.user.repositories import UserRepository
 
 
 class UserService:

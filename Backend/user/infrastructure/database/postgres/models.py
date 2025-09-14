@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 
-from user.core.database import Base
+from core.database import Base
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy import BigInteger
 from sqlalchemy.dialects.postgresql import JSONB

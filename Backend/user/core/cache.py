@@ -4,7 +4,7 @@ Redis 缓存管理
 import json
 from typing import Any, Optional, Union
 import redis.asyncio as redis
-from user.core.config import settings
+from core.config import settings
 
 
 class CacheService:

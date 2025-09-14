@@ -10,9 +10,9 @@ from datetime import datetime
 from sqlalchemy import select, update, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from user.domains.user.entities import UserEntity
-from user.domains.user.repositories import UserRepository
-from user.infrastructure.database.postgres.models import UserModel
+from domains.user.entities import UserEntity
+from domains.user.repositories import UserRepository
+from infrastructure.database.postgres.models import UserModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Any, Dict, cast
 

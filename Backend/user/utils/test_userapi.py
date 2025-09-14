@@ -18,7 +18,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 # 现在可以安全导入user模块
-from user.core.config import get_settings
+from core.config import get_settings
 
 # API基础URL
 settings = get_settings()
@@ -453,8 +453,8 @@ async def test_database_verification():
     print(f"\n🔍 验证数据库中的数据...")
     
     try:
-        from user.core.database import AsyncSessionLocal
-        from user.infrastructure.database.postgres.models import UserModel
+        from core.database import AsyncSessionLocal
+        from infrastructure.database.postgres.models import UserModel
         from sqlalchemy import select
         
         async with AsyncSessionLocal() as session:

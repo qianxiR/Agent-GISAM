@@ -6,13 +6,13 @@ from uuid import UUID
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-from user.domains.user.entities import UserEntity
-from user.domains.user.services import UserService
-from user.application.dto.user_dto import (
+from domains.user.entities import UserEntity
+from domains.user.services import UserService
+from application.dto.user_dto import (
     UserRegisterDTO, UserLoginDTO, UserProfileDTO, 
     UserUpdateDTO, PasswordChangeDTO
 )
-from user.core.config import settings
+from core.config import settings
 
 # 密码加密上下文
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

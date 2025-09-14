@@ -3,10 +3,10 @@
 实现真正的依赖倒置，管理所有服务的生命周期
 """
 from typing import Dict, Any
-from user.domains.user.repositories import UserRepository, MockUserRepository
-from user.domains.user.services import UserService
-from user.application.use_cases.user.auth_use_case import AuthUseCase
-from user.infrastructure.database.postgres.repositories import PostgreSQLUserRepository
+from domains.user.repositories import UserRepository, MockUserRepository
+from domains.user.services import UserService
+from application.use_cases.user.auth_use_case import AuthUseCase
+from infrastructure.database.postgres.repositories import PostgreSQLUserRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 # ProfileUseCase 已废弃，移除导入与注册
 
@@ -20,7 +20,10 @@ class Container:
     
     def _configure_services(self):
         """配置服务依赖"""
-        # 仓储层
+        # 仓储层 - 使用MockUserRepository作为默认实现
+        # 注意：在生产环境中应该使用PostgreSQLUserRepository
+        # 由于需要数据库会话，这里暂时使用MockUserRepository
+        # 实际的PostgreSQL仓储将通过build_auth_use_case函数创建
         self._services['user_repository'] = MockUserRepository()
         
         # 领域服务层

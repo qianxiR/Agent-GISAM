@@ -4,7 +4,7 @@ API v1 版本路由管理器
 """
 from fastapi import APIRouter
 
-from user.api.v1.user.auth import router as user_auth_router
+from api.v1.user.auth import router as user_auth_router
 
 # 创建主路由
 api_v1_router = APIRouter()

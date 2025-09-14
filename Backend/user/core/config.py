@@ -36,10 +36,10 @@ class Settings(BaseSettings):
     
     # 数据库配置
     postgres_user: str = Field(default="postgres", alias="POSTGRES_USER")
-    postgres_password: str = Field(default="postgres", alias="POSTGRES_PASSWORD")
+    postgres_password: str = Field(default="001117", alias="POSTGRES_PASSWORD")
     postgres_host: str = Field(default="localhost", alias="POSTGRES_HOST")
     postgres_port: int = Field(default=5432, alias="POSTGRES_PORT")
-    postgres_db: str = Field(default="supermap_gis", alias="POSTGRES_DB")
+    postgres_db: str = Field(default="supermap", alias="POSTGRES_DB")
     
     @property
     def database_url(self) -> str:
@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     # DashScope / Vite 相关配置
     vite_dashscope_api_key: str = Field(default="your-dashscope-api-key-here", alias="VITE_DASHSCOPE_API_KEY")
     vite_dashscope_base_url: str = Field(default="https://dashscope.aliyuncs.com/api/v1", alias="VITE_DASHSCOPE_BASE_URL")
-    vite_dashscope_model: str = Field(default="qwen-turbo", alias="VITE_DASHSCOPE_MODEL")
+    vite_dashscope_model: str = Field(default="qwen-plus", alias="VITE_DASHSCOPE_MODEL")
     vite_dashscope_temperature: float = Field(default=0.7, alias="VITE_DASHSCOPE_TEMPERATURE")
     vite_dashscope_max_tokens: int = Field(default=2000, alias="VITE_DASHSCOPE_MAX_TOKENS")
     

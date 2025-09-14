@@ -5,7 +5,7 @@ FastAPI 依赖注入模块
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional, Dict, Any
-from user.core.security import verify_token
+from core.security import verify_token
 
 # HTTP Bearer Token 实例
 security = HTTPBearer()

@@ -180,7 +180,7 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
   - `POSTGRES_PASSWORD`（默认：001117）
   - `POSTGRES_HOST`（默认：localhost）
   - `POSTGRES_PORT`（默认：5432）
-  - `POSTGRES_DB`（默认：supermap_gis）
+  - `POSTGRES_DB`（默认：supermap）
 - 安全
   - `SECRET_KEY`（默认见代码，建议覆盖）
   - `ALGORITHM`（默认：HS256）
