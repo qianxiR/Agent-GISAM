@@ -93,35 +93,34 @@
             <div class="status-label">版本</div>
             <div class="status-value">v{{ apiStatus.version }}</div>
           </div>
-          <!-- 功能特性标签 -->
-          <div class="status-item">
-            <div class="status-label">功能特性</div>
-            <div class="status-features">
-              <div class="feature-tag primary">GIS工具箱</div>
-              <div class="feature-tag secondary">知识库系统</div>
-              <div class="feature-tag accent">空间分析</div>
-              <div class="feature-tag info">智能对话</div>
-            </div>
-          </div>
           
-          <!-- 监测数据推送控制 -->
+          <!-- 异常值提醒控制 -->
           <div class="status-item monitoring-control">
-            <div class="status-label">监测数据推送</div>
+            <div class="status-label">异常值提醒</div>
             <div class="monitoring-control-content">
               <div class="monitoring-status">
                 <span class="status-indicator" :class="{ active: isAutoPushEnabled }"></span>
                 <span class="status-text">{{ isAutoPushEnabled ? '已启用' : '已禁用' }}</span>
               </div>
-              <button 
-                class="monitoring-toggle-btn"
-                :class="{ active: isAutoPushEnabled }"
-                @click="toggleAutoPush"
-              >
-                {{ isAutoPushEnabled ? '停止推送' : '启动推送' }}
-              </button>
+              <div class="monitoring-buttons">
+                <button 
+                  class="monitoring-toggle-btn"
+                  :class="{ active: isAutoPushEnabled }"
+                  @click="toggleAutoPush"
+                >
+                  {{ isAutoPushEnabled ? '停止提醒' : '启动提醒' }}
+                </button>
+                <button 
+                  class="test-anomaly-btn"
+                  @click="testAnomalyDetection"
+                  :disabled="isLLMResponding"
+                >
+                  {{ isLLMResponding ? '测试中...' : '立即测试' }}
+                </button>
+              </div>
             </div>
             <div class="monitoring-description">
-              每5分钟自动推送一个监测点的水质数据给AI进行分析
+              检测到水质异常值时自动提醒AI进行深度分析
             </div>
           </div>
         </div>
@@ -1260,12 +1259,24 @@ const sendImplicitMessageToLLM = async (resultMessage: string, showResponse: boo
   }
 }
 
-// 快速发送消息到LLM（不显示发送状态，直接发送）
+// 快速发送消息到LLM（显示发送消息和AI回复）
 const sendQuickMessageToLLM = async (resultMessage: string) => {
   // 设置LLM响应状态
   isLLMResponding.value = true
   
   try {
+    // 先将发送的消息添加到聊天记录中
+    messages.value.push({
+      id: Date.now(),
+      text: resultMessage,
+      sender: 'user'
+    })
+    
+    // 滚动到底部显示发送的消息
+    nextTick(() => {
+      messagesPanelRef.value?.scrollToBottom()
+    })
+    
     const apiBase = getAgentApiBaseUrl()
     // 使用相同的会话ID
     const convId = sessionStorage.getItem('agent_conv_id') || (() => {
@@ -1289,11 +1300,11 @@ const sendQuickMessageToLLM = async (resultMessage: string) => {
     const resp = await axios.post(`${apiBase}/agent/tool-chat`, payload)
     const content = resp.data?.data?.final_answer || '未得到结果。'
       
-      // 直接添加AI回复到消息列表
+      // 添加AI回复到消息列表
       messages.value.push({
         id: Date.now() + 1,
         text: content,
-        sender: 'system'
+        sender: 'user'
       })
       
       // 滚动到底部
@@ -1337,13 +1348,19 @@ const sendMonitoringSiteInfo = async (siteInfo: any, isAutoPush: boolean = false
 
     const latestData = siteData.data[siteData.data.length - 1]
     
-    // 构造监测点信息消息
-    const monitoringMessage = `[${isAutoPush ? '自动推送' : '监测点信息'}] 监测点：${siteInfo.name} (${siteInfo.location})
+    // 随机生成异常指标名称
+    const anomalyIndicators = ['溶解氧', '氨氮', '总磷', '浊度', 'pH值', '水温', '高锰酸盐指数', '总氮', '叶绿素a', '藻类密度']
+    const randomAnomaly = anomalyIndicators[Math.floor(Math.random() * anomalyIndicators.length)]
+    
+    // 构造异常值检测消息
+    const monitoringMessage = `🚨 [异常值检测] 监测点：${siteInfo.name} (${siteInfo.location})
 坐标：${siteInfo.coordinates[0]}, ${siteInfo.coordinates[1]}
 图层名称：${siteInfo.layerName}
 水质类别：${siteInfo.waterQualityClass}
 
-最新监测数据：
+⚠️ 检测到异常指标：${randomAnomaly}指标异常！
+
+📊 完整监测数据：
 - 时间：${latestData.time}
 - 水温：${latestData.water_temperature}°C
 - pH值：${latestData.ph_value}
@@ -1356,32 +1373,32 @@ const sendMonitoringSiteInfo = async (siteInfo: any, isAutoPush: boolean = false
 - 叶绿素a：${latestData.chlorophyll_a} mg/L
 - 藻类密度：${latestData.algae_density.toLocaleString()} 个/L
 
-请分析这些水质数据，关注是否有异常指标需要预警。`
+🔍 请立即分析这些异常数据，结合监测点坐标信息(${siteInfo.coordinates[0]}, ${siteInfo.coordinates[1]})和图层名称"${siteInfo.layerName}"，作为武汉市长江水域与水资源管理的自主智能体，给出针对性的治理意见和下一步建议！`
 
     // 发送给AI
     await sendQuickMessageToLLM(monitoringMessage)
     
     // 显示系统通知
     showSystemNotification(
-      isAutoPush ? '自动推送监测数据' : '监测点信息已发送',
-      `已向AI发送监测点"${siteInfo.location}"的最新数据`,
-      'info'
+      '水质异常值检测',
+      `${siteInfo.location}站点${randomAnomaly}指标异常！我将为您自主定位并分析`,
+      'error'
     )
     
-    console.log(`[ChatAssistant] ${isAutoPush ? '自动推送' : '手动发送'}监测点信息: ${siteInfo.name}`)
+    console.log(`[ChatAssistant] ${isAutoPush ? '自动检测' : '手动检测'}异常值: ${siteInfo.name}, 异常指标: ${randomAnomaly}`)
     
   } catch (error) {
-    console.error('[ChatAssistant] 发送监测点信息失败:', error)
+    console.error('[ChatAssistant] 异常值检测失败:', error)
     showSystemNotification(
-      '发送失败',
-      `发送监测点"${siteInfo.location}"信息时发生错误`,
+      '检测失败',
+      `检测监测点"${siteInfo.location}"异常值时发生错误`,
       'error'
     )
   }
 }
 
 /**
- * 自动推送监测点数据（每5分钟推送一个监测点）
+ * 自动检测监测点异常值（每5分钟检测一次）
  */
 const autoPushMonitoringData = () => {
   if (!isAutoPushEnabled.value) return
@@ -1389,45 +1406,45 @@ const autoPushMonitoringData = () => {
   const sites = monitoringPlatformStore.getAllSites
   if (sites.length === 0) return
   
-  // 获取当前要推送的监测点
+  // 获取当前要检测的监测点
   const currentSite = sites[currentSiteIndex.value]
   if (currentSite) {
     sendMonitoringSiteInfo(currentSite, true)
     
-    // 更新索引，循环推送
+    // 更新索引，循环检测
     currentSiteIndex.value = (currentSiteIndex.value + 1) % sites.length
   }
 }
 
 /**
- * 启动自动推送定时器
+ * 启动异常值检测定时器
  */
 const startAutoPush = () => {
   if (autoPushInterval.value) return
   
-  // 每5分钟推送一次
+  // 每5分钟检测一次
   autoPushInterval.value = setInterval(autoPushMonitoringData, 5 * 60 * 1000)
-  console.log('[ChatAssistant] 监测数据自动推送已启动，每5分钟推送一次')
+  console.log('[ChatAssistant] 异常值检测已启动，每5分钟检测一次')
   
   showSystemNotification(
-    '自动推送已启动',
-    '系统将每5分钟自动推送一个监测点的数据给AI',
+    '异常值检测已启动',
+    'Agent将自动检测监测点异常值并为您给出针对性意见并执行后续分析任务',
     'success'
   )
 }
 
 /**
- * 停止自动推送定时器
+ * 停止异常值检测定时器
  */
 const stopAutoPush = () => {
   if (autoPushInterval.value) {
     clearInterval(autoPushInterval.value)
     autoPushInterval.value = null
-    console.log('[ChatAssistant] 监测数据自动推送已停止')
+    console.log('[ChatAssistant] 异常值检测已停止')
     
     showSystemNotification(
-      '自动推送已停止',
-      '系统不再自动推送监测数据',
+      '异常值检测已停止',
+      '系统不再自动检测监测点异常值',
       'info'
     )
   }
@@ -1458,6 +1475,62 @@ const toggleAutoPush = () => {
     startAutoPush()
   } else {
     stopAutoPush()
+  }
+}
+
+/**
+ * 立即测试异常值检测
+ */
+const testAnomalyDetection = async () => {
+  if (isLLMResponding.value) return
+  
+  const sites = monitoringPlatformStore.getAllSites
+  if (sites.length === 0) {
+    showSystemNotification(
+      '测试失败',
+      '没有可用的监测点进行测试',
+      'error'
+    )
+    return
+  }
+  
+  // 获取当前要测试的监测点
+  const currentSite = sites[currentSiteIndex.value]
+  if (currentSite) {
+    try {
+      // 立即触发异常值检测
+      await sendMonitoringSiteInfo(currentSite, true)
+      
+      // 显示测试成功通知
+      showSystemNotification(
+        '测试已触发',
+        `已向AI发送${currentSite.location}站点的异常值检测请求`,
+        'success'
+      )
+      
+      // 随机生成异常指标名称并显示异常值提醒
+      const anomalyIndicators = ['溶解氧', '氨氮', '总磷', '浊度', 'pH值', '水温', '高锰酸盐指数', '总氮', '叶绿素a', '藻类密度']
+      const randomAnomaly = anomalyIndicators[Math.floor(Math.random() * anomalyIndicators.length)]
+      
+      // 显示异常值提醒通知
+      showSystemNotification(
+        '水质异常值检测',
+        `${currentSite.location}站点${randomAnomaly}指标异常！我将为您自主定位并分析`,
+        'error'
+      )
+      
+      // 关闭服务状态弹窗
+      showApiStatus.value = false
+      
+      console.log(`[ChatAssistant] 手动测试异常值检测: ${currentSite.name}`)
+    } catch (error) {
+      console.error('[ChatAssistant] 测试异常值检测失败:', error)
+      showSystemNotification(
+        '测试失败',
+        `测试${currentSite.location}站点异常值检测时发生错误`,
+        'error'
+      )
+    }
   }
 }
 
@@ -2078,6 +2151,12 @@ defineExpose({
   gap: 12px;
 }
 
+.monitoring-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .monitoring-status {
   display: flex;
   align-items: center;
@@ -2131,6 +2210,38 @@ defineExpose({
   background: var(--accent-hover);
 }
 
+.test-anomaly-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.test-anomaly-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.test-anomaly-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--surface);
+  color: var(--sub);
+  transform: none;
+}
+
 .monitoring-description {
   font-size: 12px;
   color: var(--sub);
@@ -2150,31 +2261,6 @@ defineExpose({
   font-weight: 500;
 }
 
-.status-features {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  flex: 1;
-  justify-content: flex-end;
-}
-
-.feature-tag {
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 500;
-  border: 1px solid;
-  transition: all 0.2s ease;
-}
-
-.feature-tag.primary,
-.feature-tag.secondary,
-.feature-tag.accent,
-.feature-tag.info {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
-}
 
 .loading-status {
   text-align: center;
