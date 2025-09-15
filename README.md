@@ -870,11 +870,16 @@ conda create -n py310 python = 3.10
 完成安装后执行
 conda activate py310
 pip install -r requirements.txt安装相关包
+或者激活临时环境，.venv_tmp
+
+.\.venv_tmp\Scripts\Activate.ps1
 
 
 #### 2. 启动所有服务
 
 **G:\1代码\开发\SuperMap\start_services.bat**
+或
+**G:\1代码\开发\SuperMap\start_services_venv_tmp**
 
 在根目录下一键启动即可打开所有服务！
 
