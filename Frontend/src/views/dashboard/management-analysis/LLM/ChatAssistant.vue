@@ -629,19 +629,9 @@ const handleSaveResult = async (event: CustomEvent) => {
   
   console.log('[ChatAssistant] 收到保存结果事件:', { success, message, layerName, count, error })
   
-  // 如果保存失败，显示错误消息
+  // 保存失败时不向聊天面板发送消息，只记录日志
   if (!success) {
-    const errorMessage = `保存失败：${message || '未知错误'}`
-    messages.value.push({ 
-      id: Date.now(), 
-      text: errorMessage, 
-      sender: 'system' 
-    })
-    
-    // 滚动到底部显示新消息
-    nextTick(() => {
-      messagesPanelRef.value?.scrollToBottom()
-    })
+    console.log('[ChatAssistant] 保存失败，不显示到聊天面板:', message || '未知错误')
   }
   // 如果保存成功，不显示消息，等待系统弹窗确认
 }
@@ -852,11 +842,8 @@ const handleBufferAnalysisResult = (event: CustomEvent) => {
   isLLMResponding.value = false
   console.log('缓冲区分析完成，任务状态已重置')
   
-  // 发送分析结果上下文给AI，让AI记住刚才的分析类型
-  if (success) {
-    const contextMessage = `[缓冲区分析完成] 刚才执行了缓冲区分析，图层"${layerName}"，半径${radius}${unit}。现在AI需要记住这个分析类型，当用户说"导出为json"、"导出为图层"、"保存为图层"等操作时，必须基于这个缓冲区分析结果调用对应的工具。`
-    sendImplicitMessageToLLM(contextMessage, false)
-  }
+    sendImplicitMessageToLLM( '', false)
+  
 }
 
 // 监听相交分析结果事件
@@ -870,11 +857,7 @@ const handleIntersectionAnalysisResult = (event: CustomEvent) => {
   isLLMResponding.value = false
   console.log('相交分析完成，任务状态已重置')
   
-  // 发送分析结果上下文给AI，让AI记住刚才的分析类型
-  if (success) {
-    const contextMessage = `[相交分析完成] 刚才执行了相交分析，目标图层"${targetLayerName}"，掩膜图层"${maskLayerName}"。现在AI需要记住这个分析类型，当用户说"导出为json"、"导出为图层"、"保存为图层"等操作时，必须基于这个相交分析结果调用对应的工具。`
-    sendImplicitMessageToLLM(contextMessage, false)
-  }
+  sendImplicitMessageToLLM( '', false)
 }
 
 // 监听擦除分析结果事件
@@ -888,11 +871,7 @@ const handleEraseAnalysisResult = (event: CustomEvent) => {
   isLLMResponding.value = false
   console.log('擦除分析完成，任务状态已重置')
   
-  // 发送分析结果上下文给AI，让AI记住刚才的分析类型
-  if (success) {
-    const contextMessage = `[擦除分析完成] 刚才执行了擦除分析，目标图层"${targetLayerName}"，擦除图层"${eraseLayerName}"。现在AI需要记住这个分析类型，当用户说"导出为json"、"导出为图层"、"保存为图层"等操作时，必须基于这个擦除分析结果调用对应的工具。`
-    sendImplicitMessageToLLM(contextMessage, false)
-  }
+  sendImplicitMessageToLLM( '', false)
 }
 
 // 监听最短路径分析结果事件
@@ -906,11 +885,7 @@ const handlePathAnalysisResult = (event: CustomEvent) => {
   isLLMResponding.value = false
   console.log('最短路径分析完成，任务状态已重置')
   
-  // 发送分析结果上下文给AI，让AI记住刚才的分析类型
-  if (success) {
-    const contextMessage = `[最短路径分析完成] 刚才执行了最短路径分析，起点图层"${startLayerName}"，终点图层"${endLayerName}"。现在AI需要记住这个分析类型，当用户说"导出为json"、"导出为图层"、"保存为图层"等操作时，必须基于这个最短路径分析结果调用对应的工具。`
-    sendImplicitMessageToLLM(contextMessage, false)
-  }
+  sendImplicitMessageToLLM( '', false)
 }
 
 // 监听获取打开图层结果事件
@@ -1048,14 +1023,11 @@ onMounted(() => {
     window.addEventListener('agent:saveIntersectionResultsAsLayer', handleSaveIntersectionResultsAsLayer as unknown as EventListener)
     window.addEventListener('agent:saveEraseResultsAsLayer', handleSaveEraseResultsAsLayer as unknown as EventListener)
     window.addEventListener('agent:savePathResultsAsLayer', handleSavePathResultsAsLayer as unknown as EventListener)
-    // 监听图层可见性变化事件，显示消息但不发送给AI
+    // 监听图层可见性变化事件，只记录日志不显示消息
     window.addEventListener('agent:layerVisibilityChanged', ((e: any) => {
       const { layerName, visible } = e.detail || {}
       const msg = visible ? `打开图层：${layerName}` : `关闭图层：${layerName}`
-      messages.value.push({ id: Date.now(), text: msg, sender: 'system' })
-      nextTick(() => {
-        messagesPanelRef.value?.scrollToBottom()
-      })
+      console.log('[ChatAssistant] 图层可见性变化，不显示到聊天面板:', msg)
       // 不发送给AI，避免占据端口
     }) as EventListener)
   }
@@ -1214,20 +1186,7 @@ const sendImplicitMessageToLLM = async (resultMessage: string, showResponse: boo
     })()
     
     // 构造完整的prompt
-    const fullPrompt = `分析结果反馈：${resultMessage}
-
-🔥 关键记忆规则 - 必须严格执行：
-
-当用户说"导出为图层"、"保存为图层"、"另存为图层"时，请根据刚才完成的分析类型自动调用对应的保存工具：
-- 缓冲区分析完成 → 调用 save_buffer_results_as_layer
-- 相交分析完成 → 调用 save_intersection_results_as_layer  
-- 擦除分析完成 → 调用 save_erase_results_as_layer
-- 最短路径分析完成 → 调用 save_path_results_as_layer
-- 属性查询完成 → 调用 save_query_results_as_layer
-
-⚡ 重要：检测到关键词后必须立即调用对应工具，不要询问用户确认！基于对话历史中的分析类型确定工具选择！
-
-`
+    const fullPrompt = resultMessage
     
     const llm = getLLMApiConfig()
     const payload = {
@@ -1286,13 +1245,11 @@ const sendQuickMessageToLLM = async (resultMessage: string) => {
     })()
     
     // 构造完整的prompt
-    const fullPrompt = resultMessage
     
     const llm = getLLMApiConfig()
     const payload = {
       model: 'qwen-plus',
       temperature: typeof llm.temperature === 'number' ? llm.temperature : 0.7,
-      prompt: fullPrompt,
       stream: false,
       conversation_id: convId
     }
@@ -1919,7 +1876,7 @@ const sendMessage = async () => {
     // 没有工具调用时在上面已经重置了任务状态
   } catch (e: any) {
     const errorMessage = e?.response?.data?.message || e?.message || e
-    messages.value.push({ id: Date.now() + 2, text: `LLM请求异常: ${errorMessage}`, sender: 'system' })
+    console.log('[ChatAssistant] LLM请求异常，不显示到聊天面板:', errorMessage)
     // 任务失败，重置状态
     currentTaskId.value = null
     isLLMResponding.value = false
