@@ -27,3 +27,15 @@ Frontend/docs/
 Backend/rag/知识库
 Backend/rag/vector_db
 .venv_tmp/*
+*.zip
+*.env
+Backend/*.env
+Frontend/*.env
+Frontend/dist/
+Frontend/node_modules/
+Frontend/docs/
+Frontend/public/
+Frontend/src/
+Frontend/src/assets/
+Frontend/src/components/
+Frontend/src/views/
