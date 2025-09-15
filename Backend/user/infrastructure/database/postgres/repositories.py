@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Any, cast
 from uuid import UUID
 from datetime import datetime
 
-from sqlalchemy import select, update, delete, func
+from sqlalchemy import select, update, delete, func, cast, String
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domains.user.entities import UserEntity
@@ -23,7 +23,7 @@ def _model_to_entity(model: UserModel) -> UserEntity:
         email=cast(str, model.email),
         username=cast(str, model.username),
         hashed_password=cast(str, model.hashed_password),
-        phone=cast(Optional[str], model.phone),
+        phone=str(model.phone) if model.phone is not None else None,
         is_active=cast(bool, model.is_active),
         is_superuser=cast(bool, model.is_superuser),
         created_at=cast(Optional[datetime], model.created_at),
@@ -43,7 +43,7 @@ class PostgreSQLUserRepository(UserRepository):
             id=user.id,
             username=user.username,
             email=user.email,
-            phone=user.phone,
+            phone=int(user.phone) if user.phone is not None and user.phone != '' else None,
             hashed_password=user.hashed_password,
             is_active=user.is_active,
             is_superuser=user.is_superuser,
@@ -72,9 +72,7 @@ class PostgreSQLUserRepository(UserRepository):
         return _model_to_entity(model) if model else None
 
     async def get_by_phone(self, phone: str) -> Optional[UserEntity]:
-        if not phone:
-            return None
-        stmt = select(UserModel).where(UserModel.phone == phone.strip())
+        stmt = select(UserModel).where(UserModel.phone == int(phone.strip()))
         result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
         return _model_to_entity(model) if model else None
@@ -150,9 +148,7 @@ class PostgreSQLUserRepository(UserRepository):
         return (result.scalar_one() or 0) > 0
 
     async def exists_by_phone(self, phone: str) -> bool:
-        if not phone:
-            return False
-        stmt = select(func.count()).select_from(UserModel).where(UserModel.phone == phone.strip())
+        stmt = select(func.count()).select_from(UserModel).where(UserModel.phone == int(phone.strip()))
         result = await self.session.execute(stmt)
         return (result.scalar_one() or 0) > 0
 

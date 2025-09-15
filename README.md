@@ -1,6 +1,8 @@
 # 🗺️ SuperMap 智能地理信息分析系统
 基于EDA事件驱动Agent的武汉市长江流域地理空间实时势态感知智能决策分析及多源信息综合可视化监测预警一体化平台
 > 基于微服务架构的现代化 WebGIS 全栈应用，集成 EDA 事件驱动 AI Agent 与传统 GIS 分析功能
+*所有开发工作目前由本人独自开发设计，若引用项目理念及设计发送邮箱至qianxi_x@163.com*
+
 
 [![Vue](https://img.shields.io/badge/Vue-3.5.18-4FC08D?logo=vue.js)](https://vuejs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
@@ -860,19 +862,23 @@ analysis/                       # Node.js + Express + DDD
 - **API测试**: Postman 或 Insomnia
 
 ### 一键启动（推荐）
+#### 1.安装后端依赖
 
-系统需要同时启动三个服务，建议按以下顺序启动：
 
-#### 1. 启动数据库服务
-G:\1代码\开发\SuperMap\start_services.bat
-在桌面下一键启动即可打开所有服务！
+cd 到根目录
+conda create -n py310 python = 3.10
+完成安装后执行
+conda activate py310
+pip install -r requirements.txt安装相关包
+
+
+#### 2. 启动所有服务
+
+**G:\1代码\开发\SuperMap\start_services.bat**
+
+在根目录下一键启动即可打开所有服务！
+
 conda环境名称必须是py310
-
-
-
-
-
-
 
 ```
 
@@ -886,9 +892,6 @@ conda环境名称必须是py310
 | 🤖 EDA Agent服务 | http://localhost:8089/docs | FastAPI Swagger 文档 |
 | 👤 用户服务 API | http://localhost:8089/docs | FastAPI Swagger 文档 |
 | 🗺️ 分析服务 API | http://localhost:3001/docs | 空间分析 API 文档 |
-| ❤️ 健康检查 | http://localhost:8089/health | EDA Agent服务健康状态 |
-| ❤️ 健康检查 | http://localhost:8089/health | 用户服务健康状态 |
-| ❤️ 健康检查 | http://localhost:3001/health | 分析服务健康状态 |
 
 
 
@@ -900,33 +903,6 @@ DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 DASHSCOPE_MODEL=qwen-plus
 DASHSCOPE_TEMPERATURE=0.5
 DASHSCOPE_MAX_TOKENS=3000
-
-# CORS 配置
-CORS_ORIGINS=http://localhost:5173,http://localhost:3000
-```
-
-### 构建与部署
-
-#### 前端构建
-```bash
-cd Frontend
-npm run build
-# 构建产物在 dist/ 目录
-```
-
-#### 后端部署
-```bash
-# EDA Agent服务
-cd Backend/agent
-python -m uvicorn app:app --host 0.0.0.0 --port 8089
-
-# 用户服务
-cd Backend/user
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
-
-# 分析服务
-cd Backend/analysis
-npm start
 ```
 
 
@@ -985,30 +961,6 @@ npm start
    - 验证用户权限
    - 查看数据库日志
 
-### 调试模式
-
-#### 前端调试
-```bash
-# 启用详细日志
-npm run dev
-
-# 查看网络请求
-# 打开浏览器开发者工具 -> Network 标签
-
-# Vue DevTools 调试
-# 安装 Vue DevTools 浏览器扩展
-```
-
-#### 后端调试
-```bash
-# 用户服务调试模式
-cd Backend/user
-python -m uvicorn main:app --reload --log-level debug
-
-# 分析服务调试模式
-cd Backend/analysis
-npm run dev
-```
 
 ### 性能优化
 
@@ -1033,50 +985,6 @@ npm run dev
 - **数据库日志**: PostgreSQL 日志文件
 
 ## 🧪 测试
-
-### API 测试
-
-#### 用户服务测试
-```bash
-# 健康检查
-curl http://localhost:8089/health
-
-# 用户注册测试
-curl -X POST "http://localhost:8089/api/v1/user/register" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "testuser",
-    "email": "test@example.com",
-    "phone": "13800138000",
-    "password": "password123",
-    "confirm_password": "password123"
-  }'
-
-# 用户登录测试
-curl -X POST "http://localhost:8089/api/v1/user/login" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "login_identifier": "testuser",
-    "password": "password123"
-  }'
-```
-
-#### 空间分析服务测试
-```bash
-# 健康检查
-curl http://localhost:3001/health
-
-# 缓冲区分析测试
-curl -X POST "http://localhost:3001/api/v1/spatial-analysis/buffer" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "sourcelayerId": "wuhan_schools",
-    "bufferSettings": {
-      "radius": 100,
-      "semicircleLineSegment": 10
-    }
-  }'
-```
 
 
 ## 📚 使用指南
@@ -1187,4 +1095,4 @@ npm run dev -- --debug
 
 *本项目持续维护和更新中，欢迎关注和贡献！*
 
-**最后更新**: 2024年1月
+**最后更新**: 2025.9.15

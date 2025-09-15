@@ -544,6 +544,55 @@ async def tool_chat(req: ToolChatRequest):
         )
         
         model = init_chat_model(f"openai:{req.model}")
+
+        # 特殊处理：异常值检测消息走纯文本分析路径（不调用任何工具）
+        anomaly_mode = req.prompt.strip().startswith("🚨 [异常值检测]")
+        if anomaly_mode:
+            history_list = _conversation_layer_history.get(req.conversation_id, [])
+            parsed_lines: List[str] = []
+            last_action_text = ""
+            for entry in history_list:
+                if ":" in entry:
+                    action, layer = entry.split(":", 1)
+                    parsed_line = f"action={action}; layer={layer}"
+                    parsed_lines.append(parsed_line)
+                    last_action_text = f"action={action}; layer={layer}"
+                else:
+                    parsed_lines.append(entry)
+                    last_action_text = entry
+            history_text = "\n".join(parsed_lines)
+            system_prompt = load_system_prompt()
+            conversation_context = get_conversation_context(req.conversation_id)
+            full_system_prompt = system_prompt
+            if history_text:
+                full_system_prompt += f"\n\n历史操作(顺序, 最新在下):\n{history_text}\n"
+                full_system_prompt += f"最近一次操作: {last_action_text}。若用户问'刚才做了什么'，请直接依据最近几次操作回答。"
+            if conversation_context:
+                full_system_prompt += f"\n\n对话历史上下文:\n{conversation_context}\n"
+                full_system_prompt += "请结合对话历史上下文理解用户的问题，保持对话的连贯性。"
+
+            # 注入异常值检测专用分析指令
+            full_system_prompt += (
+                "\n\n【异常值检测处理规则】\n"
+                "当用户消息以'🚨 [异常值检测]'开头时：\n"
+                "1) 仅基于消息中的监测点化学指标（水温、pH、溶解氧、浊度、高锰酸盐指数、氨氮、总磷、总氮、叶绿素a、藻类密度等）进行详细的专业分析；\n"
+                "2) 输出结构包含：异常项判读、潜在成因研判、对水资源与生态的影响评估、监测与治理的下一步建议；\n"
+                "3) 不调用任何工具与外部接口，不返回工具调用指令或图层操作指令；\n"
+                "4) 用简洁专业的中文给出结论与可执行建议。\n"
+            )
+
+            add_to_conversation_history(req.conversation_id, "user", req.prompt)
+            final_ai = model.invoke([
+                SystemMessage(content=full_system_prompt),
+                HumanMessage(content=req.prompt)
+            ])
+
+            if not getattr(final_ai, "content", None) or str(final_ai.content).strip() == "":
+                final_ai.content = "已完成异常值检测消息的分析与建议。"
+
+            add_to_conversation_history(req.conversation_id, "assistant", final_ai.content)
+            return ChatResponse(success=True, data={"first_call": {"tool_calls": []}, "tool_result": None, "final_answer": final_ai.content}, task_id=task_id)
+
         llm_with_tools = model.bind_tools([
             # 知识库工具
             query_knowledge_base,

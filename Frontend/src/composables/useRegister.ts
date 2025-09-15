@@ -59,10 +59,7 @@ export function useRegister() {
       errors.push('邮箱格式不正确')
     }
     
-    // 手机号验证（可选）
-    if (phone.value.trim() && !/^1[3-9]\d{9}$/.test(phone.value.trim())) {
-      errors.push('手机号格式不正确')
-    }
+    // 移除手机号格式校验
     
     // 密码验证
     if (!password.value) {

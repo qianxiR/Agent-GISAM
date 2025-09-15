@@ -1,7 +1,7 @@
 """
 PostgreSQL数据库模型模块
 """
-from sqlalchemy import Column, String, Boolean, DateTime, Text, Integer, Float, ForeignKey
+from sqlalchemy import Column, String, Boolean, DateTime, Text, Integer, Float, ForeignKey, BigInteger
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -27,7 +27,7 @@ class UserModel(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
-    phone = Column(String(20), unique=True, nullable=True, index=True)
+    phone = Column(BigInteger, unique=True, nullable=True, index=True)
     hashed_password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False, index=True)
     is_superuser = Column(Boolean, default=False, nullable=False)

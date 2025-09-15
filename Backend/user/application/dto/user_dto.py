@@ -22,12 +22,7 @@ class UserRegisterDTO(BaseModel):
             raise ValueError('用户名只能包含字母、数字和下划线')
         return v
     
-    @field_validator('phone')
-    @classmethod
-    def validate_phone(cls, v):
-        if v and not re.match(r'^1[3-9]\d{9}$', v):
-            raise ValueError('手机号格式不正确')
-        return v
+    # 移除手机号格式校验，允许任意字符串或空值
 
     @model_validator(mode='after')
     def validate_passwords_match(self):

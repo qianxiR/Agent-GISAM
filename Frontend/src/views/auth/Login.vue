@@ -48,6 +48,10 @@
           <span v-if="loading">登录中...</span>
           <span v-else>登录</span>
         </button>
+
+        <button type="button" class="skip-btn" @click="enterAsGuest">
+          直接进入平台（跳过数据库认证）
+        </button>
       </form>
       
       <div class="login-footer">
@@ -63,6 +67,8 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
 import { useLogin } from '@/composables/useLogin'
 
 // 使用登录composable
@@ -80,6 +86,8 @@ const {
 
 // 本地状态
 const hasLoginHistory = ref(false)
+const router = useRouter()
+const userStore = useUserStore()
 
 onMounted(() => {
   // 加载记住的密码
@@ -131,6 +139,21 @@ const handleLogin = async () => {
     const loginHistory = loadLoginHistory()
     hasLoginHistory.value = loginHistory.length > 0
   }
+}
+
+// 直接进入平台（游客模式，跳过数据库认证）
+const enterAsGuest = () => {
+  const guestToken = 'guest-token'
+  const guestUser = {
+    username: 'guest',
+    email: 'guest@example.com',
+    phone: '00000000000',
+    accountType: 'guest',
+    role: 'guest',
+    loginTime: new Date().toISOString()
+  }
+  userStore.login(guestUser as any, guestToken)
+  router.push('/dashboard')
 }
 </script>
 
@@ -318,6 +341,22 @@ const handleLogin = async () => {
   background: var(--sub);
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.skip-btn {
+  padding: 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.skip-btn:hover {
+  background: var(--panel);
 }
 
 .login-footer {

@@ -14,8 +14,8 @@ from application.dto.user_dto import (
 )
 from core.config import settings
 
-# 密码加密上下文
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# 密码加密上下文（使用内置的 pbkdf2_sha256，避免外部二进制依赖问题）
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 class AuthUseCase:

@@ -1250,6 +1250,7 @@ const sendQuickMessageToLLM = async (resultMessage: string) => {
     const payload = {
       model: 'qwen-plus',
       temperature: typeof llm.temperature === 'number' ? llm.temperature : 0.7,
+      prompt: resultMessage,
       stream: false,
       conversation_id: convId
     }
@@ -1330,7 +1331,7 @@ const sendMonitoringSiteInfo = async (siteInfo: any, isAutoPush: boolean = false
 - 叶绿素a：${latestData.chlorophyll_a} mg/L
 - 藻类密度：${latestData.algae_density.toLocaleString()} 个/L
 
-🔍 请立即分析这些异常数据，结合监测点坐标信息(${siteInfo.coordinates[0]}, ${siteInfo.coordinates[1]})和图层名称"${siteInfo.layerName}"，作为武汉市长江水域与水资源管理的自主智能体，给出针对性的治理意见和下一步建议！`
+🔍 请立即分析这些异常数据，作为武汉市长江水域与水资源管理的自主智能体，给出针对性的治理意见和下一步建议！`
 
     // 发送给AI
     await sendQuickMessageToLLM(monitoringMessage)

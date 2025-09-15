@@ -6,7 +6,7 @@ from typing import Dict, Any
 from domains.user.repositories import UserRepository, MockUserRepository
 from domains.user.services import UserService
 from application.use_cases.user.auth_use_case import AuthUseCase
-from infrastructure.database.postgres.repositories import PostgreSQLUserRepository
+from domains.user.repositories import MockUserRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 # ProfileUseCase 已废弃，移除导入与注册
 
@@ -87,8 +87,8 @@ def get_auth_use_case() -> AuthUseCase:
 
 
 def build_user_repository(session: AsyncSession) -> UserRepository:
-    """基于给定数据库会话创建用户仓储实现（PostgreSQL）。"""
-    return PostgreSQLUserRepository(session)
+    """返回全局内存仓储实例，避免每次请求新建导致数据丢失。"""
+    return get_user_repository()
 
 
 def build_user_service(session: AsyncSession) -> UserService:
