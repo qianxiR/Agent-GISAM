@@ -8,7 +8,7 @@ from domains.user.services import UserService
 from application.use_cases.user.auth_use_case import AuthUseCase
 from domains.user.repositories import MockUserRepository
 from sqlalchemy.ext.asyncio import AsyncSession
-# ProfileUseCase 已废弃，移除导入与注册
+# ProfileUseCase 
 
 
 class Container:

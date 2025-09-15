@@ -71,7 +71,7 @@ timeout /t 2 /nobreak >nul
 ::::::: 启动 User 服务 (Python FastAPI)
 echo [2/4] 启动 User 服务 (Python FastAPI)...
 echo 路径: %~dp0Backend\user
-start "User Service" cmd /k "cd /d %~dp0Backend\user && echo 激活 conda test 环境... && conda activate test && echo 启动 User 服务... && echo 当前目录: %CD% && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8088"
+start "User Service" cmd /k "cd /d %~dp0Backend\user && echo 激活临时环境 .venv_tmp... && call "%~dp0.venv_tmp\Scripts\activate.bat" && echo 启动 User 服务... && echo 当前目录: %CD% && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8088"
 
 ::::::: 等待2秒
 timeout /t 2 /nobreak >nul
@@ -79,7 +79,7 @@ timeout /t 2 /nobreak >nul
 ::::::: 启动 Agent 服务 (Python FastAPI)
 echo [3/4] 启动 Agent 服务 (Python FastAPI)...
 echo 路径: %~dp0Backend
-start "Agent Service" cmd /k "cd /d %~dp0Backend && echo 激活 conda test 环境... && conda activate test && echo 启动 Agent 服务... && echo 当前目录: %CD% && python -m uvicorn agent.app:app --reload --host 0.0.0.0 --port 8089"
+start "Agent Service" cmd /k "cd /d %~dp0Backend && echo 激活临时环境 .venv_tmp... && call "%~dp0.venv_tmp\Scripts\activate.bat" && echo 启动 Agent 服务... && echo 当前目录: %CD% && python -m uvicorn agent.app:app --reload --host 0.0.0.0 --port 8089"
 
 ::::::: 等待2秒
 timeout /t 2 /nobreak >nul

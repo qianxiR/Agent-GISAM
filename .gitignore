@@ -26,3 +26,4 @@ Frontend/node_modules/
 Frontend/docs/
 Backend/rag/知识库
 Backend/rag/vector_db
+.venv_tmp/*
