@@ -1,7 +1,8 @@
 /**
  * 应用配置管理
  */
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const config = {
   // 应用基础配置

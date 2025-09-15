@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "osmbuildings": "^0.2.0-b",
-    "uuid": "^13.0.0"
-  }
-}

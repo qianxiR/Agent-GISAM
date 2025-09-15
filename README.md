@@ -33,17 +33,17 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 │                        前端应用层                                │
 │  Vue 3 + TypeScript + Openlayers + Pinia + Ant Design Vue     │
 │  ├── 事件驱动架构 (CustomEvent)                                │
-│  ├── 21个Pinia状态管理模块                                     │
-│  ├── 25个UI组件 + 14个地图组件 + 17个图表组件 + 3个Agent组件     │
-│  └── 25个组合式函数 (Composables)                              │
+│  ├── 22个Pinia状态管理模块                                     │
+│  ├── 25个UI组件 + 14个地图组件 + 17个图表组件 + 2个Agent组件     │
+│  └── 24个组合式函数 (Composables)                              │
 └─────────────────┬───────────────────────────────────────────────┘
                   │ HTTP/REST API + 事件驱动通信
 ┌─────────────────┴───────────────────────────────────────────────┐
 │                       后端服务层                                │
 ├─────────────────────────────────────────────────────────────────┤
 │  EDA事件驱动Agent服务 (FastAPI + LangChain)                    │
-│  - 长江水域监测专业背景知识                                     │
-│  - 17个工具函数 (图层管理+空间分析+结果导出)                    │
+│  - 长江水域监测专业背景知识 (13个专业文档，涵盖武汉概况、长江流域、水质监测等) │
+│  - 18个工具函数 (知识库查询+图层管理+空间分析+结果导出)         │
 │  - 上下文记忆和会话管理                                         │
 │  - 工具调用和结果反馈机制                                       │
 ├─────────────────────────────────────────────────────────────────┤
@@ -67,11 +67,11 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 - **双模式设计**: LLM 智能模式 + 传统 GIS 模式
 - **实时地图交互**: 基于 Openlayers 的高性能地图渲染
 - **完整分析工具**: 缓冲区、相交、擦除、最短路径等空间分析
-- **智能AI助手**: 长江水域监测专业背景的AI Agent，支持17个工具函数
+- **智能AI助手**: 长江水域监测专业背景的AI Agent，支持18个工具函数
 - **事件驱动通信**: 前端事件监听器 + 后端工具调用 + 结果反馈机制
 - **用户管理系统**: 完整的用户认证、授权和资料管理
 - **响应式界面**: 现代化 UI 设计，支持主题切换
-- **状态持久化**: 17个Pinia状态模块的完整应用状态管理
+- **状态持久化**: 22个Pinia状态模块的完整应用状态管理
 
 ## ✨ 功能特性
 
@@ -83,10 +83,10 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 
 ### 🧠 EDA事件驱动LLM智能模式
 - **自然语言交互**: 通过聊天界面操作地图，支持长江水域监测专业术语
-- **17个工具函数**: 图层管理、空间分析、结果导出的完整工具链
+- **18个工具函数**: 知识库查询、图层管理、空间分析、结果导出的完整工具链
 - **事件驱动通信**: 前端CustomEvent监听 + 后端LangChain工具调用
 - **上下文记忆**: 会话历史管理和操作上下文自动识别
-- **专业背景知识**: 长江水系特征、水质监测标准、监测点布局等专业知识
+- **专业背景知识**: 长江水系特征、水质监测标准、监测点布局等专业知识，包含13个专业文档的知识库
 - **智能结果反馈**: 分析结果自动反馈和智能回应生成
 - **多轮对话**: 支持复杂的地图分析任务和连续操作
 
@@ -116,8 +116,8 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 - **主题切换**: 明暗主题自动切换
 - **分割面板**: 可调整的布局分割
 - **通知系统**: 实时操作反馈
-- **状态管理**: 21个Pinia状态模块的完整应用状态持久化
-- **模块化组件**: 25个UI组件 + 14个地图组件 + 17个图表组件 + 3个Agent组件
+- **状态管理**: 22个Pinia状态模块的完整应用状态持久化
+- **模块化组件**: 25个UI组件 + 14个地图组件 + 17个图表组件 + 2个Agent组件
 - **事件驱动UI**: 基于CustomEvent的组件间解耦通信
 - **路由驱动**: 每个功能面板独立路由，支持懒加载
 
@@ -150,7 +150,7 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 - **通义千问 (Qwen)**: 阿里云大语言模型
 - **Tavily Search**: 联网搜索能力
 - **Pydantic**: 数据验证和序列化
-- **17个工具函数**: 图层管理、空间分析、结果导出
+- **18个工具函数**: 知识库查询、图层管理、空间分析、结果导出
 
 #### 用户认证服务 (Python)
 - **FastAPI 0.104**: 现代高性能 Web 框架
@@ -184,16 +184,198 @@ SuperMap 智能地理信息分析系统是一个基于微服务架构的现代�
 ```
 SuperMap/
 ├── Frontend/                   # 前端应用 (Vue 3 + TypeScript + 事件驱动)
-│   ├── src/
-│   │   ├── components/         # 组件库 (19个UI + 8个地图 + 2个布局)
-│   │   ├── composables/        # 组合式函数 (12个)
-│   │   ├── stores/            # 状态管理 (17个Pinia模块)
-│   │   ├── views/             # 页面组件 (路由驱动)
-│   │   └── docs/              # 前端架构文档
+│   ├── src/                    # 源代码目录
+│   │   ├── api/                # API接口层 (6个文件)
+│   │   ├── components/         # 组件库 (58个组件)
+│   │   │   ├── Agent/          # AI Agent组件 (2个文件)
+│   │   │   │   ├── ChatMessagesPanel.vue    # 聊天消息面板
+│   │   │   │   └── LLMInputWindow.vue       # LLM输入窗口
+│   │   │   ├── Charts/         # 图表组件 (17个文件)
+│   │   │   │   ├── AgeDistributionChart.vue      # 年龄分布图表
+│   │   │   │   ├── EducationLevelChart.vue       # 教育水平图表
+│   │   │   │   ├── GenderRatioChart.vue          # 性别比例图表
+│   │   │   │   ├── HospitalDistributionChart.vue # 医院分布图表
+│   │   │   │   ├── LivelihoodSummaryChart.vue    # 民生资源汇总图表
+│   │   │   │   ├── RailwayTypeChart.vue          # 铁路类型图表
+│   │   │   │   ├── RegionAreaChart.vue           # 区域面积图表
+│   │   │   │   ├── RegionPopulationChart.vue     # 区域人口图表
+│   │   │   │   ├── ResidentDistributionChart.vue # 居民分布图表
+│   │   │   │   ├── RoadLevelChart.vue            # 道路等级图表
+│   │   │   │   ├── SchoolDistributionChart.vue   # 学校分布图表
+│   │   │   │   ├── WaterLineChart.vue            # 水系线图表
+│   │   │   │   ├── WaterQualityChart1.vue        # 水质图表1
+│   │   │   │   ├── WaterQualityChart2.vue        # 水质图表2
+│   │   │   │   ├── WaterQualityChart3.vue        # 水质图表3
+│   │   │   │   ├── WaterQualityChart4.vue        # 水质图表4
+│   │   │   │   └── WaterSurfaceChart.vue         # 水面图表
+│   │   │   ├── Map/            # 地图组件 (14个文件)
+│   │   │   │   ├── AdminLegend.vue               # 行政区图例
+│   │   │   │   ├── AreaMeasurePanel.vue          # 面积测量面板
+│   │   │   │   ├── CoordinateDisplay.vue         # 坐标显示
+│   │   │   │   ├── DistanceMeasureButton.vue     # 距离测量按钮
+│   │   │   │   ├── DistanceMeasurePanel.vue      # 距离测量面板
+│   │   │   │   ├── FeaturePopup.vue              # 要素弹窗
+│   │   │   │   ├── LayerAssistant.vue            # 图层助手
+│   │   │   │   ├── MapLegend.vue                 # 地图图例
+│   │   │   │   ├── OverviewMap.vue               # 鹰眼地图
+│   │   │   │   ├── ScaleBar.vue                  # 比例尺
+│   │   │   │   ├── TrafficLegend.vue             # 交通图例
+│   │   │   │   ├── TrafficWaterLegend.vue        # 交通水系图例
+│   │   │   │   ├── WaterLegend.vue               # 水系图例
+│   │   │   │   └── YangtzeLegend.vue             # 长江图例
+│   │   │   └── UI/              # UI组件 (25个文件)
+│   │   │       ├── AutoScrollContainer.vue       # 自动滚动容器
+│   │   │       ├── BaseButton.vue                # 基础按钮
+│   │   │       ├── ButtonGroup.vue               # 按钮组
+│   │   │       ├── ConfirmDialog.vue             # 确认对话框
+│   │   │       ├── DataUploadModal.vue           # 数据上传模态框
+│   │   │       ├── DownloadButton.vue            # 下载按钮
+│   │   │       ├── DropdownSelect.vue            # 下拉选择器
+│   │   │       ├── EditModal.vue                 # 编辑模态框
+│   │   │       ├── Icon.vue                      # 图标组件
+│   │   │       ├── IconButton.vue                # 图标按钮
+│   │   │       ├── LayerItem.vue                 # 图层项
+│   │   │       ├── LayerNameModal.vue            # 图层名称模态框
+│   │   │       ├── LLMInputGroup.vue             # LLM输入组
+│   │   │       ├── NotificationManager.vue       # 通知管理器
+│   │   │       ├── NotificationToast.vue         # 通知提示
+│   │   │       ├── PanelContainer.vue            # 面板容器
+│   │   │       ├── PanelWindow.vue               # 面板窗口
+│   │   │       ├── PrimaryButton.vue             # 主要按钮
+│   │   │       ├── QueryConditionRow.vue         # 查询条件行
+│   │   │       ├── SecondaryButton.vue           # 次要按钮
+│   │   │       ├── SplitPanel.vue                # 分割面板
+│   │   │       ├── ThemeTransitionOverlay.vue    # 主题过渡覆盖层
+│   │   │       ├── TipWindow.vue                 # 提示窗口
+│   │   │       ├── TraditionalInputGroup.vue     # 传统输入组
+│   │   │       └── UploadButton.vue              # 上传按钮
+│   │   ├── composables/        # 组合式函数 (24个文件)
+│   │   │   ├── useBufferAnalysis.ts              # 缓冲区分析
+│   │   │   ├── useBuildingExtrusion.ts           # 建筑拉伸
+│   │   │   ├── useDataUpload.ts                  # 数据上传
+│   │   │   ├── useEraseAnalysis.ts               # 擦除分析
+│   │   │   ├── useFeatureQuery.ts                # 要素查询
+│   │   │   ├── useFeatureSelection.ts            # 要素选择
+│   │   │   ├── useIntersectionAnalysis.ts        # 相交分析
+│   │   │   ├── useLayerExport.ts                 # 图层导出
+│   │   │   ├── useLayerManager.ts                # 图层管理 (事件驱动)
+│   │   │   ├── useLayerMentions.ts               # 图层提及
+│   │   │   ├── useLogin.ts                       # 登录逻辑
+│   │   │   ├── useMap.ts                         # 地图核心逻辑
+│   │   │   ├── useMapData.ts                     # 地图数据
+│   │   │   ├── useMapInteraction.ts              # 地图交互
+│   │   │   ├── useMapLifecycle.ts                # 地图生命周期
+│   │   │   ├── useMapStyles.ts                   # 地图样式
+│   │   │   ├── useMonitoringDataLayers.ts        # 监测数据图层
+│   │   │   ├── useMonitoringThreshold.ts         # 监测阈值管理
+│   │   │   ├── useRealTimeWaterQuality.ts        # 实时水质监测
+│   │   │   ├── useRegister.ts                    # 注册逻辑
+│   │   │   ├── useShortestPathAnalysis.ts        # 最短路径分析
+│   │   │   ├── useThemeOptimization.ts           # 主题优化
+│   │   │   ├── useUserProfile.ts                 # 用户资料
+│   │   │   └── useYangtzeWaterLayers.ts          # 长江水图层
+│   │   ├── stores/             # 状态管理 (22个 Pinia stores)
+│   │   │   ├── analysisStore.ts                  # 分析工具状态
+│   │   │   ├── areaSelectionStore.ts             # 区域选择状态
+│   │   │   ├── bufferAnalysisStore.ts            # 缓冲区分析状态
+│   │   │   ├── eraseAnalysisStore.ts             # 擦除分析状态
+│   │   │   ├── featureQueryStore.ts              # 要素查询状态
+│   │   │   ├── interactionStore.ts               # 交互状态
+│   │   │   ├── intersectionAnalysisStore.ts      # 相交分析状态
+│   │   │   ├── layerDataStore.ts                 # 图层数据状态
+│   │   │   ├── layerUIStore.ts                   # 图层UI状态
+│   │   │   ├── loadingStore.ts                   # 加载状态
+│   │   │   ├── mapStore.ts                       # 地图状态
+│   │   │   ├── modalStore.ts                     # 模态框状态
+│   │   │   ├── modeStateStore.ts                 # 模式切换状态
+│   │   │   ├── monitoringDataStore.ts            # 监测数据状态
+│   │   │   ├── monitoringPlatformStore.ts        # 监测平台状态
+│   │   │   ├── pageStateStore.ts                 # 页面状态
+│   │   │   ├── persistenceStore.ts               # 持久化状态
+│   │   │   ├── popupStore.ts                     # 弹窗状态
+│   │   │   ├── selectionStore.ts                 # 选择状态
+│   │   │   ├── shortestPathAnalysisStore.ts      # 最短路径分析状态
+│   │   │   ├── themeStore.ts                     # 主题状态
+│   │   │   └── userStore.ts                      # 用户状态
+│   │   ├── views/              # 页面组件 (路由驱动)
+│   │   │   ├── auth/            # 认证页面 (2个文件)
+│   │   │   │   ├── Login.vue                     # 登录页面
+│   │   │   │   └── Register.vue                  # 注册页面
+│   │   │   ├── dashboard/       # 主工作台
+│   │   │   │   ├── management-analysis/          # 管理分析模块
+│   │   │   │   │   ├── layout/                   # 布局组件 (2个文件)
+│   │   │   │   │   │   ├── DashboardManageHeader.vue    # 管理头部
+│   │   │   │   │   │   └── DashboardManageLayout.vue    # 管理布局
+│   │   │   │   │   ├── LLM/                      # EDA事件驱动LLM模式 (3个文件)
+│   │   │   │   │   │   ├── LLMMode.vue           # LLM模式主页面
+│   │   │   │   │   │   ├── ChatAssistant.vue     # 聊天助手 (事件监听器)
+│   │   │   │   │   │   └── ChatHistory.vue       # 聊天历史
+│   │   │   │   │   ├── traditional/              # 传统 GIS 模式 (9个文件)
+│   │   │   │   │   │   ├── TraditionalMode.vue   # 传统模式主页面
+│   │   │   │   │   │   ├── LayerManager.vue      # 图层管理器
+│   │   │   │   │   │   ├── FeatureQueryPanel.vue # 要素查询面板
+│   │   │   │   │   │   ├── AreaSelectionTools.vue # 区域选择工具
+│   │   │   │   │   │   ├── BufferAnalysisPanel.vue # 缓冲区分析面板
+│   │   │   │   │   │   ├── IntersectionAnalysisPanel.vue # 相交分析面板
+│   │   │   │   │   │   ├── EraseAnalysisPanel.vue # 擦除分析面板
+│   │   │   │   │   │   ├── ShortestPathAnalysisPanel.vue # 最短路径分析面板
+│   │   │   │   │   │   └── DataUploadPanel.vue   # 数据上传面板
+│   │   │   │   │   ├── management/               # 系统管理 (1个文件)
+│   │   │   │   │   │   └── AIManagement.vue      # AI管理
+│   │   │   │   │   ├── profile/                  # 用户管理 (1个文件)
+│   │   │   │   │   │   └── UserProfile.vue       # 用户资料
+│   │   │   │   │   ├── ManagementAnalysis.vue    # 管理分析主页面
+│   │   │   │   │   ├── RightPanel.vue            # 右侧面板
+│   │   │   │   │   └── SuperMapViewer.vue        # SuperMap查看器
+│   │   │   │   └── ViewPage/                     # 视图页面
+│   │   │   │       ├── layout/                   # 视图布局 (1个文件)
+│   │   │   │       │   └── DashboardViewHeader.vue # 视图头部
+│   │   │   │       ├── data/                     # 数据文件 (4个文件)
+│   │   │   │       ├── monitordata/              # 监测数据 (6个GeoJSON文件)
+│   │   │   │       ├── processed_data/           # 处理数据 (8个文件)
+│   │   │   │       ├── ViewHome.vue              # 视图首页
+│   │   │   │       ├── ViewLayerManager.vue      # 视图图层管理
+│   │   │   │       ├── ViewSubPage1.vue          # 视图子页面1
+│   │   │   │       ├── ViewSubPage2.vue          # 视图子页面2
+│   │   │   │       ├── ViewSubPage3.vue          # 视图子页面3
+│   │   │   │       ├── 水文监测点_GeoJSON.json   # 水文监测点数据
+│   │   │   │       ├── 长江线.geojson            # 长江线数据
+│   │   │   │       └── 长江面.geojson            # 长江面数据
+│   │   │   └── Dashboard.vue                     # 主仪表板
+│   │   ├── types/              # TypeScript 类型定义 (7个文件)
+│   │   │   ├── geojson.d.ts                     # GeoJSON类型定义
+│   │   │   ├── jsx-global.d.ts                  # JSX全局类型
+│   │   │   ├── map.ts                           # 地图相关类型
+│   │   │   ├── query.ts                         # 查询相关类型
+│   │   │   ├── splitpanes.d.ts                  # 分割面板类型
+│   │   │   ├── supermap.d.ts                    # SuperMap类型定义
+│   │   │   └── vue-shims.d.ts                   # Vue类型声明
+│   │   ├── utils/              # 工具函数 (12个文件)
+│   │   │   ├── __tests__/                       # 测试文件目录
+│   │   │   ├── config.ts                        # 配置工具
+│   │   │   ├── domainBackground.ts              # 领域背景
+│   │   │   ├── eventUtils.ts                    # 事件工具
+│   │   │   ├── featureUtils.ts                  # 要素工具
+│   │   │   ├── geometryConverter.ts             # 几何转换
+│   │   │   ├── layerUtils.ts                    # 图层工具
+│   │   │   ├── layerValidation.ts               # 图层验证
+│   │   │   ├── legendColorUtils.ts              # 图例颜色工具
+│   │   │   ├── llmNotification.ts               # LLM通知
+│   │   │   ├── notification.ts                  # 通知工具
+│   │   │   ├── styleUtils.ts                    # 样式工具
+│   │   │   └── themeUtils.ts                    # 主题工具
+│   │   ├── styles/            # 全局样式
+│   │   ├── router/            # 路由配置
+│   │   └── data/              # 数据文件
+│   ├── docs/                  # 前端架构文档 (21个文件)
+│   ├── public/                # 静态资源
+│   └── dist/                  # 构建产物
 ├── Backend/                    # 后端服务
 │   ├── agent/                  # EDA事件驱动Agent服务 (FastAPI + LangChain)
 │   ├── user/                   # 用户认证服务 (FastAPI + PostgreSQL + DDD)
-│   └── analysis/               # 空间分析服务 (Node.js + Express + DDD)
+│   ├── analysis/               # 空间分析服务 (Node.js + Express + DDD)
+│   ├── rag/                    # RAG知识库系统
+│   └── vector_db/              # 向量数据库存储
 ├── docs/                       # 项目文档
 └── README.md                   # 项目说明文档
 ```
@@ -203,71 +385,127 @@ SuperMap/
 ```
 Frontend/
 ├── src/
-│   ├── api/                    # API 接口层 (5个文件)
+│   ├── api/                    # API 接口层 (6个文件)
 │   │   ├── config.ts           # Axios 配置和拦截器
+│   │   ├── state.ts            # 状态管理API
 │   │   ├── supermap.ts         # SuperMap iServer 接口
 │   │   ├── hydrologyData.ts    # 水文数据接口
 │   │   ├── waterQualityData.ts # 水质数据接口
 │   │   └── yangtzeData.ts      # 长江数据接口
 │   │
-│   ├── components/             # 组件库 (4个分类)
-│   │   ├── Agent/              # AI Agent组件 (3个文件)
-│   │   │   ├── ChatMessagesPanel.vue
-│   │   │   ├── LLMInputWindow.vue
-│   │   │   └── prompt/         # 提示词文件
+│   ├── components/             # 组件库 (4个分类，共58个文件)
+│   │   ├── Agent/              # AI Agent组件 (2个文件)
+│   │   │   ├── ChatMessagesPanel.vue    # 聊天消息面板
+│   │   │   └── LLMInputWindow.vue       # LLM输入窗口
 │   │   ├── Charts/             # 图表组件 (17个文件)
-│   │   │   ├── AgeDistributionChart.vue
-│   │   │   ├── EducationLevelChart.vue
-│   │   │   ├── GenderRatioChart.vue
-│   │   │   ├── HospitalDistributionChart.vue
-│   │   │   ├── WaterQualityChart1-4.vue
-│   │   │   └── ...             # 其他统计图表
+│   │   │   ├── AgeDistributionChart.vue      # 年龄分布图表
+│   │   │   ├── EducationLevelChart.vue       # 教育水平图表
+│   │   │   ├── GenderRatioChart.vue          # 性别比例图表
+│   │   │   ├── HospitalDistributionChart.vue # 医院分布图表
+│   │   │   ├── LivelihoodSummaryChart.vue    # 民生资源汇总图表
+│   │   │   ├── RailwayTypeChart.vue          # 铁路类型图表
+│   │   │   ├── RegionAreaChart.vue           # 区域面积图表
+│   │   │   ├── RegionPopulationChart.vue     # 区域人口图表
+│   │   │   ├── ResidentDistributionChart.vue # 居民分布图表
+│   │   │   ├── RoadLevelChart.vue            # 道路等级图表
+│   │   │   ├── SchoolDistributionChart.vue   # 学校分布图表
+│   │   │   ├── WaterLineChart.vue            # 水系线图表
+│   │   │   ├── WaterQualityChart1.vue        # 水质图表1
+│   │   │   ├── WaterQualityChart2.vue        # 水质图表2
+│   │   │   ├── WaterQualityChart3.vue        # 水质图表3
+│   │   │   ├── WaterQualityChart4.vue        # 水质图表4
+│   │   │   └── WaterSurfaceChart.vue         # 水面图表
 │   │   ├── Map/                # 地图组件 (14个文件)
-│   │   │   ├── CoordinateDisplay.vue
-│   │   │   ├── ScaleBar.vue
-│   │   │   ├── OverviewMap.vue
-│   │   │   ├── FeaturePopup.vue
-│   │   │   ├── LayerAssistant.vue
-│   │   │   ├── DistanceMeasurePanel.vue
-│   │   │   ├── AreaMeasurePanel.vue
-│   │   │   └── ...             # 图例和控件组件
+│   │   │   ├── AdminLegend.vue               # 行政区图例
+│   │   │   ├── AreaMeasurePanel.vue          # 面积测量面板
+│   │   │   ├── CoordinateDisplay.vue         # 坐标显示
+│   │   │   ├── DistanceMeasureButton.vue     # 距离测量按钮
+│   │   │   ├── DistanceMeasurePanel.vue      # 距离测量面板
+│   │   │   ├── FeaturePopup.vue              # 要素弹窗
+│   │   │   ├── LayerAssistant.vue            # 图层助手
+│   │   │   ├── MapLegend.vue                 # 地图图例
+│   │   │   ├── OverviewMap.vue               # 鹰眼地图
+│   │   │   ├── ScaleBar.vue                  # 比例尺
+│   │   │   ├── TrafficLegend.vue             # 交通图例
+│   │   │   ├── TrafficWaterLegend.vue        # 交通水系图例
+│   │   │   ├── WaterLegend.vue               # 水系图例
+│   │   │   └── YangtzeLegend.vue             # 长江图例
 │   │   └── UI/                 # UI组件 (25个文件)
-│   │       ├── PrimaryButton.vue
-│   │       ├── SecondaryButton.vue
-│   │       ├── IconButton.vue
-│   │       ├── PanelWindow.vue
-│   │       ├── NotificationManager.vue
-│   │       └── ...             # 其他UI组件
+│   │       ├── AutoScrollContainer.vue       # 自动滚动容器
+│   │       ├── BaseButton.vue                # 基础按钮
+│   │       ├── ButtonGroup.vue               # 按钮组
+│   │       ├── ConfirmDialog.vue             # 确认对话框
+│   │       ├── DataUploadModal.vue           # 数据上传模态框
+│   │       ├── DownloadButton.vue            # 下载按钮
+│   │       ├── DropdownSelect.vue            # 下拉选择器
+│   │       ├── EditModal.vue                 # 编辑模态框
+│   │       ├── Icon.vue                      # 图标组件
+│   │       ├── IconButton.vue                # 图标按钮
+│   │       ├── LayerItem.vue                 # 图层项
+│   │       ├── LayerNameModal.vue            # 图层名称模态框
+│   │       ├── LLMInputGroup.vue             # LLM输入组
+│   │       ├── NotificationManager.vue       # 通知管理器
+│   │       ├── NotificationToast.vue         # 通知提示
+│   │       ├── PanelContainer.vue            # 面板容器
+│   │       ├── PanelWindow.vue               # 面板窗口
+│   │       ├── PrimaryButton.vue             # 主要按钮
+│   │       ├── QueryConditionRow.vue         # 查询条件行
+│   │       ├── SecondaryButton.vue           # 次要按钮
+│   │       ├── SplitPanel.vue                # 分割面板
+│   │       ├── ThemeTransitionOverlay.vue    # 主题过渡覆盖层
+│   │       ├── TipWindow.vue                 # 提示窗口
+│   │       ├── TraditionalInputGroup.vue     # 传统输入组
+│   │       └── UploadButton.vue              # 上传按钮
 │   │
-│   ├── composables/            # 组合式函数 (25个文件)
-│   │   ├── useMap.ts           # 地图核心逻辑
-│   │   ├── useLayerManager.ts  # 图层管理 (事件驱动)
+│   ├── composables/            # 组合式函数 (24个文件)
 │   │   ├── useBufferAnalysis.ts # 缓冲区分析
-│   │   ├── useFeatureQuery.ts  # 要素查询
-│   │   ├── useIntersectionAnalysis.ts # 相交分析
+│   │   ├── useBuildingExtrusion.ts # 建筑拉伸
+│   │   ├── useDataUpload.ts    # 数据上传
 │   │   ├── useEraseAnalysis.ts # 擦除分析
-│   │   ├── useShortestPathAnalysis.ts # 最短路径分析
-│   │   ├── useRealTimeWaterQuality.ts # 实时水质监测
+│   │   ├── useFeatureQuery.ts  # 要素查询
+│   │   ├── useFeatureSelection.ts # 要素选择
+│   │   ├── useIntersectionAnalysis.ts # 相交分析
+│   │   ├── useLayerExport.ts   # 图层导出
+│   │   ├── useLayerManager.ts  # 图层管理 (事件驱动)
+│   │   ├── useLayerMentions.ts # 图层提及
+│   │   ├── useLogin.ts         # 登录逻辑
+│   │   ├── useMap.ts           # 地图核心逻辑
+│   │   ├── useMapData.ts       # 地图数据
+│   │   ├── useMapInteraction.ts # 地图交互
+│   │   ├── useMapLifecycle.ts  # 地图生命周期
+│   │   ├── useMapStyles.ts     # 地图样式
 │   │   ├── useMonitoringDataLayers.ts # 监测数据图层
 │   │   ├── useMonitoringThreshold.ts # 监测阈值管理
-│   │   └── ...                 # 其他业务逻辑
+│   │   ├── useRealTimeWaterQuality.ts # 实时水质监测
+│   │   ├── useRegister.ts      # 注册逻辑
+│   │   ├── useShortestPathAnalysis.ts # 最短路径分析
+│   │   ├── useThemeOptimization.ts # 主题优化
+│   │   ├── useUserProfile.ts   # 用户资料
+│   │   └── useYangtzeWaterLayers.ts # 长江水图层
 │   │
-│   ├── stores/                 # 状态管理 (21个 Pinia stores)
-│   │   ├── mapStore.ts         # 地图状态
-│   │   ├── userStore.ts        # 用户状态
+│   ├── stores/                 # 状态管理 (22个 Pinia stores)
 │   │   ├── analysisStore.ts    # 分析工具状态
-│   │   ├── modeStateStore.ts   # 模式切换状态
+│   │   ├── areaSelectionStore.ts # 区域选择状态
 │   │   ├── bufferAnalysisStore.ts # 缓冲区分析状态
-│   │   ├── featureQueryStore.ts # 要素查询状态
-│   │   ├── intersectionAnalysisStore.ts # 相交分析状态
 │   │   ├── eraseAnalysisStore.ts # 擦除分析状态
-│   │   ├── shortestPathAnalysisStore.ts # 最短路径分析状态
-│   │   ├── monitoringDataStore.ts # 监测数据状态
+│   │   ├── featureQueryStore.ts # 要素查询状态
+│   │   ├── interactionStore.ts # 交互状态
+│   │   ├── intersectionAnalysisStore.ts # 相交分析状态
 │   │   ├── layerDataStore.ts   # 图层数据状态
 │   │   ├── layerUIStore.ts     # 图层UI状态
+│   │   ├── loadingStore.ts     # 加载状态
+│   │   ├── mapStore.ts         # 地图状态
+│   │   ├── modalStore.ts       # 模态框状态
+│   │   ├── modeStateStore.ts   # 模式切换状态
+│   │   ├── monitoringDataStore.ts # 监测数据状态
+│   │   ├── monitoringPlatformStore.ts # 监测平台状态
 │   │   ├── pageStateStore.ts   # 页面状态
 │   │   ├── persistenceStore.ts # 持久化状态
-│   │   └── ...                 # 其他状态模块
+│   │   ├── popupStore.ts       # 弹窗状态
+│   │   ├── selectionStore.ts   # 选择状态
+│   │   ├── shortestPathAnalysisStore.ts # 最短路径分析状态
+│   │   ├── themeStore.ts       # 主题状态
+│   │   └── userStore.ts        # 用户状态
 │   │
 │   ├── views/                  # 页面组件 (路由驱动)
 │   │   ├── auth/               # 认证页面 (2个文件)
@@ -282,17 +520,16 @@ Frontend/
 │   │   │   │   │   ├── LLMMode.vue
 │   │   │   │   │   ├── ChatAssistant.vue # 事件监听器
 │   │   │   │   │   └── ChatHistory.vue
-│   │   │   │   ├── traditional/ # 传统 GIS 模式
+│   │   │   │   ├── traditional/ # 传统 GIS 模式 (9个文件)
 │   │   │   │   │   ├── TraditionalMode.vue
-│   │   │   │   │   └── tools/  # 分析工具面板 (8个文件)
-│   │   │   │   │       ├── LayerManager.vue
-│   │   │   │   │       ├── FeatureQueryPanel.vue
-│   │   │   │   │       ├── AreaSelectionTools.vue
-│   │   │   │   │       ├── BufferAnalysisPanel.vue
-│   │   │   │   │       ├── IntersectionAnalysisPanel.vue
-│   │   │   │   │       ├── EraseAnalysisPanel.vue
-│   │   │   │   │       ├── ShortestPathAnalysisPanel.vue
-│   │   │   │   │       └── DataUploadPanel.vue
+│   │   │   │   │   ├── LayerManager.vue
+│   │   │   │   │   ├── FeatureQueryPanel.vue
+│   │   │   │   │   ├── AreaSelectionTools.vue
+│   │   │   │   │   ├── BufferAnalysisPanel.vue
+│   │   │   │   │   ├── IntersectionAnalysisPanel.vue
+│   │   │   │   │   ├── EraseAnalysisPanel.vue
+│   │   │   │   │   ├── ShortestPathAnalysisPanel.vue
+│   │   │   │   │   └── DataUploadPanel.vue
 │   │   │   │   ├── management/ # 系统管理 (1个文件)
 │   │   │   │   │   └── AIManagement.vue
 │   │   │   │   ├── profile/    # 用户管理 (1个文件)
@@ -308,28 +545,79 @@ Frontend/
 │   │   │       ├── processed_data/ # 处理数据 (8个文件)
 │   │   │       ├── ViewHome.vue
 │   │   │       ├── ViewLayerManager.vue
-│   │   │       ├── ViewSubPage1-3.vue
-│   │   │       └── ...         # 长江数据文件
+│   │   │       ├── ViewSubPage1.vue
+│   │   │       ├── ViewSubPage2.vue
+│   │   │       ├── ViewSubPage3.vue
+│   │   │       ├── 水文监测点_GeoJSON.json
+│   │   │       ├── 长江线.geojson
+│   │   │       └── 长江面.geojson
 │   │   └── Dashboard.vue
 │   │
-│   ├── router/                 # 路由配置 (嵌套路由)
-│   ├── styles/                 # 全局样式 (主题系统)
 │   ├── types/                  # TypeScript 类型定义 (7个文件)
-│   ├── utils/                  # 工具函数 (13个文件)
+│   │   ├── geojson.d.ts
+│   │   ├── jsx-global.d.ts
+│   │   ├── map.ts
+│   │   ├── query.ts
+│   │   ├── splitpanes.d.ts
+│   │   ├── supermap.d.ts
+│   │   └── vue-shims.d.ts
+│   ├── utils/                  # 工具函数 (12个文件)
+│   │   ├── __tests__/          # 测试文件
+│   │   ├── config.ts           # 配置工具
+│   │   ├── domainBackground.ts # 领域背景
+│   │   ├── eventUtils.ts       # 事件工具
+│   │   ├── featureUtils.ts     # 要素工具
+│   │   ├── geometryConverter.ts # 几何转换
+│   │   ├── layerUtils.ts       # 图层工具
+│   │   ├── layerValidation.ts  # 图层验证
+│   │   ├── legendColorUtils.ts # 图例颜色工具
+│   │   ├── llmNotification.ts  # LLM通知
+│   │   ├── notification.ts     # 通知工具
+│   │   ├── styleUtils.ts       # 样式工具
+│   │   └── themeUtils.ts       # 主题工具
+│   ├── router/                 # 路由配置 (嵌套路由)
+│   │   └── index.ts
+│   ├── styles/                 # 全局样式 (主题系统)
+│   │   └── theme.css
 │   ├── data/                   # 数据文件
-│   └── main.js                 # 应用入口
+│   │   └── waterQualityMockData.ts
+│   ├── App.vue                 # 根组件
+│   ├── main.js                 # 应用入口
+│   └── vite-env.d.ts           # Vite环境类型
 │
 ├── docs/                       # 前端架构文档 (21个文件)
 │   ├── 0.路由页面管理方式.md    # 路由架构设计
 │   ├── 1.页面布局及UI管理方式.md # 布局组件层级
 │   ├── 2.UI组件设置.md          # UI组件详细说明
+│   ├── 3.前端四大分析功能接口调用文档.md # 分析功能接口
 │   ├── 4.功能实现方法.md        # 组合式函数实现
-│   ├── 5.状态管理设计.md        # 21个Pinia状态模块
+│   ├── 5.状态管理设计.md        # 22个Pinia状态模块
+│   ├── 6.openlayer使用情况.md   # OpenLayers使用
+│   ├── 7.主题切换机制说明.md    # 主题系统
+│   ├── 8.读取数据流程.md        # 数据读取流程
 │   ├── 9.图层管理与数据读取机制分析.md # 数据流转机制
-│   ├── 20.事件驱动分析.md       # EDA事件驱动架构
-│   └── ...                     # 其他架构文档
+│   ├── 10.Pinia状态管理重构总结.md # 状态管理重构
+│   ├── 10.配置设置.md          # 配置设置
+│   ├── 11.LLMmodelUI.md        # LLM模型UI
+│   ├── 11.UI组件库介绍.md       # UI组件库介绍
+│   ├── 13.图层保存方式.md       # 图层保存
+│   ├── 14.显示图层.md          # 图层显示
+│   ├── 15.属性数据处理优化.md   # 属性数据处理
+│   ├── 16.注记添加方法.md       # 注记添加
+│   ├── 17.属性数据管理方式.md   # 属性数据管理
+│   ├── 18.view页面路由设计方案整理.md # 视图页面路由
+│   ├── 19.持久化上传图层.md     # 持久化上传图层
+│   └── 20.事件驱动分析.md       # EDA事件驱动架构
 ├── public/                     # 静态资源
-└── package.json                # 依赖配置
+│   ├── dist/                   # 第三方库
+│   ├── libs/                   # 库文件
+│   ├── favicon.ico
+│   ├── logo.jpg
+│   └── logoContent.png
+├── dist/                       # 构建产物
+├── package.json                # 依赖配置
+├── tsconfig.json               # TypeScript配置
+└── vite.config.js              # Vite配置
 ```
 
 ### 后端结构 (Backend/)
@@ -338,24 +626,70 @@ Frontend/
 ```
 agent/                          # FastAPI + LangChain + 通义千问
 ├── app.py                      # FastAPI 应用入口 (919行)
-├── models/                     # 数据模型
-│   ├── __init__.py
-│   └── schemas.py              # Pydantic 模型定义
-├── study_ali/                  # 阿里云大模型研究
-│   ├── 1多轮对话.py            # 多轮对话示例
-│   ├── 2工具调用.py            # 工具调用示例
-│   ├── 3联网搜索.PY            # 联网搜索示例
-│   ├── 4运行工具函数.PY        # 工具函数运行示例
-│   ├── 5结构化输出.PY          # 结构化输出示例
-│   ├── integrated_llm_agent.py # 集成LLM Agent
-│   ├── 原理.md                 # 原理说明文档
-│   └── Langchain/              # LangChain 学习案例
-│       ├── 1.第一个LLM/        # 第一个LLM案例
-│       │   ├── 1.对话翻译.Ipynb
-│       │   ├── 2.工具调用.ipynb
-│       │   └── 工具调用完整指南.md
 │       └── readme.md
-└── 17个工具函数 (在app.py中)   # 长江水域监测专业工具
+├── rag/                        # RAG知识库系统
+│   ├── 知识库/                 # 专业领域知识文档 (13个文件)
+│   │   ├── wuhan.md            # 武汉基础信息
+│   │   ├── 人工智能+.md        # 人工智能发展
+│   │   ├── 发展方向.md         # 发展方向
+│   │   ├── 地理空间人工智能发展概况.md # GeoAI发展研究
+│   │   ├── 地表水环境标准GB3838-2002.pdf # 水质标准PDF
+│   │   ├── 武汉市介绍.md       # 武汉市综合调研报告
+│   │   ├── 武汉市基本情况_武汉年鉴.md # 武汉年鉴数据
+│   │   ├── 武汉市基础情况_百度百科.md # 百度百科武汉
+│   │   ├── 武汉市水文条件.md   # 武汉水文条件
+│   │   ├── 武汉市统计数据.md   # 武汉统计数据
+│   │   ├── 水质监测指标概念与标准.md # 水质监测专业标准
+│   │   ├── 长江流域概况_百度百科.md # 长江流域百度百科
+│   │   └── 长江流域概况.md     # 长江流域水资源管理报告
+│   ├── 查询脚本/               # SQL查询脚本 (7个文件)
+│   │   ├── 公路等级统计.sql
+│   │   ├── 医院区域统计.sql
+│   │   ├── 学校区域统计.sql
+│   │   ├── 居民地地点名区域统计.sql
+│   │   ├── 水文站点区域统计.sql
+│   │   ├── 水系数据统计统计.sql
+│   │   └── 铁路类型统计.sql
+│   ├── 源表/                   # 数据源表 (6个文件)
+│   │   ├── 医院.sql
+│   │   ├── 学校.sql
+│   │   ├── 居民地地点名.sql
+│   │   ├── 水文站点.sql
+│   │   ├── 水系线.sql
+│   │   └── 水系面.sql
+│   ├── 统计结果/               # 统计结果 (17个文件)
+│   │   ├── 一到七普.sql
+│   │   ├── 公路等级统计结果.sql
+│   │   ├── 区域人口数量.sql
+│   │   ├── 医院.sql
+│   │   ├── 土地利用2000.sql
+│   │   ├── 土地利用2010.sql
+│   │   ├── 土地利用2020.sql
+│   │   ├── 居民点.sql
+│   │   ├── 年龄人口分布.sql
+│   │   ├── 教育程度.sql
+│   │   ├── 水文监测点.sql
+│   │   ├── 水文站点.sql
+│   │   ├── 水系线分类统计表.sql
+│   │   ├── 水系面分类统计表.sql
+│   │   ├── 男女比重.sql
+│   │   ├── 行政区面积.sql
+│   │   └── 铁路类型统计结果.sql
+│   ├── 课件&代码/              # 学习课件 (3个文件)
+│   │   ├── 1.RAG入门与从零到一搭建RAG系统.ipynb
+│   │   ├── 2.基于LangChain的RAG系统开发.ipynb
+│   │   └── 3.手动搭建RAG系统实战.ipynb
+│   ├── vector_db/              # 向量数据库存储
+│   │   ├── index.faiss
+│   │   └── index.pkl
+│   ├── rag_system.py           # RAG系统核心实现
+│   ├── interactive_test.py     # 交互测试
+│   ├── start_rag.py           # RAG启动脚本
+│   ├── requirements.txt        # RAG依赖
+│   └── README.md              # RAG说明文档
+└── 18个工具函数 (在app.py中)   # 长江水域监测专业工具
+    ├── query_knowledge_base    # 知识库查询 (武汉市概况、长江流域、水质监测标准等)
+    ├── update_knowledge_base   # 知识库更新
     ├── toggle_layer_visibility # 图层可见性切换
     ├── query_features_by_attribute # 属性查询
     ├── execute_buffer_analysis # 缓冲区分析
@@ -485,7 +819,7 @@ analysis/                       # Node.js + Express + DDD
 │   └── readme.md               # 服务说明文档
 ├── config/                     # 配置文件
 │   └── index.js
-├── downloads/                  # 下载文件 (136个JSON文件)
+├── downloads/                  # 下载文件 (526个JSON文件)
 ├── node_modules/               # Node.js依赖
 ├── package.json                # 依赖配置
 ├── package-lock.json           # 依赖锁定文件
@@ -496,9 +830,9 @@ analysis/                       # Node.js + Express + DDD
 
 #### 前端架构
 - **事件驱动设计**: 基于CustomEvent的前后端解耦通信机制
-- **组件化设计**: 25个UI组件 + 14个地图组件 + 17个图表组件 + 3个Agent组件，高度可复用
-- **状态管理**: 21个Pinia状态模块，模块化管理应用状态
-- **组合式函数**: 25个composables承载业务逻辑，与组件解耦
+- **组件化设计**: 25个UI组件 + 14个地图组件 + 17个图表组件 + 2个Agent组件，高度可复用
+- **状态管理**: 22个Pinia状态模块，模块化管理应用状态
+- **组合式函数**: 24个composables承载业务逻辑，与组件解耦
 - **路由驱动**: 每个功能面板独立路由，支持懒加载
 - **主题系统**: CSS变量驱动的主题切换，支持明暗模式
 
@@ -530,66 +864,16 @@ analysis/                       # Node.js + Express + DDD
 系统需要同时启动三个服务，建议按以下顺序启动：
 
 #### 1. 启动数据库服务
-```bash
-# 启动 PostgreSQL 数据库
-# Windows (如果使用 PostgreSQL 服务)
-net start postgresql-x64-15
+G:\1代码\开发\SuperMap\start_services.bat
+在桌面下一键启动即可打开所有服务！
+conda环境名称必须是py310
 
-# macOS (使用 Homebrew)
-brew services start postgresql
 
-# Linux (使用 systemctl)
-sudo systemctl start postgresql
-```
 
-#### 2. 启动后端服务
 
-**EDA事件驱动Agent服务 (端口: 8089)**
-```bash
-# 打开第一个 PowerShell 窗口
-cd Backend/agent
 
-# 激活 Python 环境 (如使用 conda)
-conda activate pyside6
 
-# 启动EDA Agent服务
-python -m uvicorn app:app --reload --host 0.0.0.0 --port 8089
-```
 
-**用户认证服务 (端口: 8000)**
-```bash
-# 打开第二个 PowerShell 窗口
-cd Backend/user
-
-# 激活 Python 环境 (如使用 conda)
-conda activate pyside6
-
-# 启动用户服务
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-**空间分析服务 (端口: 3001)**
-```bash
-# 打开第三个 PowerShell 窗口
-cd Backend/analysis
-
-# 安装依赖 (首次运行)
-npm install
-
-# 启动分析服务
-npm run dev
-```
-
-#### 4. 启动前端应用 (端口: 5173)
-```bash
-# 打开第四个 PowerShell 窗口
-cd Frontend
-
-# 安装依赖 (首次运行)
-npm install
-
-# 启动前端开发服务器
-npm run dev
 ```
 
 ### 服务访问地址
@@ -606,32 +890,12 @@ npm run dev
 | ❤️ 健康检查 | http://localhost:8089/health | 用户服务健康状态 |
 | ❤️ 健康检查 | http://localhost:3001/health | 分析服务健康状态 |
 
-### 环境配置
 
-#### 数据库配置
-在系统环境变量或 `.env` 文件中配置数据库连接：
-
-```bash
-# PostgreSQL 数据库配置
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=001117
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=supermap
-```
-
-#### JWT 安全配置
-```bash
-# JWT 配置
-SECRET_KEY=your-secret-key-here
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
 
 #### EDA Agent 配置
 ```bash
 # 阿里云通义千问配置
-DASHSCOPE_API_KEY=your-dashscope-api-key
+DASHSCOPE_API_KEY=your-dashscope-api-key#项目保留了自己的key位于后端服务的.env文件中
 DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 DASHSCOPE_MODEL=qwen-plus
 DASHSCOPE_TEMPERATURE=0.5
@@ -664,146 +928,6 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8000
 cd Backend/analysis
 npm start
 ```
-
-## 🔧 开发指南
-
-### API 文档
-
-#### EDA事件驱动Agent服务 API
-- **基础URL**: `http://localhost:8089/agent`
-- **Swagger 文档**: http://localhost:8089/docs
-- **主要接口**:
-  - `POST /tool-chat` - LLM工具调用聊天接口
-  - `GET /health` - 健康检查
-- **17个工具函数**:
-  - 图层管理: `toggle_layer_visibility`
-  - 属性查询: `query_features_by_attribute`
-  - 空间分析: `execute_buffer_analysis`, `execute_intersection_analysis`, `execute_erase_analysis`, `execute_shortest_path_analysis`
-  - 结果保存: `save_*_results_as_layer`
-  - 结果导出: `export_*_results_as_json`
-
-#### 用户认证服务 API
-- **基础URL**: `http://localhost:8089/api/v1/user`
-- **Swagger 文档**: http://localhost:8089/docs
-- **主要接口**:
-  - `POST /register` - 用户注册
-  - `POST /login` - 用户登录
-  - `GET /profile` - 获取用户资料
-  - `POST /update-profile` - 修改用户信息
-  - `POST /change-password` - 修改密码
-  - `POST /logout` - 用户登出
-
-#### 空间分析服务 API
-- **基础URL**: `http://localhost:3001/api/v1/spatial-analysis`
-- **Swagger 文档**: http://localhost:3001/docs
-- **主要接口**:
-  - `POST /buffer` - 缓冲区分析
-  - `POST /intersection` - 相交分析
-  - `POST /erase` - 擦除分析
-  - `POST /shortest-path` - 最短路径分析
-
-### 开发规范
-
-#### 前端开发规范
-- **组件命名**: 使用 PascalCase (如: `MapViewer.vue`)
-- **文件结构**: 使用 `<script setup lang="ts">` 语法糖
-- **状态管理**: 使用 Composition API 风格的 Pinia stores
-- **事件驱动**: 使用 CustomEvent 进行组件间通信
-- **路由管理**: 支持懒加载和路由守卫
-- **样式规范**: 使用 CSS 变量，支持主题切换
-
-#### 后端开发规范
-- **EDA Agent**: 使用 LangChain 工具调用和上下文记忆
-- **API 设计**: RESTful API，统一响应格式
-- **错误处理**: 完整的异常处理机制
-- **数据验证**: 请求参数严格验证
-- **文档规范**: 完整的 Swagger API 文档
-
-### 核心组件库
-
-#### UI 组件 (25个)
-- **按钮类**: PrimaryButton, SecondaryButton, IconButton, ButtonGroup, BaseButton, DownloadButton, UploadButton
-- **输入类**: TraditionalInputGroup, LLMInputGroup, DropdownSelect, QueryConditionRow
-- **面板类**: PanelContainer, PanelWindow, SplitPanel
-- **对话框类**: EditModal, ConfirmDialog, TipWindow, DataUploadModal, LayerNameModal
-- **通知类**: NotificationToast, NotificationManager
-- **容器类**: AutoScrollContainer, ThemeTransitionOverlay
-- **图标类**: Icon
-- **图层类**: LayerItem
-
-#### 地图组件 (14个)
-- **显示控件**: CoordinateDisplay, ScaleBar, OverviewMap
-- **交互工具**: FeaturePopup, LayerAssistant
-- **测量工具**: DistanceMeasurePanel, AreaMeasurePanel, DistanceMeasureButton
-- **图例组件**: MapLegend, AdminLegend, TrafficLegend, TrafficWaterLegend, WaterLegend, YangtzeLegend
-
-#### 状态管理 (21个 Pinia Stores)
-- **核心状态**: mapStore, userStore, themeStore, modalStore, loadingStore
-- **分析状态**: analysisStore, bufferAnalysisStore, intersectionAnalysisStore, eraseAnalysisStore, shortestPathAnalysisStore
-- **交互状态**: selectionStore, areaSelectionStore, featureQueryStore, popupStore, interactionStore
-- **模式状态**: modeStateStore (LLM模式 + 传统模式状态管理)
-- **图层状态**: layerDataStore, layerUIStore (图层数据和UI状态管理)
-- **监测状态**: monitoringDataStore (水质监测数据状态)
-- **页面状态**: pageStateStore (页面状态管理)
-- **持久化状态**: persistenceStore (状态持久化管理)
-
-## 📖 文档与资源
-
-### 项目文档
-
-#### 前端文档 (Frontend/docs/)
-- **[路由页面管理方式](Frontend/docs/0.路由页面管理方式.md)**: 详细的路由架构设计
-- **[页面布局及UI管理方式](Frontend/docs/1.页面布局及UI管理方式.md)**: 布局组件层级结构
-- **[UI组件设置](Frontend/docs/2.UI组件设置.md)**: 19个UI组件详细说明
-- **[功能实现方法](Frontend/docs/4.功能实现方法.md)**: 12个组合式函数实现
-- **[状态管理设计](Frontend/docs/5.状态管理设计.md)**: 17个Pinia状态模块设计
-- **[图层管理与数据读取机制分析](Frontend/docs/9.图层管理与数据读取机制分析.md)**: 数据流转机制
-- **[事件驱动分析](Frontend/docs/20.事件驱动分析.md)**: EDA事件驱动架构详解
-
-#### 后端文档 (Backend/)
-- **[EDA事件驱动Agent服务](Backend/agent/app.py)**: 17个工具函数的Agent服务
-- **[用户认证API文档](Backend/user/docs/user-auth-api.md)**: 完整的用户服务API说明
-- **[用户认证快速参考](Backend/user/docs/user-auth-quick-reference.md)**: API快速查询手册
-- **[空间分析服务文档](Backend/analysis/README.md)**: DDD架构分析服务说明
-
-#### 联调文档 (docs/)
-- **[缓冲区分析前后端联调](docs/缓冲区分析前后端联调.md)**: 缓冲区分析完整流程
-- **[相交分析前后端联调](docs/相交分析前后端联调.md)**: 相交分析实现细节
-- **[擦除分析前后端联调](docs/擦除分析前后端联调.md)**: 擦除分析接口说明
-- **[最短路径分析前后端联调](docs/最短路径分析前后端联调.md)**: 路径规划算法实现
-
-### API 文档访问
-
-| 服务 | Swagger 文档 | 说明 |
-|------|-------------|------|
-| EDA事件驱动Agent服务 | http://localhost:8089/docs | FastAPI + LangChain 文档 |
-| 用户认证服务 | http://localhost:8089/docs | FastAPI 自动生成文档 |
-| 空间分析服务 | http://localhost:3001/docs | Express + Swagger 文档 |
-| 健康检查 | http://localhost:8089/health | EDA Agent服务健康状态 |
-| 健康检查 | http://localhost:8089/health | 用户服务健康状态 |
-| 健康检查 | http://localhost:3001/health | 分析服务健康状态 |
-
-### 技术资源
-
-#### 前端技术
-- [Vue 3 文档](https://vuejs.org/) - Vue 3 官方文档
-- [TypeScript 文档](https://www.typescriptlang.org/) - TypeScript 官方文档
-- [Pinia 文档](https://pinia.vuejs.org/) - 状态管理库文档
-- [Openlayers 文档](https://openlayers.org/) - 地图库文档
-- [Ant Design Vue 文档](https://antdv.com/) - UI组件库文档
-
-#### 后端技术
-- [FastAPI 文档](https://fastapi.tiangolo.com/) - Python Web框架文档
-- [LangChain 文档](https://python.langchain.com/) - AI Agent 框架文档
-- [通义千问 文档](https://help.aliyun.com/zh/dashscope/) - 阿里云大语言模型文档
-- [Node.js 文档](https://nodejs.org/) - Node.js 官方文档
-- [Express 文档](https://expressjs.com/) - Express 框架文档
-- [PostgreSQL 文档](https://www.postgresql.org/) - 数据库文档
-
-#### 空间分析技术
-- [SuperMap 文档](https://www.supermap.com/) - SuperMap 产品文档
-- [Turf.js 文档](https://turfjs.org/) - JavaScript 空间分析库
-- [GeoJSON 规范](https://geojson.org/) - GeoJSON 数据格式规范
 
 
 
@@ -954,131 +1078,26 @@ curl -X POST "http://localhost:3001/api/v1/spatial-analysis/buffer" \
   }'
 ```
 
-### 前端测试
-
-#### 路由测试
-```bash
-cd Frontend
-npm run test:routing
-```
-
-#### 构建测试
-```bash
-cd Frontend
-npm run test:build
-```
-
-#### 完整测试
-```bash
-cd Frontend
-npm run test:all
-```
-
-## 🚀 部署
-
-### 开发环境部署
-
-按照[快速开始](#快速开始)部分的说明进行开发环境部署。
-
-### 生产环境部署
-
-#### 前端部署
-```bash
-cd Frontend
-npm run build
-# 构建产物在 dist/ 目录，部署到 Web 服务器
-```
-
-#### 后端部署
-
-**用户服务部署**
-```bash
-cd Backend/user
-# 生产环境启动
-python -m uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
-```
-
-**空间分析服务部署**
-```bash
-cd Backend/analysis
-# 生产环境启动
-NODE_ENV=production npm start
-```
-
-### Docker 部署 (可选)
-
-#### 前端 Docker 部署
-```bash
-cd Frontend
-# 构建 Docker 镜像
-docker build -t supermap-frontend .
-
-# 运行容器
-docker run -p 80:80 supermap-frontend
-```
-
-#### 后端 Docker 部署
-```bash
-# 用户服务 Docker 部署
-cd Backend/user
-docker build -t supermap-user-service .
-docker run -p 8000:8000 supermap-user-service
-
-# 分析服务 Docker 部署  
-cd Backend/analysis
-docker build -t supermap-analysis-service .
-docker run -p 3001:3001 supermap-analysis-service
-```
-
-### 环境配置
-
-#### 前端环境变量
-- **开发环境**: `.env.development`
-- **生产环境**: `.env.production`
-
-```bash
-# 前端环境配置
-VITE_API_BASE_URL=http://localhost:8089
-VITE_ANALYSIS_API_BASE_URL=http://localhost:3001
-VITE_SUPERMAP_SERVER_URL=http://your-supermap-server
-VITE_APP_TITLE=SuperMap 智能地理信息分析系统
-```
-
-#### 后端环境变量
-```bash
-# 用户服务环境配置
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your-password
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=supermap
-SECRET_KEY=your-secret-key
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# 分析服务环境配置
-NODE_ENV=production
-PORT=3001
-API_VERSION=v1
-RATE_LIMIT_WINDOW_MS=60000
-RATE_LIMIT_MAX_REQUESTS=100
-```
 
 ## 📚 使用指南
 
 ### 快速上手
-
+0. **启动服务**：双击启动G:\1代码\开发\SuperMap\start_services.bat
 1. **启动应用**: 访问 `http://localhost:5173`
 2. **选择模式**: 在顶部导航栏选择 LLM 模式或传统 GIS 模式
-3. **地图操作**: 使用鼠标进行缩放、平移等基础操作
+3. **地图操作**: 执行各类功能的实现（基础地图查看、查询、分析、知识库查询、查看可视化大屏等等）
 4. **图层管理**: 在传统模式下使用图层管理面板控制图层显示
 
 ### EDA事件驱动LLM智能模式
 
 - 在聊天界面输入自然语言指令，支持长江水域监测专业术语
-- 支持的地图操作：图层管理、属性查询、空间分析、结果导出
-- 17个工具函数支持完整的地理空间分析工作流
+- 支持的地图操作：知识库查询、图层管理、属性查询、空间分析、结果导出
+- 18个工具函数支持完整的地理空间分析工作流
 - 示例指令：
+  - "查询武汉市的基本概况"
+  - "长江流域的水质监测标准是什么？"
+  - "武汉市的水文条件如何？"
+  - "地理空间人工智能的发展概况"
   - "显示@学校图层"
   - "在@人口图层中查找人口>100万"
   - "对@污染源图层进行缓冲区分析，半径500米"
@@ -1121,53 +1140,6 @@ npm run dev -- --debug
 ```
 
 
-## 🤝 贡献指南
-
-我们欢迎所有形式的贡献！
-
-### 贡献流程
-
-1. **Fork** 本仓库到你的 GitHub 账号
-2. **Clone** 你的 fork 到本地开发环境
-3. **创建** 特性分支 (`git checkout -b feature/AmazingFeature`)
-4. **开发** 并测试你的功能
-5. **提交** 你的修改 (`git commit -m 'Add some AmazingFeature'`)
-6. **推送** 到分支 (`git push origin feature/AmazingFeature`)
-7. **打开** Pull Request
-
-### 贡献规范
-
-#### 代码规范
-- 遵循项目的代码风格和命名规范
-- 添加必要的注释和文档
-- 确保代码通过所有测试
-- 提交前运行 ESLint 和 TypeScript 检查
-
-#### 提交规范
-- 使用清晰的提交信息描述变更
-- 遵循 [Conventional Commits](https://conventionalcommits.org/) 规范
-- 示例：`feat: add buffer analysis API`, `fix: resolve map rendering issue`
-
-#### 文档规范
-- 更新相关的 API 文档
-- 添加新功能的使用说明
-- 保持 README 和其他文档的同步
-
-### 问题反馈
-
-如果你发现 bug 或有功能建议：
-
-1. 查看 [Issues](../../issues) 是否已有相关问题
-2. 如果没有，请创建新的 Issue
-3. 详细描述问题或建议
-4. 提供复现步骤（如果是 bug）
-
-### 开发环境设置
-
-1. 确保满足[环境要求](#环境要求)
-2. 按照[快速开始](#快速开始)设置开发环境
-3. 运行测试确保环境正常
-4. 开始你的贡献！
 
 ## 📜 许可证
 

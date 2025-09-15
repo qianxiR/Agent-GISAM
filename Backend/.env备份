@@ -1,3 +1,7 @@
+
+
+
+
 # SuperMap Backend Environment Variables
 
 # Application Settings
@@ -8,7 +12,7 @@ ENVIRONMENT=development
 
 # API Configuration
 API_V1_PREFIX=/api/v1
-CORS_ORIGINS=http://localhost:3000,http://localhost:8080,http://localhost:5173,http://localhost:5173
+CORS_ORIGINS=http://localhost:8080,http://localhost:5173
 
 # Security Settings  
 SECRET_KEY=your-super-secret-key-change-this-in-production
@@ -52,6 +56,6 @@ LOG_LEVEL=INFO
 
 VITE_DASHSCOPE_API_KEY=sk-b494400841214e9aa17baa1d24efec62
 VITE_DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-VITE_DASHSCOPE_MODEL=qwen-plus
+VITE_DASHSCOPE_MODEL=qwen-max
 VITE_DASHSCOPE_TEMPERATURE=0.6
 VITE_DASHSCOPE_MAX_TOKENS=10000

@@ -28,7 +28,9 @@
     "pinia": "^3.0.3",
     "splitpanes": "^4.0.4",
     "vue": "^3.5.18",
-    "vue-router": "^4.5.1"
+    "vue-router": "^4.5.1",
+    "osmbuildings": "^0.2.0-b",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

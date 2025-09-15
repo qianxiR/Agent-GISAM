@@ -24,5 +24,5 @@ Backend/agent/downloads/
 Backend/agent/database/
 Frontend/node_modules/
 Frontend/docs/
-Backend/rag/
-Backend/.env
+Backend/rag/知识库
+Backend/rag/vector_db

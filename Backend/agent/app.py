@@ -45,7 +45,7 @@ class LLMSettings(BaseModel):
 
 
 # 加载后端环境变量文件 Backend/.env
-_ROOT = Path(__file__).resolve().parents[1]
+_ROOT = Path(__file__).resolve().parents[2]
 _ENV_PATH = _ROOT / ".env"
 if _ENV_PATH.exists():
     load_dotenv(dotenv_path=str(_ENV_PATH))
