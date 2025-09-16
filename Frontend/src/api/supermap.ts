@@ -78,7 +78,7 @@ export class SuperMapClient {
         const dataset = parts[0]
         const datasource = parts[1] || 'wuhan'
         
-        const url = `${this.config.baseUrl}/${this.config.dataService}/datasources/${datasource}/datasets/${dataset}/features.json`
+        const url = `${this.config.baseUrl}/${this.config.dataService}/datasources/${datasource}/datasets/${dataset}/features/`
         const response = await fetch(url, {
           signal: AbortSignal.timeout(this.config.timeout)
         })
@@ -148,7 +148,7 @@ export class SuperMapClient {
           params.append('attributeFilter', options.attributeFilter)
         }
         
-        const url = `${this.config.baseUrl}/${this.config.dataService}/datasources/${datasource}/datasets/${dataset}/features.json?${params}`
+        const url = `${this.config.baseUrl}/${this.config.dataService}/datasources/${datasource}/datasets/${dataset}/features/?${params}`
         const response = await fetch(url, {
           signal: AbortSignal.timeout(this.config.timeout)
         })
@@ -246,7 +246,7 @@ export class SuperMapClient {
         const dataset = parts[0]
         const datasource = parts[1] || 'wuhan'
         
-        const url = `${this.config.baseUrl}/${this.config.dataService}/datasources/${datasource}/datasets/${dataset}/features.json`
+        const url = `${this.config.baseUrl}/${this.config.dataService}/datasources/${datasource}/datasets/${dataset}/features/`
         const params = new URLSearchParams({
           fromIndex: startIndex.toString(),
           toIndex: endIndex.toString(),

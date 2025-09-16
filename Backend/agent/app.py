@@ -4,14 +4,12 @@ Agent Service - FastAPI entry for LLM chat proxy with full LLM management featur
 Usage (dev):
   python -m uvicorn agent.app:app --reload --host 0.0.0.0 --port 8089
 """
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uvicorn
 import os
-import uuid
-import json
 from pathlib import Path
 from dotenv import load_dotenv
 from langchain_community.chat_models.tongyi import ChatTongyi
@@ -22,7 +20,6 @@ from langchain.chat_models import init_chat_model
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from langchain_tavily import TavilySearch
-from openai import OpenAI
 
 # 关闭全局SSL验证以规避企业网络或中间代理引起的握手问题
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -45,7 +42,7 @@ class LLMSettings(BaseModel):
 
 
 # 加载后端环境变量文件 Backend/.env
-_ROOT = Path(__file__).resolve().parents[2]
+_ROOT = Path(__file__).resolve().parents[1]
 _ENV_PATH = _ROOT / ".env"
 if _ENV_PATH.exists():
     load_dotenv(dotenv_path=str(_ENV_PATH))
@@ -82,7 +79,7 @@ import sys
 from pathlib import Path
 rag_path = Path(__file__).resolve().parents[1] / "rag"
 sys.path.append(str(rag_path))
-from rag_system import RAGSystem
+from rag.rag_system import RAGSystem
 
 # 知识库查询工具
 @tool

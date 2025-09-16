@@ -81,6 +81,7 @@ const isLayerVisible = (displayName: string) => {
   
   return layerInfo ? layerInfo.layer.getVisible() : false
 }
+
 </script>
 
 <style scoped>
@@ -94,16 +95,14 @@ const isLayerVisible = (displayName: string) => {
   border-radius: 8px;
   padding: 12px 16px;
   box-shadow: none;
-  z-index: 1000;
+  z-index: 1001;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: auto;
+  gap: 16px;
 }
 
 .legend-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text);
   margin-right: 8px;
@@ -112,7 +111,7 @@ const isLayerVisible = (displayName: string) => {
 .legend-items {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
 }
 
 .legend-item {
@@ -171,7 +170,7 @@ const isLayerVisible = (displayName: string) => {
 }
 
 .legend-label {
-  font-size: 13px;
+  font-size: 11px;
   color: var(--text);
   white-space: nowrap;
 }
@@ -196,12 +195,12 @@ const isLayerVisible = (displayName: string) => {
   }
   
   .legend-items {
-    gap: 10px;
+    gap: 16px;
   }
   
   .legend-symbol {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
   
   .legend-symbol.hydrology-point {
@@ -210,7 +209,7 @@ const isLayerVisible = (displayName: string) => {
   }
   
   .legend-label {
-    font-size: 12px;
+    font-size: 10px;
   }
 }
 </style>

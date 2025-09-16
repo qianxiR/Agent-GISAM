@@ -9,7 +9,7 @@ const ol = window.ol;
 
 // 数据加载配置常量
 const DATA_CONFIG = {
-  PAGE_SIZE: 10000,
+  PAGE_SIZE: 20, // 根据SuperMap API文档，每页20个要素
   PAGINATION_DELAY: 100,
   HIT_TOLERANCE: 5,
   DEFAULT_FEATURE_COUNT: 20,
@@ -51,14 +51,10 @@ export function useMapData() {
       }
     } 
     
-    // 检查是否已存在懒加载图层容器
-    const existingLayerInfo = mapStore.vectorlayers.find(l => l.name === layerName && l.isLazyLoaded)
-    let vectorlayer: any
+    // ===== 从服务器加载数据 =====
+    const apiConfig = createAPIConfig()
+    console.log(`[${layerName}] 从服务器加载数据`)
     
-    if (existingLayerInfo && existingLayerInfo.layer) {
-      // 使用已存在的懒加载图层容器
-      vectorlayer = existingLayerInfo.layer
-    } else {
       // 创建新的图层容器
       const style = createLayerStyle(layerConfig, layerName);
       
@@ -70,18 +66,17 @@ export function useMapData() {
       // 5. 添加图层到地图
       // 6. 渲染图层
       // 7. 更新图层样式
-      vectorlayer = new ol.layer.Vector({
+    const vectorlayer = new ol.layer.Vector({
         source: new ol.source.Vector({}),
         style: style
       });
-
-    }
     
     // ===== 连接SuperMap iServer数据服务 =====
     // 调用者: loadVectorLayer()
-    // 服务器地址: mapStore.mapConfig.dataUrl (来自 src/utils/config.ts 配置)
+    // 服务器地址: ${baseUrl}/${dataService} (来自 src/utils/config.ts 配置)
     // 作用: 创建SuperMap要素服务客户端，用于获取矢量数据
-    const featureService = new ol.supermap.FeatureService(mapStore.mapConfig.dataUrl);
+    const dataServiceUrl = `${apiConfig.baseUrl}/${apiConfig.dataService}`
+    const featureService = new ol.supermap.FeatureService(dataServiceUrl);
     
     // 解析图层名称获取数据集和数据源信息
     const parts = layerConfig.name.split('@');
@@ -89,27 +84,56 @@ export function useMapData() {
     const datasource = parts[1]; // 数据源名称，如: 'wuhan'
     const datasetNames = [`${datasource}:${dataset}`];
 
-    // ===== 第一次服务器调用：获取图层元数据信息 =====
+    // ===== 第一次服务器调用：获取图层要素总数 =====
     // 调用者: loadVectorLayer()
-    // 服务器地址: ${mapStore.mapConfig.dataUrl}/datasources/${datasource}/datasets/${dataset}/features.json
-    // 作用: 获取图层的要素总数、起始索引等元数据信息，用于分页加载
-    const metaUrlBounds = `${mapStore.mapConfig.dataUrl}/datasources/${datasource}/datasets/${dataset}/features.json`;
-    const metaJsonBounds = await (await fetch(metaUrlBounds)).json();
-    const startIndexDefaultBounds: number = (metaJsonBounds && typeof metaJsonBounds.startIndex === 'number') ? metaJsonBounds.startIndex : 0;
-    let featureCountBounds: number = (metaJsonBounds && typeof metaJsonBounds.featureCount === 'number') ? metaJsonBounds.featureCount : 20;
+    // 服务器地址: ${baseUrl}/${dataService}/datasources/${datasource}/datasets/${dataset}/features.json
+    // 作用: 获取图层的要素总数(featureCount)，用于计算分页
+    const featuresUrl = `${apiConfig.baseUrl}/${apiConfig.dataService}/datasources/${datasource}/datasets/${encodeURIComponent(dataset)}/features.json`;
+    
+    // 调试日志：显示实际访问的URL
+    console.log(`[${layerName}] 访问要素总数URL:`, featuresUrl);
+    
+    // 添加错误处理，检查响应是否为JSON
+    let featuresJson;
+    try {
+      const response = await fetch(featuresUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const responseText = await response.text();
+        throw new Error(`服务器返回非JSON数据: ${responseText.substring(0, 200)}...`);
+      }
+      featuresJson = await response.json();
+    } catch (error) {
+      console.error(`获取图层要素总数失败 [${layerName}]:`, error);
+      console.error(`请求URL: ${featuresUrl}`);
+      throw error;
+    }
+    
+    // 获取要素总数
+    let featureCountBounds: number = (featuresJson && typeof featuresJson.featureCount === 'number') ? featuresJson.featureCount : 15;
     
     // 如果图层配置了maxFeatures，则限制要素数量
     if (layerConfig.maxFeatures && layerConfig.maxFeatures > 0) {
       featureCountBounds = Math.min(featureCountBounds, layerConfig.maxFeatures);
     }
     
-    const computedFromIndexBounds: number = startIndexDefaultBounds;
-    const computedToIndexBounds: number = startIndexDefaultBounds + featureCountBounds - 1;
+    // 计算总页数：featureCount / 20，有余数则页数加一
+    const totalPages = Math.ceil(featureCountBounds / DATA_CONFIG.PAGE_SIZE);
+    
+    // 打印分页加载参数信息
+    console.log(`[${layerName}] 分页加载参数:`, {
+      要素总数: featureCountBounds,
+      每页大小: DATA_CONFIG.PAGE_SIZE,
+      总页数: totalPages,
+      要素总数响应: featuresJson
+    });
 
     // ===== 从配置中获取地图边界范围 =====
     // 调用者: loadVectorLayer()
     // 配置来源: createAPIConfig().mapBounds.extent
-    const apiConfig = createAPIConfig()
     const mapExtent = apiConfig.mapBounds.extent
     const mapBounds = new ol.geom.Polygon([[
       [mapExtent[0], mapExtent[1]], // 左下角 [minLon, minLat]
@@ -119,89 +143,227 @@ export function useMapData() {
       [mapExtent[0], mapExtent[1]]  // 闭合 [minLon, minLat]
     ]]);
 
-    const pageSize = DATA_CONFIG.PAGE_SIZE;
-    const initialToIndex = Math.min(computedFromIndexBounds + pageSize - 1, computedToIndexBounds);
-
-    // 移除对 count.json 和 info.json 接口的调用，避免 400/404 错误
-    let totalFeatureCount = 0;
-
-    // ===== 第四次服务器调用：获取第一页要素数据（优化后的参数） =====
-    // 调用者: loadVectorLayer() -> featureService.getFeaturesByBounds()
-    // 服务器地址: mapStore.mapConfig.dataUrl (通过SuperMap FeatureService)
-    // 作用: 获取指定边界范围内的第一页矢量要素数据，使用优化的参数配置
-    const getFeaturesByBoundsParams = new ol.supermap.GetFeaturesByBoundsParameters({
-      datasetNames: datasetNames,
-      bounds: ol.extent.boundingExtent(mapBounds.getCoordinates()[0]),
-      returnContent: true,
-      returnFeaturesOnly: true, // ✅ 官方推荐：设置为true提升性能
-      maxFeatures: -1,
-      fromIndex: computedFromIndexBounds,
-      toIndex: initialToIndex
+    // ===== 根据正确的API接口实现分页加载逻辑 =====
+    // 1. 获取featureCount总数
+    // 2. 计算总页数：featureCount / 15，有余数则页数加一
+    // 3. 使用正确的API接口循环加载每页数据
+    
+    const pageSize = DATA_CONFIG.PAGE_SIZE; // 20个要素/页
+    
+    // 存储所有要素数据的数组
+    let allFeatures: any[] = [];
+    
+    // 定义分页加载函数 - 只获取数据，不渲染
+    const loadPage = (pageIndex: number): Promise<any[]> => new Promise(resolve => {
+      const fromIndex = pageIndex * pageSize;
+      const toIndex = Math.min(fromIndex + pageSize - 1, featureCountBounds - 1);
+      
+      console.log(`[${layerName}] 加载第${pageIndex + 1}页，索引范围: ${fromIndex}-${toIndex}`);
+      
+      // 使用正确的API接口格式获取分页数据
+      const pageUrl = `${apiConfig.baseUrl}/${apiConfig.dataService}/datasources/${datasource}/datasets/${encodeURIComponent(dataset)}/features.json?fromIndex=${fromIndex}&toIndex=${toIndex}`;
+      
+      console.log(`[${layerName}] 分页请求URL:`, pageUrl);
+      
+      fetch(pageUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        })
+        .then(async (data) => {
+          if (data && data.childUriList && Array.isArray(data.childUriList)) {
+            console.log(`[${layerName}] 第${pageIndex + 1}页获取到${data.childUriList.length}个要素链接`);
+            
+            // 并行获取所有childUriList中的geometry数据
+            const geometryPromises = data.childUriList.map(async (uri: string, index: number) => {
+              // 确保URI以.json结尾
+              const geometryUrl = uri.endsWith('.json') ? uri : `${uri}.json`;
+              
+              try {
+                console.log(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} 获取geometry:`, geometryUrl);
+                
+                const geometryResponse = await fetch(geometryUrl);
+                if (!geometryResponse.ok) {
+                  throw new Error(`HTTP ${geometryResponse.status}: ${geometryResponse.statusText}`);
+                }
+                
+                // 检查响应内容类型
+                const contentType = geometryResponse.headers.get('content-type');
+                console.log(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} 响应类型:`, contentType);
+                
+                if (!contentType || !contentType.includes('application/json')) {
+                  // 如果不是JSON，打印响应内容的前200个字符
+                  const responseText = await geometryResponse.text();
+                  console.error(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} 非JSON响应:`, responseText.substring(0, 200));
+                  throw new Error(`服务器返回非JSON数据: ${responseText.substring(0, 100)}...`);
+                }
+                
+                const geometryData = await geometryResponse.json();
+                console.log(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} geometry数据:`, geometryData);
+                return geometryData;
+              } catch (error) {
+                console.error(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} geometry获取失败:`, error);
+                console.error(`[${layerName}] 失败的URL:`, geometryUrl);
+                return null;
+              }
+            });
+            
+            // 等待所有geometry数据加载完成
+            const geometryResults = await Promise.all(geometryPromises);
+            
+            // 过滤掉失败的请求，只处理成功获取的geometry数据
+            const validGeometries = geometryResults.filter(result => result !== null);
+            
+            if (validGeometries.length > 0) {
+              // 将SuperMap格式的geometry数据转换为OpenLayers要素
+              const features: any[] = [];
+              
+              validGeometries.forEach((geometryData: any, index: number) => {
+                try {
+                  // 解析SuperMap格式的geometry数据
+                  if (geometryData.geometry && geometryData.geometry.type === 'REGION') {
+                    // 处理面要素（REGION）
+                    const coordinates = geometryData.geometry.points.map((point: any) => [point.x, point.y]);
+                    // 闭合多边形（首尾坐标相同）
+                    if (coordinates.length > 0 && (coordinates[0][0] !== coordinates[coordinates.length - 1][0] || coordinates[0][1] !== coordinates[coordinates.length - 1][1])) {
+                      coordinates.push([coordinates[0][0], coordinates[0][1]]);
+                    }
+                    
+                    const polygon = new ol.geom.Polygon([coordinates]);
+                    const feature = new ol.Feature({
+                      geometry: polygon,
+                      properties: {
+                        id: geometryData.ID,
+                        name: geometryData.fieldValues ? geometryData.fieldValues[5] : '', // NAME字段
+                        area: geometryData.fieldValues ? geometryData.fieldValues[2] : '', // SMAREA字段
+                        height: geometryData.fieldValues ? geometryData.fieldValues[8] : '', // HEIGHT字段
+                        ...geometryData
+                      }
+                    });
+                    features.push(feature);
+                  } else if (geometryData.geometry && geometryData.geometry.type === 'LINE') {
+                    // 处理线要素（LINE）
+                    const coordinates = geometryData.geometry.points.map((point: any) => [point.x, point.y]);
+                    const lineString = new ol.geom.LineString(coordinates);
+                    const feature = new ol.Feature({
+                      geometry: lineString,
+                      properties: {
+                        id: geometryData.ID,
+                        name: geometryData.fieldValues ? geometryData.fieldValues[5] : '',
+                        ...geometryData
+                      }
+                    });
+                    features.push(feature);
+                  } else if (geometryData.geometry && geometryData.geometry.type === 'POINT') {
+                    // 处理点要素（POINT）
+                    const point = geometryData.geometry.points[0];
+                    const pointGeom = new ol.geom.Point([point.x, point.y]);
+                    const feature = new ol.Feature({
+                      geometry: pointGeom,
+                      properties: {
+                        id: geometryData.ID,
+                        name: geometryData.fieldValues ? geometryData.fieldValues[5] : '',
+                        ...geometryData
+                      }
+                    });
+                    features.push(feature);
+                  }
+                } catch (error) {
+                  console.error(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} geometry解析失败:`, error);
+                }
+              });
+              
+              // 返回转换后的要素，不直接渲染
+              console.log(`[${layerName}] 第${pageIndex + 1}页数据转换完成，获得${features.length}个要素`);
+              resolve(features);
+            } else {
+              console.warn(`[${layerName}] 第${pageIndex + 1}页没有成功获取到任何geometry数据`);
+              resolve([]);
+            }
+          } else {
+            console.warn(`[${layerName}] 第${pageIndex + 1}页响应中没有childUriList字段或格式不正确`);
+            resolve([]);
+          }
+        })
+        .catch(error => {
+          console.error(`[${layerName}] 第${pageIndex + 1}页加载失败:`, error);
+          resolve([]); // 返回空数组
+        });
     });
 
-    // ===== 第五次服务器调用：执行第一页要素数据获取 =====
-    // 调用者: loadVectorLayer() -> featureService.getFeaturesByBounds()
-    // 服务器地址: mapStore.mapConfig.dataUrl (通过SuperMap FeatureService)
-    // 作用: 实际执行第一页要素数据的获取，并将GeoJSON格式的要素数据转换为Openlayers要素对象
-    featureService.getFeaturesByBounds(getFeaturesByBoundsParams, (serviceResult: any) => {
-      if (serviceResult.result && serviceResult.result.features) {
-        const features = (new ol.format.GeoJSON()).readFeatures(serviceResult.result.features);
-        vectorlayer.getSource().addFeatures(features);
-        //serviceResult.result.features就是目前从服务器中获取到的要素数据，features是GeoJSON格式的要素数据，features是Openlayers要素对象
-
-        // ===== 第六次及后续服务器调用：分页加载剩余要素数据（优化后的参数） =====
-        // 调用者: loadVectorLayer() -> addPage() -> featureService.getFeaturesByBounds()
-        // 服务器地址: mapStore.mapConfig.dataUrl (通过SuperMap FeatureService)
-        // 作用: 如果要素总数超过10000个，则分页加载剩余的要素数据，每页最多10000个要素
-        const addPage = (from: number, to: number): Promise<void> => new Promise(resolve => {
-          const pageParams = new ol.supermap.GetFeaturesByBoundsParameters({
-            datasetNames: datasetNames,
-            bounds: ol.extent.boundingExtent(mapBounds.getCoordinates()[0]),
-            returnContent: true,
-            returnFeaturesOnly: true, // ✅ 官方推荐：设置为true提升性能
-            maxFeatures: -1,
-            fromIndex: from,
-            toIndex: to
-          });
-          featureService.getFeaturesByBounds(pageParams, (res: any) => {
-            if (res.result && res.result.features) {
-              const feats = (new ol.format.GeoJSON()).readFeatures(res.result.features);
-              vectorlayer.getSource().addFeatures(feats);
-            }
-            resolve();
-          });
-        });
-
-        // ===== 异步分页加载循环 =====
-        // 调用者: loadVectorLayer() -> setTimeout() -> addPage()
-        // 作用: 延迟后开始分页加载剩余要素，避免阻塞主线程
+    // ===== 批量加载和渲染流程 =====
+    // 1. 先批量保存所有要素数据（1000个一批）
+    // 2. 保存完成后，分批渲染到地图（10000个一批）
+    const batchSaveSize = 100; // 每批保存1000个要素
+    const batchRenderSize = 100; // 每批渲染10000个要素
+    
         setTimeout(() => {
           (async () => {
             try {
-              for (let start = initialToIndex + 1; start <= computedToIndexBounds; start += pageSize) {
-                const end = Math.min(start + pageSize - 1, computedToIndexBounds);
-                await addPage(start, end); // 每次调用addPage都会发起一次服务器请求
-              }
+          console.log(`[${layerName}] 开始批量加载，共${totalPages}页`);
+          
+          // 第一阶段：批量加载所有数据
+          for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+            const pageFeatures = await loadPage(pageIndex);
+            allFeatures = allFeatures.concat(pageFeatures);
+            
+            // 每1000个要素打印一次进度
+            if (allFeatures.length % batchSaveSize === 0 || pageIndex === totalPages - 1) {
+              console.log(`[${layerName}] 已保存${allFeatures.length}个要素数据`);
+            }
+            
+            // 每页之间添加小延迟，避免服务器压力过大
+            if (pageIndex < totalPages - 1) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
+          }
+          
+          console.log(`[${layerName}] 数据加载完成，共获得${allFeatures.length}个要素`);
+          
+          // 第二阶段：分批渲染到地图
+          console.log(`[${layerName}] 开始分批渲染到地图，每批${batchRenderSize}个要素`);
+          
+          for (let i = 0; i < allFeatures.length; i += batchRenderSize) {
+            const batchFeatures = allFeatures.slice(i, i + batchRenderSize);
+            vectorlayer.getSource().addFeatures(batchFeatures);
+            
+            const batchNumber = Math.floor(i / batchRenderSize) + 1;
+            const totalBatches = Math.ceil(allFeatures.length / batchRenderSize);
+            console.log(`[${layerName}] 渲染第${batchNumber}/${totalBatches}批，${batchFeatures.length}个要素`);
+            
+            // 每批渲染之间添加延迟，避免界面卡顿
+            if (i + batchRenderSize < allFeatures.length) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
+          
+          console.log(`[${layerName}] 批量加载和渲染完成，共渲染${allFeatures.length}个要素`);
+          
+          // 更新图层状态管理中的要素数量信息
+          const layerIndex = mapStore.vectorlayers.findIndex(l => l.name === layerName);
+          if (layerIndex > -1) {
+            mapStore.vectorlayers[layerIndex] = {
+              ...mapStore.vectorlayers[layerIndex],
+              featureCount: allFeatures.length,
+              isLoaded: true
+            };
+          }
+          
             } catch (error) {
-              // 静默处理分页加载错误
+          console.error(`[${layerName}] 批量加载错误:`, error);
             }
           })();
         }, DATA_CONFIG.PAGINATION_DELAY);
         
-        // ===== 保存图层数据到全局状态管理 =====
+    // ===== 加载完成通知 =====
         // 调用者: loadVectorLayer()
-        // 作用: 将加载的要素数据保存到layerDataStore中，供文本注记等功能使用
-        layerDataStore.setLayerAttributes(layerName, features)
-        
-        // ===== 加载完成通知（使用自定义API获取的统计信息） =====
-        // 调用者: loadVectorLayer()
-        // 作用: 显示图层加载完成的统计信息，包括要素数量、数据来源和服务器地址
+    // 作用: 显示图层加载完成的统计信息
         notificationManager.info(
-          `图层 ${layerName} 加载完成`,
-          `共 ${features.length} 个要素\n总要素数: ${totalFeatureCount || serviceResult.result.totalCount || '未知'}\n当前返回: ${serviceResult.result.currentCount || features.length}\n最大要素数: ${serviceResult.result.maxFeatures || '无限制'}\nfeatureCount: ${(serviceResult.result.featureCount ?? serviceResult.result.totalCount ?? serviceResult.result.currentCount ?? features.length) || 0}\n数据来源: SuperMap iServer\n服务器地址: ${mapStore.mapConfig.dataUrl}\n✅ 使用自定义API优化性能`
+      `图层 ${layerName} 开始加载`,
+      `要素总数: ${featureCountBounds}\n总页数: ${totalPages}\n每页大小: ${pageSize}\n数据来源: SuperMap iServer\n服务器地址: ${apiConfig.baseUrl}\n✅ 使用标准分页加载`
         );
-      }
-    });
     
     const resolvedVisible = typeof visibleOverride === 'boolean' ? visibleOverride : !!layerConfig.visible
     vectorlayer.setVisible(resolvedVisible);
@@ -215,8 +377,7 @@ export function useMapData() {
     }
     vectorlayer.setZIndex(zIndex);
     
-    // 只有非懒加载图层才需要添加到地图和mapStore
-    if (!existingLayerInfo) {
+    // 添加图层到地图和状态管理
       map.addLayer(vectorlayer);
       
       mapStore.vectorlayers.push({
@@ -224,136 +385,13 @@ export function useMapData() {
         name: layerName,
         layer: vectorlayer,
         visible: resolvedVisible,
-        type: 'vector',
-        source: 'supermap'
-      });
-    } else {
-      // 懒加载图层已存在，只需要设置可见性
-      vectorlayer.setVisible(resolvedVisible);
-    }
-  }
-
-  /**
-   * 创建懒加载图层容器 - 创建空的图层容器，等待用户点击显示时再加载数据
-   * 调用者: loadVectorLayers() -> createLazyLayerContainer()
-   * 作用: 为懒加载图层创建空的OpenLayers图层容器，设置初始样式但不加载数据
-   */
-  const createLazyLayerContainer = (map: any, layerConfig: any): void => {
-    const layerName = layerConfig.name.split('@')[0] || layerConfig.name
-    const style = createLayerStyle(layerConfig, layerName)
-    
-    // 创建空的矢量图层容器
-    const vectorlayer = new ol.layer.Vector({
-      source: new ol.source.Vector({}),
-      style: style,
-      visible: layerConfig.visible // 设置初始可见性
-    })
-    
-    // 设置图层标识
-    vectorlayer.set('layerName', layerName)
-    vectorlayer.set('layerConfig', layerConfig)
-    vectorlayer.set('isLazyLoaded', true) // 标记为懒加载图层
-    vectorlayer.set('isLoaded', false) // 标记为未加载数据
-    
-    // 添加到地图
-    map.addLayer(vectorlayer)
-    
-    // 存储到mapStore中
-    mapStore.vectorlayers.push({
-      id: layerName,
-      name: layerName,
-      layer: vectorlayer,
-      visible: layerConfig.visible,
       type: 'vector',
       source: 'supermap',
-      isLazyLoaded: true,
-      isLoaded: false
-    })
-    
+      isLazyLoaded: false, // 明确设置为非懒加载
+      isLoaded: true       // 明确设置为已加载
+    });
   }
 
-  /**
-   * 加载懒加载图层数据 - 当用户点击显示懒加载图层时调用
-   * 调用者: useLayerManager.ts -> toggleLayerVisibility() -> loadLazyLayer()
-   * 作用: 为已创建的懒加载图层容器加载实际的矢量数据
-   */
-  const loadLazyLayer = async (layerName: string): Promise<boolean> => {
-    const layerInfo = mapStore.vectorlayers.find(l => l.name === layerName && l.isLazyLoaded)
-    
-    if (!layerInfo || !layerInfo.layer) {
-      console.warn(`懒加载图层不存在: ${layerName}`)
-      return false
-    }
-    
-    if (layerInfo.isLoaded) {
-      return true
-    }
-    
-    try {
-      const layerConfig = layerInfo.layer.get('layerConfig')
-      if (!layerConfig) {
-        console.error(`图层配置不存在: ${layerName}`)
-        return false
-      }
-      
-      
-      // 调用原有的loadVectorLayer函数加载数据
-      await loadVectorLayer(mapStore.map, layerConfig, true)
-      
-      // 更新图层状态
-      layerInfo.isLoaded = true
-      layerInfo.layer.set('isLoaded', true)
-      
-      return true
-      
-    } catch (error) {
-      console.error(`加载懒加载图层失败: ${layerName}`, error)
-      return false
-    }
-  }
-
-  /**
-   * 卸载懒加载图层数据 - 当用户点击隐藏懒加载图层时调用
-   * 调用者: useLayerManager.ts -> toggleLayerVisibility() -> unloadLazyLayer()
-   * 作用: 完全移除懒加载图层的数据，释放内存，但保留图层容器
-   */
-  const unloadLazyLayer = async (layerName: string): Promise<boolean> => {
-    const layerInfo = mapStore.vectorlayers.find(l => l.name === layerName && l.isLazyLoaded)
-    
-    if (!layerInfo || !layerInfo.layer) {
-      console.warn(`懒加载图层不存在: ${layerName}`)
-      return false
-    }
-    
-    if (!layerInfo.isLoaded) {
-      return true
-    }
-    
-    try {
-      
-      // 清除图层源中的所有要素数据
-      const source = layerInfo.layer.getSource()
-      if (source) {
-        source.clear()
-      }
-      
-      // 设置图层不可见
-      layerInfo.layer.setVisible(false)
-      
-      // 更新图层状态
-      layerInfo.isLoaded = false
-      layerInfo.layer.set('isLoaded', false)
-      
-      // 强制触发图层重绘
-      layerInfo.layer.changed()
-      
-      return true
-      
-    } catch (error) {
-      console.error(`卸载懒加载图层失败: ${layerName}`, error)
-      return false
-    }
-  }
 
   /**
    * 清空所有图层数据
@@ -423,22 +461,20 @@ export function useMapData() {
         continue;
       }
       
-      // 如果指定了可见图层列表，则只加载指定的图层
-      let shouldLoad = false
+      // 所有图层都立即加载，但根据配置和参数控制可见性
+      let shouldBeVisible = true
+      
       if (visibleLayers && visibleLayers.length > 0) {
-        shouldLoad = visibleLayers.includes(layerName)
+        // 如果指定了可见图层列表，则只有指定的图层可见
+        shouldBeVisible = visibleLayers.includes(layerName)
       } else {
-        // 懒加载逻辑：只有非懒加载且可见的图层才立即加载
-        shouldLoad = !layerConfig.lazyLoad && layerConfig.visible
+        // 如果没有指定，则使用配置中的默认可见性设置
+        shouldBeVisible = !!layerConfig.visible
       }
       
-      if (shouldLoad) {
+      // 所有图层都加载，但控制可见性
         loadingStore.updateLoading('map-init', `正在加载图层: ${layerName}`)
-        loadTasks.push(loadVectorLayer(map, layerConfig, true))
-      } else {
-        // 懒加载图层：创建空的图层容器，等待用户点击显示时再加载数据
-        createLazyLayerContainer(map, layerConfig)
-      }
+      loadTasks.push(loadVectorLayer(map, layerConfig, shouldBeVisible))
     }
     
     await Promise.allSettled(loadTasks)
@@ -447,9 +483,6 @@ export function useMapData() {
   return {
     loadVectorLayer,
     loadVectorLayers,
-    createLazyLayerContainer,
-    loadLazyLayer,
-    unloadLazyLayer,
     clearAllLayersBeforeInit
   }
 }

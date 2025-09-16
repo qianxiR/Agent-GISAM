@@ -218,6 +218,19 @@ const loadYangtzeSurfaceLayer = async () => {
       stroke: new ol.style.Stroke({
         color: yangtzeSurfaceStrokeColor,
         width: 2
+      }),
+      text: new ol.style.Text({
+        text: '长江',
+        font: 'bold 14px Arial',
+        fill: new ol.style.Fill({
+          color: '#000000'
+        }),
+        stroke: new ol.style.Stroke({
+          color: '#ffffff',
+          width: 3
+        }),
+        offsetY: 0,
+        textAlign: 'center'
       })
     })
     
@@ -288,6 +301,19 @@ const loadYangtzeLineLayer = async () => {
       stroke: new ol.style.Stroke({
         color: yangtzeLineStrokeColor,
         width: 3
+      }),
+      text: new ol.style.Text({
+        text: '长江',
+        font: 'bold 14px Arial',
+        fill: new ol.style.Fill({
+          color: '#000000'
+        }),
+        stroke: new ol.style.Stroke({
+          color: '#ffffff',
+          width: 3
+        }),
+        offsetY: -10,
+        textAlign: 'center'
       })
     })
     

@@ -109,23 +109,23 @@
           </div>
         </div>
 
-        <!-- 上传图层容器 -->
+        <!-- 本地图层容器 -->
         <div class="layer-container">
-          <div class="group-header" @click="toggleGroupCollapse('upload')">
+          <div class="group-header" @click="toggleGroupCollapse('local')">
             <div class="group-title">
-              上传图层
-              <span class="group-count">{{ getLayersBySource('upload').length }}</span>
+              本地图层
+              <span class="group-count">{{ getLayersBySource('local').length }}</span>
             </div>
             <DownloadButton
-              :title="`下载 ${getLayersBySource('upload').length} 个图层为JSON`"
-              :disabled="getLayersBySource('upload').length === 0"
-              @click="handleExportGroup('upload')"
+              :title="`下载 ${getLayersBySource('local').length} 个图层为JSON`"
+              :disabled="getLayersBySource('local').length === 0"
+              @click="handleExportGroup('local')"
             />
           </div>
           
-          <div class="layer-items-container" v-show="expandedGroups.upload">
+          <div class="layer-items-container" v-show="expandedGroups.local">
             <LayerItem
-              v-for="item in getLayersBySource('upload')" 
+              v-for="item in getLayersBySource('local')" 
               :key="item.key"
               :layer-name="item.displayName"
               :layer-desc="item.desc"
@@ -262,7 +262,7 @@ const alllayers = computed(() => {
       } else if (sourceType === 'area' || sourceType === 'query') {
         item.source = 'query' // 查询图层（区域选择 + 属性查询）
       } else if (sourceType === 'upload') {
-        item.source = 'upload' // 上传图层分组
+        item.source = 'local' // 上传图层分组改为本地图层分组
       }
     }
     
@@ -311,7 +311,7 @@ const handleExportGroup = async (source: string) => {
   const groupNames: Record<string, string> = {
     draw: '分析及绘制图层', 
     query: '查询图层',
-    upload: '上传图层'
+    local: '本地图层'
   }
   
   await exportLayersAsGeoJSON(layers, groupNames[source] || source)

@@ -100,7 +100,7 @@ export function useMap() {
    * 地图初始化主函数
    * 整合各模块功能，完成地图的完整初始化流程
    * @param customZoom 自定义缩放等级，如果不提供则使用默认配置
-   * @param visibleLayers 指定要显示的图层名称数组，如果不提供则使用默认配置
+   * @param visibleLayers 指定要显示的图层名称数组，如果不提供则使用默认配置（仅显示武汉县级和武汉市级图层）
    */
   const initMap = async (customZoom?: number, visibleLayers?: string[]): Promise<void> => {
     try {
@@ -183,7 +183,9 @@ export function useMap() {
       
       // ===== 5. 加载矢量图层 =====
       loadingStore.updateLoading('map-init', '正在加载图层...')
-      await mapData.loadVectorLayers(map, visibleLayers)
+      // 设置默认可见图层：仅显示武汉县级和武汉市级图层
+      const defaultVisibleLayers = visibleLayers || ['武汉_县级', '武汉_市级']
+      await mapData.loadVectorLayers(map, defaultVisibleLayers)
       
       // ===== 6. 创建交互图层 =====
       // 悬停图层
@@ -247,8 +249,6 @@ export function useMap() {
     createLayerStyle: mapStyles.createLayerStyle,
     
     // 数据加载
-    loadLazyLayer: mapData.loadLazyLayer,
-    unloadLazyLayer: mapData.unloadLazyLayer,
     
     // 交互功能
     queryFeaturesAtPoint: mapInteraction.queryFeaturesAtPoint,

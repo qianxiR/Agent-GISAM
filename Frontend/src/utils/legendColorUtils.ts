@@ -48,8 +48,6 @@ export const getLegendColors = () => {
     '学校': getLayerColors('学校'),
     '居民地地名点': getLayerColors('居民地地名点'),
     
-    // 建筑物图层
-    '建筑物面': getLayerColors('建筑物面'),
     
     // 水文监测点（特殊处理，使用固定颜色）
     '水文监测点': {
@@ -62,6 +60,7 @@ export const getLegendColors = () => {
 /**
  * 获取长江流域相关图层的颜色
  * 专门为长江监测预警一体化页面提供颜色配置
+ * 与ViewSubPage3.vue中的实际图层颜色保持一致
  */
 export const getYangtzeColors = () => {
   return {
@@ -74,8 +73,8 @@ export const getYangtzeColors = () => {
       fill: '#002766'
     },
     '水文监测点': {
-      stroke: '#0288d1',
-      fill: '#4fc3f7'
+      stroke: '#0050b3',
+      fill: '#1890ff'
     }
   }
 }

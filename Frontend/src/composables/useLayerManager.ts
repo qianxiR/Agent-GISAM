@@ -161,31 +161,16 @@ export function uselayermanager() {
     const currentVisibility = layerInfo.layer.getVisible()
     const newVisibility = !currentVisibility
     
-    // 动态导入useMap以获取相关函数
-    const { useMap } = await import('@/composables/useMap')
-    const { loadLazyLayer, unloadLazyLayer } = useMap()
+    // 移除懒加载相关函数导入
     
     if (newVisibility) {
       // 显示图层逻辑
-      if (layerInfo.isLazyLoaded && !layerInfo.isLoaded) {
-        // 懒加载图层且未加载数据，需要先加载数据
-        
-        const loadSuccess = await loadLazyLayer(layerInfo.name)
-        if (!loadSuccess) {
-          console.error(`懒加载图层失败: ${layerInfo.name}`)
-          return
-        }
-        
-      } else {
-        // 非懒加载图层或已加载的懒加载图层，直接显示
-        layerInfo.layer.setVisible(true)
-      }
+      layerInfo.layer.setVisible(true)
       
-      // 检查是否为建筑物图层，如果是则启用2.5D渲染
+      // 检查是否为需要特殊渲染的图层
       if (layerInfo.name === '建筑物面' && mapStore.map) {
-        const { enablePolygonExtrusion } = await import('@/composables/useBuildingExtrusion')
-        const color = getComputedStyle(document.documentElement).getPropertyValue('--building-3d-color').trim()
-        enablePolygonExtrusion(layerInfo.layer, mapStore.map, color)
+        // 建筑物图层已移除，跳过特殊渲染
+        return
       }
     } else {
       // 隐藏图层逻辑
@@ -213,18 +198,8 @@ export function uselayermanager() {
       const featureQuery = useFeatureQueryStore()
       featureQuery.clearQuerySelection()
       
-      if (layerInfo.isLazyLoaded && layerInfo.isLoaded) {
-        // 懒加载图层且已加载数据，需要完全卸载数据
-        
-        const unloadSuccess = await unloadLazyLayer(layerInfo.name)
-        if (!unloadSuccess) {
-          console.error(`卸载懒加载图层失败: ${layerInfo.name}`)
-        } else {
-        }
-      } else {
-        // 非懒加载图层，只设置可见性
-        layerInfo.layer.setVisible(false)
-      }
+      // 设置图层不可见
+      layerInfo.layer.setVisible(false)
     }
     
     // 确保响应式更新 - 使用数组索引直接更新
@@ -1662,6 +1637,9 @@ export function uselayermanager() {
     }))
   }
 
+  // 缓存管理功能
+
+
   return {
     // 激活新功能
     togglelayerVisibility,
@@ -1675,6 +1653,7 @@ export function uselayermanager() {
 
     // 通用保存功能
     saveFeaturesAslayer,
+
 
     // 确认对话框相关
     showConfirmDialog,

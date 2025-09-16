@@ -11,7 +11,7 @@ export const useLayerUIStore = defineStore('layerUI', () => {
     supermap: false,    // SuperMap服务图层组
     draw: false,        // 分析及绘制图层组
     query: false,       // 查询图层组
-    upload: false,      // 上传图层组
+    local: false,       // 本地图层组（上传、长江数据等）
     external: false     // 外部图层组
   })
 
