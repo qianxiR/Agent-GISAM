@@ -10,7 +10,9 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uvicorn
 import os
+import uuid
 from pathlib import Path
+import uuid
 from dotenv import load_dotenv
 from langchain_community.chat_models.tongyi import ChatTongyi
 from langchain_core.tools import tool
@@ -20,6 +22,8 @@ from langchain.chat_models import init_chat_model
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from langchain_tavily import TavilySearch
+from openai import OpenAI
+from openai import OpenAI
 
 # 关闭全局SSL验证以规避企业网络或中间代理引起的握手问题
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -81,58 +85,7 @@ rag_path = Path(__file__).resolve().parents[1] / "rag"
 sys.path.append(str(rag_path))
 from rag.rag_system import RAGSystem
 
-# 知识库查询工具
-@tool
-def query_knowledge_base(question: str) -> str:
-    """
-    查询知识库获取相关信息
-    
-    Args:
-        question: 用户问题，例如"武汉市的基本概况是什么？"
-    
-    Returns:
-        str: 基于知识库的回答，包含参考来源
-    """
-    try:
-        # 检查并更新知识库
-        update_knowledge_base_if_needed()
-        
-        # 获取RAG系统并查询
-        rag_system = get_rag_system()
-        result = rag_system.query(question, include_sources=True)
-        
-        # 构建包含来源信息的完整回答
-        answer = result['answer']
-        
-        # 如果RAG系统没有自动添加来源信息，手动添加
-        if '**📚 参考来源：**' not in answer and result.get('source_documents'):
-            source_info = "\n\n**📚 参考来源：**\n"
-            for i, doc in enumerate(result['source_documents'], 1):
-                filename = doc.get('filename', '未知文件')
-                source_info += f"{i}. {filename}\n"
-            answer += source_info
-        
-        return answer
-        
-    except Exception as e:
-        return f"知识库查询失败: {str(e)}"
-
-@tool
-def update_knowledge_base() -> str:
-    """
-    手动更新知识库
-    
-    Returns:
-        str: 更新结果信息
-    """
-    try:
-        global _rag_system_cache
-        _rag_system_cache = None  # 清除缓存
-        get_rag_system()  # 重新初始化
-        return "知识库更新成功"
-        
-    except Exception as e:
-        return f"知识库更新失败: {str(e)}"
+from .tools import query_knowledge_base, update_knowledge_base
 
 # 系统提示词缓存 - 在模块加载时初始化
 _system_prompt_cache: Optional[str] = None

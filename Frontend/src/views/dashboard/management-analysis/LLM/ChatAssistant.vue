@@ -68,7 +68,7 @@ import { useModeStateStore } from '@/stores/modeStateStore';
 import LLMInputWindow from '@/components/Agent/LLMInputWindow.vue';
 import ChatMessagesPanel from '@/components/Agent/ChatMessagesPanel.vue';
 import SecondaryButton from '@/components/UI/SecondaryButton.vue';
-import { getAgentApiBaseUrl, getLLMApiConfig } from '@/utils/config'
+import { getAgentApiBaseUrl } from '@/utils/config'
 
 interface Message {
   id: number;
@@ -93,6 +93,11 @@ const nextAssistantOverride = ref<string | null>(null);
 // 智能滚动相关状态现在由ChatMessagesPanel组件内部处理
 
 
+
+// 从环境变量加载LLM配置
+const llmModel = (import.meta as any).env.VITE_LLM_MODEL ?? 'qwen-max'
+const llmTemperature = Number((import.meta as any).env.VITE_LLM_TEMPERATURE ?? 0.7)
+const llmStream = (((import.meta as any).env.VITE_LLM_STREAM ?? 'false') === 'true')
 
 const maybeAnnounceInitiallayers = () => {
   // 显示初始欢迎消息
@@ -511,12 +516,11 @@ const sendImplicitMessageToLLM = async (resultMessage: string) => {
     // 构造完整的prompt
     const fullPrompt = `${conversationContext}分析结果反馈：${resultMessage}。请根据这个结果给出适当的回应或建议。`
     
-    const llm = getLLMApiConfig()
     const payload = {
-      model: 'qwen-max',
-      temperature: typeof llm.temperature === 'number' ? llm.temperature : 0.7,
+      model: llmModel,
+      temperature: llmTemperature,
       prompt: fullPrompt,
-      stream: false,
+      stream: llmStream,
       conversation_id: convId
     }
     
@@ -568,12 +572,11 @@ const sendMessage = async () => {
   const userMsg = { role: 'user', content: message }
 
   try {
-    const llm = getLLMApiConfig()
     const payload = {
-      model: 'qwen-max',
-      temperature: typeof llm.temperature === 'number' ? llm.temperature : 0.7,
+      model: llmModel,
+      temperature: llmTemperature,
       prompt: message,
-      stream: false,
+      stream: llmStream,
       conversation_id: convId
     }
     const resp = await fetch(`${apiBase}/agent/tool-chat`, {

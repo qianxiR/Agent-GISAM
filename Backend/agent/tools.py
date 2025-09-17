@@ -4,6 +4,7 @@ Agent工具定义模块
 """
 from typing import Dict, Any
 from langchain_core.tools import tool
+from .knowledge import get_rag_system, update_knowledge_base_if_needed
 
 
 @tool
@@ -205,6 +206,60 @@ def save_path_results_as_layer(layer_name: str) -> Dict[str, Any]:
     return result
 
 
+# ===== 知识库相关工具 =====
+
+@tool
+def query_knowledge_base(question: str) -> str:
+    """
+    查询知识库获取相关信息
+
+    输入参数：
+      - question: string 用户问题
+    业务处理：
+      - 调用共享的 RAG 管理模块，必要时更新知识库
+      - 使用 RAGSystem 进行查询，返回包含来源的答案
+    输出数据格式：
+      - string: 基于知识库的回答，包含参考来源
+    """
+    update_knowledge_base_if_needed()
+    rag_system = get_rag_system()
+    result = rag_system.query(question, include_sources=True)
+    answer = result['answer']
+    if '**📚 参考来源：**' not in answer and result.get('source_documents'):
+        source_info = "\n\n**📚 参考来源：**\n"
+        for i, doc in enumerate(result['source_documents'], 1):
+            filename = doc.get('filename', '未知文件')
+            source_info += f"{i}. {filename}\n"
+        answer += source_info
+    return answer
+
+
+@tool
+def update_knowledge_base() -> str:
+    """
+    手动更新知识库
+
+    输入参数：
+      - 无
+    业务处理：
+      - 清理并重建知识库索引
+    输出数据格式：
+      - string: 更新结果信息
+    """
+    # 通过重置单例并重新初始化实现更新
+    from .knowledge import _rag_system_cache  # type: ignore
+    globals_dict = globals()
+    # 直接赋值以确保缓存被清空
+    # 注意：此处依赖 knowledge 模块的模块级变量
+    # 在本项目结构中是安全的
+    # 清空缓存并重建
+    import importlib
+    import agent.knowledge as knowledge_module  # type: ignore
+    knowledge_module._rag_system_cache = None
+    knowledge_module.get_rag_system()
+    return "知识库更新成功"
+
+
 
 
 # 导出所有工具函数
@@ -220,5 +275,7 @@ __all__ = [
     'save_buffer_results_as_layer',
     'save_intersection_results_as_layer',
     'save_erase_results_as_layer',
-    'save_path_results_as_layer'
+    'save_path_results_as_layer',
+    'query_knowledge_base',
+    'update_knowledge_base'
 ]
