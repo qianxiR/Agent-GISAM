@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import './styles/theme.css'
+import { getAnalysisServiceConfig } from './api/config'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -23,3 +24,10 @@ setTimeout(async () => {
     console.error('初始化状态持久化失败:', error)
   }
 }, 500)
+
+// 页面关闭前，通知后端清理下载目录
+window.addEventListener('beforeunload', () => {
+  const baseUrl = getAnalysisServiceConfig().baseUrl
+  const url = `${baseUrl}/download/cleanup`
+  navigator.sendBeacon(url, new Blob([], { type: 'application/json' }))
+})

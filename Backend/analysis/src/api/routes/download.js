@@ -3,6 +3,14 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 
+// POST /cleanup - 清空并重建下载目录
+router.post('/cleanup', async (req, res) => {
+  const downloadsDir = path.join(__dirname, '..', '..', '..', 'downloads');
+  await fs.promises.rm(downloadsDir, { recursive: true, force: true });
+  await fs.promises.mkdir(downloadsDir, { recursive: true });
+  res.json({ success: true });
+});
+
 // GET /download/:filename - 下载分析结果文件
 router.get('/:filename', (req, res, next) => {
   const { filename } = req.params;
