@@ -1052,7 +1052,63 @@ export function uselayermanager() {
       }
     })
     
-    console.log('[useLayerManager] 4个分析功能的Agent事件监听器注册完成')
+    // 监听 Agent 图层重命名事件
+    window.addEventListener('agent:renameLayer', async (e: any) => {
+      const { layerName, newName } = e.detail || {}
+      if (!layerName || !newName) return
+      
+      try {
+        // 查找图层
+        const layerInfo = mapStore.vectorlayers.find(l => l.name === layerName)
+        if (!layerInfo) {
+          console.error(`[Agent] 未找到图层: ${layerName}`)
+          return
+        }
+        
+        // 检查是否为服务图层
+        if (layerInfo.source === 'supermap') {
+          console.warn(`[Agent] 服务图层不允许重命名: ${layerName}`)
+          window.dispatchEvent(new CustomEvent('agent:renameResult', {
+            detail: { 
+              success: false, 
+              message: `服务图层"${layerName}"不允许重命名`, 
+              oldName: layerName, 
+              newName: newName 
+            }
+          }))
+          return
+        }
+        
+        // 执行重命名
+        const success = renameLayer(layerInfo.id, newName)
+        const message = success 
+          ? `图层"${layerName}"已重命名为"${newName}"`
+          : `重命名失败：${layerName}`
+        
+        window.dispatchEvent(new CustomEvent('agent:renameResult', {
+          detail: { 
+            success, 
+            message, 
+            oldName: layerName, 
+            newName: newName 
+          }
+        }))
+        
+        console.log(`[Agent] 图层重命名完成: ${layerName} -> ${newName}`)
+      } catch (error) {
+        console.error('[Agent] 图层重命名执行失败:', error)
+        window.dispatchEvent(new CustomEvent('agent:renameResult', {
+          detail: { 
+            success: false, 
+            message: `重命名失败：${layerName}`, 
+            oldName: layerName, 
+            newName: newName 
+          }
+        }))
+      }
+    })
+    
+    console.log('[useLayerManager] 5个分析功能和图层重命名的Agent事件监听器注册完成')
     
   } // 结束只注册一次的if语句
 

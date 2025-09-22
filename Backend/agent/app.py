@@ -233,6 +233,21 @@ def save_path_results_as_layer(layer_name: str) -> Dict[str, Any]:
     return {"action": "path.save_layer", "params": {"layer_name": layer_name}}
 
 
+@tool
+def rename_layer(layer_name: str, new_name: str) -> Dict[str, Any]:
+    """
+    重命名图层（前端执行）。
+    输入参数：
+      - layer_name: string 原图层名称
+      - new_name: string 新图层名称
+    业务处理：
+      - 后端不直接操作地图，仅返回重命名参数供前端执行
+    输出数据格式：
+      - { action: 'rename_layer', params: { layer_name: string, new_name: string } }
+    """
+    return {"action": "rename_layer", "params": {"layer_name": layer_name, "new_name": new_name}}
+
+
 
 
 def load_system_prompt() -> str:
@@ -305,7 +320,8 @@ async def tool_chat(req: ToolChatRequest):
         save_buffer_results_as_layer,
         save_intersection_results_as_layer,
         save_erase_results_as_layer,
-        save_path_results_as_layer
+        save_path_results_as_layer,
+        rename_layer
     ])
     history_list = _conversation_layer_history.get(req.conversation_id, [])
     parsed_lines: List[str] = []
@@ -431,6 +447,8 @@ async def tool_chat(req: ToolChatRequest):
         tool_result = save_erase_results_as_layer.invoke(tool_args)
     elif tool_name == "save_path_results_as_layer":
         tool_result = save_path_results_as_layer.invoke(tool_args)
+    elif tool_name == "rename_layer":
+        tool_result = rename_layer.invoke(tool_args)
     else:
         tool_result = f"未知工具: {tool_name}"
     # 记录历史：优先记录action；若保存/导出操作，按分析类型归档
@@ -501,7 +519,11 @@ async def tool_chat(req: ToolChatRequest):
             "12) save_path_results_as_layer(layer_name:str)\n"
             "- 遇到'保存最短路径分析结果为图层'、'另存路径结果为图层'的请求时调用。\n"
             "- 重要：只有在执行了最短路径分析(execute_shortest_path_analysis)后，用户要求保存结果时才调用此工具。\n"
-            "- 图层名称可选：未指定时系统自动生成默认名称。\n\n"
+            "- 图层名称可选：未指定时系统自动生成默认名称。\n"
+            "13) rename_layer(layer_name:str, new_name:str)\n"
+            "- 遇到'修改图层@图层名称的名称为新名称'、'重命名@图层名称为新名称'的请求时调用。\n"
+            "- 自动解析@图层名称格式，提取图层名称和新名称。\n"
+            "- 服务图层不允许重命名，只能重命名分析、查询、上传图层。\n\n"
             "=== 默认命名规则 ===\n"
             "当用户未指定图层名称时，系统自动生成包含参数信息的默认名称：\n"
             "- 缓冲区分析：'缓冲区分析_源图层名_半径_分段数'\n"
@@ -520,19 +542,11 @@ async def tool_chat(req: ToolChatRequest):
             "3. 若用户使用@图层名称，请将@后的文本作为图层名称传递\n"
             "4. 严禁自行执行这些操作，必须通过工具完成\n\n"
             "=== 回复规则 ===\n"
-            "当工具执行完成后，必须简洁回复，禁止废话：\n"
-            "- 查询操作：直接说'正在执行请稍后'\n"
-            "- 图层操作：直接说'图层已显示/隐藏'\n"
-            "- 保存操作：直接说'正在执行请稍后'\n"
-            "- 缓冲区分析：直接说'正在执行请稍后'\n"
-            "- 相交分析：直接说'正在执行请稍后'\n"
-            "- 擦除分析：直接说'正在执行请稍后'\n"
-            "- 最短路径分析：直接说'正在执行请稍后'\n"
             "严禁说'看起来'、'可能'、'如果'、'请确认'等不确定词汇。\n"
             "严禁解释系统工作原理或引导用户查看界面。\n"
             "严禁回复具体的要素数量或详细结果。\n"
             "严禁编造或猜测操作结果。\n"
-            "只回复'正在执行请稍后'或简单的操作状态，一句话结束。"
+            "只回复简单的操作结果状态，一句话结束。"
         )),
         HumanMessage(content=req.prompt),
         first_ai,
