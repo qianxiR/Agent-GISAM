@@ -95,7 +95,7 @@ const nextAssistantOverride = ref<string | null>(null);
 
 
 // 从环境变量加载LLM配置
-const llmModel = (import.meta as any).env.VITE_LLM_MODEL ?? 'qwen-max'
+const llmModel = (import.meta as any).env.VITE_LLM_MODEL ?? 'qwen-plus'
 const llmTemperature = Number((import.meta as any).env.VITE_LLM_TEMPERATURE ?? 0.7)
 const llmStream = (((import.meta as any).env.VITE_LLM_STREAM ?? 'false') === 'true')
 
