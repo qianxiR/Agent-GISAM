@@ -238,7 +238,16 @@ export function useShortestPathAnalysis() {
       const obstacleLayerName = state.obstacleLayerName || '无障碍'
       return `最短路径分析_${startLayerName}_${endLayerName}_${obstacleLayerName}_${units}_${resolution}`
     })()
-    return saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'path')
+    const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'path')
+    
+    // 保存成功后自动清空临时图层
+    if (result) {
+      removeAnalysislayers()
+      shortestPathStore.clearAll()
+      analysisStore.setAnalysisStatus('最短路径分析结果已保存并清空临时图层')
+    }
+    
+    return result
   }
 
   const exportPathResultsAsJSON = async (fileName?: string): Promise<any> => {

@@ -16,6 +16,29 @@ export function useFeatureSelection() {
   // 状态管理
   const boxSelectInteraction = ref<any>(null)
   const highlightedFeature = ref<any>(null)
+  const areaHighlightLayer = ref<any>(null)
+  // 区域选择高亮临时图层管理
+  const ensureAreaLayer = (): any => {
+    if (areaHighlightLayer.value) return areaHighlightLayer.value
+    if (!mapStore.map) return null
+    const layer = new ol.layer.Vector({ source: new ol.source.Vector(), zIndex: 999 })
+    layer.set('isAreaHighlightLayer', true)
+    areaHighlightLayer.value = layer
+    mapStore.map.addLayer(layer)
+    return layer
+  }
+
+  const getAreaSource = (): any => {
+    const layer = ensureAreaLayer()
+    return layer ? layer.getSource() : null
+  }
+
+  const removeAreaLayer = (): void => {
+    if (mapStore.map && areaHighlightLayer.value) {
+      mapStore.map.removeLayer(areaHighlightLayer.value)
+    }
+    areaHighlightLayer.value = null
+  }
 
   // 选中要素列表（使用 selectionStore 的状态）
   const selectedFeatures = computed({
@@ -172,9 +195,9 @@ export function useFeatureSelection() {
 
   // 异步高亮显示多个要素
   const highlightFeaturesAsync = async (features: any[]) => {
-    if (!mapStore.map || !mapStore.selectlayer || features.length === 0) return
+    if (!mapStore.map || features.length === 0) return
 
-    const source = mapStore.selectlayer.getSource()
+    const source = getAreaSource()
     if (!source) return
 
     const batchSize = 100
@@ -185,6 +208,7 @@ export function useFeatureSelection() {
 
       batch.forEach(feature => {
         if (feature) {
+          try { feature.set('sourceTag', 'area') } catch (_) {}
           source.addFeature(feature)
         }
       })
@@ -212,28 +236,20 @@ export function useFeatureSelection() {
   // 在地图上高亮显示要素
   const highlightFeatureOnMap = (feature: any) => {
     if (!mapStore.map || !feature) return
-
-    // 确保选择图层中包含当前要素
-    if (mapStore.selectlayer && mapStore.selectlayer.getSource) {
-      const source = mapStore.selectlayer.getSource()
-      if (source) {
-        // 检查要素是否已经在高亮图层中，如果不在则添加
-        const features = source.getFeatures()
-        const exists = features.some((f: any) => {
-          const fGeometry = f.getGeometry()
-          const originalGeometry = feature.getGeometry()
-          if (!fGeometry || !originalGeometry) return false
-
-          const fCoords = JSON.stringify(fGeometry.getCoordinates())
-          const originalCoords = JSON.stringify(originalGeometry.getCoordinates())
-          return fCoords === originalCoords
-        })
-
-        if (!exists) {
-          try { feature.set('sourceTag', 'area') } catch (_) {}
-          source.addFeature(feature)
-        }
-      }
+    const source = getAreaSource()
+    if (!source) return
+    const features = source.getFeatures()
+    const exists = features.some((f: any) => {
+      const fGeometry = f.getGeometry()
+      const originalGeometry = feature.getGeometry()
+      if (!fGeometry || !originalGeometry) return false
+      const fCoords = JSON.stringify(fGeometry.getCoordinates())
+      const originalCoords = JSON.stringify(originalGeometry.getCoordinates())
+      return fCoords === originalCoords
+    })
+    if (!exists) {
+      try { feature.set('sourceTag', 'area') } catch (_) {}
+      source.addFeature(feature)
     }
   }
 
@@ -253,10 +269,9 @@ export function useFeatureSelection() {
 
   // 开始常亮效果
   const startHighlightAnimation = () => {
-    if (!highlightedFeature.value || !mapStore.selectlayer) return
-
-    const source = mapStore.selectlayer.getSource()
-    if (!source) return
+    if (!highlightedFeature.value) return
+    const layer = ensureAreaLayer()
+    if (!layer) return
 
     // 创建常亮样式
     const createFlashingStyle = () => {
@@ -361,13 +376,13 @@ export function useFeatureSelection() {
     }
 
     // 设置常亮样式
-    mapStore.selectlayer.setStyle(createFlashingStyle())
-    mapStore.selectlayer.changed()
+    layer.setStyle(createFlashingStyle())
+    layer.changed()
   }
 
   // 移除常亮要素
   const removeHighlightFeature = () => {
-    if (!mapStore.selectlayer) return
+    if (!areaHighlightLayer.value) return
 
     // 恢复原始样式
     const highlightColor = getComputedStyle(document.documentElement).getPropertyValue('--map-highlight-color').trim() || (document.documentElement.getAttribute('data-theme') === 'dark' ? '#ffffff' : '#000000')
@@ -421,8 +436,8 @@ export function useFeatureSelection() {
       }
     }
 
-    mapStore.selectlayer.setStyle(restoreOriginalStyle)
-    mapStore.selectlayer.changed()
+    areaHighlightLayer.value.setStyle(restoreOriginalStyle)
+    areaHighlightLayer.value.changed()
   }
 
   // 检查两个要素是否相同
@@ -454,17 +469,12 @@ export function useFeatureSelection() {
 
   // 清除地图上的区域选择高亮
   const clearMapSelection = () => {
-    if (mapStore.selectlayer && mapStore.selectlayer.getSource) {
-      const source = mapStore.selectlayer.getSource()
-      if (source) {
-        const feats = source.getFeatures?.() || []
-        feats.forEach((f: any) => {
-          if (f?.get && f.get('sourceTag') === 'area') {
-            source.removeFeature(f)
-          }
-        })
-      }
+    if (!areaHighlightLayer.value) return
+    const source = areaHighlightLayer.value.getSource?.()
+    if (source) {
+      source.clear()
     }
+    removeAreaLayer()
   }
 
   // 反选：基于当前已选要素所在图层进行反选
@@ -507,7 +517,7 @@ export function useFeatureSelection() {
     }
 
     const source = layerInfo.layer.getSource?.()
-    const selectSource = mapStore.selectlayer?.getSource?.()
+    const selectSource = getAreaSource()
     if (!source || !selectSource) {
       analysisStore.setAnalysisStatus('数据源不可用')
       return
@@ -559,16 +569,7 @@ export function useFeatureSelection() {
     clearSelectionInteractions()
     
     // 清除地图上的区域高亮
-    if (mapStore.selectlayer && mapStore.selectlayer.getSource()) {
-      const source = mapStore.selectlayer.getSource()
-      const features = source.getFeatures()
-      features.forEach((f: any) => {
-        if (f?.get && f.get('sourceTag') === 'area') {
-          source.removeFeature(f)
-        }
-      })
-      mapStore.selectlayer.changed()
-    }
+    clearMapSelection()
     
     // 清除区域选择存储状态
     selectionStore.clear()

@@ -420,7 +420,16 @@ export function useEraseAnalysis() {
       const en = e ? e.name : '擦除'
       return `擦除分析结果_${tn}_MINUS_${en}`
     })()
-    return saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'erase')
+    const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'erase')
+    
+    // 保存成功后自动清空临时图层
+    if (result) {
+      removeEraselayers()
+      store.clearResults()
+      analysisStore.setAnalysisStatus('擦除分析结果已保存并清空临时图层')
+    }
+    
+    return result
   }
 
   const exportEraseResultsAsJSON = async (fileName?: string): Promise<any> => {

@@ -452,7 +452,16 @@ export function useIntersectionAnalysis() {
       const mn = m ? m.name : '掩膜'
       return `相交分析_${tn}_${mn}`
     })()
-    return saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'intersect')
+    const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'intersect')
+    
+    // 保存成功后自动清空临时图层
+    if (result) {
+      removeIntersectionlayers()
+      store.clearResults()
+      analysisStore.setAnalysisStatus('相交分析结果已保存并清空临时图层')
+    }
+    
+    return result
   }
 
   const exportIntersectionResultsAsJSON = async (fileName?: string): Promise<any> => {

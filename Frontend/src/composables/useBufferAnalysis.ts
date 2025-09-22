@@ -453,6 +453,14 @@ export function useBufferAnalysis() {
       'buffer'
     )
     console.log('[BufferAnalysis] 保存结果:', result)
+    
+    // 保存成功后自动清空临时图层
+    if (result) {
+      removeBufferlayers()
+      bufferAnalysisStore.clearResults()
+      analysisStore.setAnalysisStatus('缓冲区分析结果已保存并清空临时图层')
+    }
+    
     return result
   }
   

@@ -31,6 +31,34 @@ export const useFeatureQueryStore = defineStore('featureQuery', () => {
 
   const selectedFeatureIndex = ref<number>(-1)
   const highlightedFeature = ref<any>(null)
+  const queryHighlightLayer = ref<any>(null)
+  // 创建并获取查询临时图层
+  const ensureQueryLayer = (): any => {
+    if (queryHighlightLayer.value) return queryHighlightLayer.value
+    const ol = (window as any).ol
+    const layer = new ol.layer.Vector({
+      source: new ol.source.Vector(),
+      zIndex: 999
+    })
+    layer.set('isQueryHighlightLayer', true)
+    queryHighlightLayer.value = layer
+    if (mapStore.map) {
+      mapStore.map.addLayer(layer)
+    }
+    return layer
+  }
+
+  const getQuerySource = (): any => {
+    const layer = ensureQueryLayer()
+    return layer.getSource()
+  }
+
+  const removeQueryLayer = (): void => {
+    if (mapStore.map && queryHighlightLayer.value) {
+      mapStore.map.removeLayer(queryHighlightLayer.value)
+    }
+    queryHighlightLayer.value = null
+  }
 
   const hasResults = computed(() => queryResults.value.length > 0)
   const selectedFeature = computed(() => {
@@ -250,20 +278,15 @@ export const useFeatureQueryStore = defineStore('featureQuery', () => {
 
   const highlightFeatureOnMap = (feature: any) => {
     if (!mapStore.map || !feature) return
-    if (mapStore.selectlayer && mapStore.selectlayer.getSource) {
-      const source = mapStore.selectlayer.getSource()
-      if (source) {
-        const exists = source.getFeatures().some((f: any) => {
-          const fGeom = f.getGeometry(); const oGeom = feature.getGeometry()
-          if (!fGeom || !oGeom) return false
-          return JSON.stringify(fGeom.getCoordinates()) === JSON.stringify(oGeom.getCoordinates())
-        })
-        if (!exists) {
-          // 标记来源为查询
-          try { feature.set('sourceTag', 'query') } catch (_) {}
-          source.addFeature(feature)
-        }
-      }
+    const source = getQuerySource()
+    const exists = source.getFeatures().some((f: any) => {
+      const fGeom = f.getGeometry(); const oGeom = feature.getGeometry()
+      if (!fGeom || !oGeom) return false
+      return JSON.stringify(fGeom.getCoordinates()) === JSON.stringify(oGeom.getCoordinates())
+    })
+    if (!exists) {
+      try { feature.set('sourceTag', 'query') } catch (_) {}
+      source.addFeature(feature)
     }
   }
 
@@ -274,29 +297,27 @@ export const useFeatureQueryStore = defineStore('featureQuery', () => {
   }
 
   const startHighlightAnimation = () => {
-    if (!highlightedFeature.value || !mapStore.selectlayer) return
-    const source = mapStore.selectlayer.getSource()
-    if (!source) return
+    if (!highlightedFeature.value) return
     const grayFillColor = getComputedStyle(document.documentElement).getPropertyValue('--map-select-fill').trim() || (document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(33, 37, 41, 0.15)')
     const highlightColor = getComputedStyle(document.documentElement).getPropertyValue('--map-highlight-color').trim() || (document.documentElement.getAttribute('data-theme') === 'dark' ? '#ffffff' : '#000000')
     const createStyle = () => (feature: any) => {
       const isHighlight = isSameFeature(feature, highlightedFeature.value)
       const geom = feature.getGeometry(); if (!geom) return null
       const type = geom.getType()
-      const styleCtor = window.ol.style
+      const styleCtor = (window as any).ol.style
       if (isHighlight) {
         switch (type) {
-                     case 'Point':
-           case 'MultiPoint':
-             return new styleCtor.Style({ image: new styleCtor.Circle({ radius: 12, stroke: new styleCtor.Stroke({ color: highlightColor, width: 4 }), fill: new styleCtor.Fill({ color: grayFillColor }) }) })
-           case 'LineString':
-           case 'MultiLineString':
-             return new styleCtor.Style({ stroke: new styleCtor.Stroke({ color: highlightColor, width: 6, lineCap: 'round', lineJoin: 'round' }) })
-           case 'Polygon':
-           case 'MultiPolygon':
-             return new styleCtor.Style({ stroke: new styleCtor.Stroke({ color: highlightColor, width: 4 }), fill: new styleCtor.Fill({ color: grayFillColor }) })
-           default:
-             return new styleCtor.Style({ image: new styleCtor.Circle({ radius: 12, stroke: new styleCtor.Stroke({ color: highlightColor, width: 4 }), fill: new styleCtor.Fill({ color: grayFillColor }) }), stroke: new styleCtor.Stroke({ color: highlightColor, width: 4 }), fill: new styleCtor.Fill({ color: grayFillColor }) })
+          case 'Point':
+          case 'MultiPoint':
+            return new styleCtor.Style({ image: new styleCtor.Circle({ radius: 12, stroke: new styleCtor.Stroke({ color: highlightColor, width: 4 }), fill: new styleCtor.Fill({ color: grayFillColor }) }) })
+          case 'LineString':
+          case 'MultiLineString':
+            return new styleCtor.Style({ stroke: new styleCtor.Stroke({ color: highlightColor, width: 6, lineCap: 'round', lineJoin: 'round' }) })
+          case 'Polygon':
+          case 'MultiPolygon':
+            return new styleCtor.Style({ stroke: new styleCtor.Stroke({ color: highlightColor, width: 4 }), fill: new styleCtor.Fill({ color: grayFillColor }) })
+          default:
+            return new styleCtor.Style({ image: new styleCtor.Circle({ radius: 12, stroke: new styleCtor.Stroke({ color: highlightColor, width: 4 }), fill: new styleCtor.Fill({ color: grayFillColor }) }), stroke: new styleCtor.Stroke({ color: highlightColor, width: 4 }), fill: new styleCtor.Fill({ color: grayFillColor }) })
         }
       } else {
         switch (type) {
@@ -314,18 +335,19 @@ export const useFeatureQueryStore = defineStore('featureQuery', () => {
         }
       }
     }
-    mapStore.selectlayer.setStyle(createStyle())
-    mapStore.selectlayer.changed()
+    const layer = ensureQueryLayer()
+    layer.setStyle(createStyle())
+    layer.changed()
   }
 
   const removeHighlightFeature = () => {
-    if (!mapStore.selectlayer) return
+    if (!queryHighlightLayer.value) return
     const highlightColor = getComputedStyle(document.documentElement).getPropertyValue('--map-highlight-color').trim() || (document.documentElement.getAttribute('data-theme') === 'dark' ? '#ffffff' : '#000000')
     const grayFillColor = getComputedStyle(document.documentElement).getPropertyValue('--map-select-fill').trim() || (document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(33, 37, 41, 0.15)')
-    const restore = (feature: any) => {
+    const styleCtor = (window as any).ol.style
+    const baseStyle = (feature: any) => {
       const geom = feature.getGeometry(); if (!geom) return null
       const type = geom.getType()
-      const styleCtor = window.ol.style
       switch (type) {
         case 'Point':
         case 'MultiPoint':
@@ -340,13 +362,12 @@ export const useFeatureQueryStore = defineStore('featureQuery', () => {
           return new styleCtor.Style({ image: new styleCtor.Circle({ radius: 8, stroke: new styleCtor.Stroke({ color: highlightColor, width: 3 }), fill: new styleCtor.Fill({ color: grayFillColor }) }), stroke: new styleCtor.Stroke({ color: highlightColor, width: 3 }), fill: new styleCtor.Fill({ color: grayFillColor }) })
       }
     }
-    mapStore.selectlayer.setStyle(restore)
-    mapStore.selectlayer.changed()
+    queryHighlightLayer.value.setStyle(baseStyle)
+    queryHighlightLayer.value.changed()
   }
 
   const removeFeaturesByTagOrMatch = (tag: string, candidates: any[] = []) => {
-    if (!mapStore.selectlayer || !mapStore.selectlayer.getSource) return
-    const source = mapStore.selectlayer.getSource()
+    const source = queryHighlightLayer.value ? queryHighlightLayer.value.getSource() : null
     if (!source) return
     const featuresOnlayer = source.getFeatures?.() || []
     featuresOnlayer.forEach((f: any) => {
@@ -360,19 +381,13 @@ export const useFeatureQueryStore = defineStore('featureQuery', () => {
 
   const highlightQueryResults = () => {
     if (queryResults.value.length === 0) return
-    try {
-      removeFeaturesByTagOrMatch('query')
-      const selectSource = mapStore.selectlayer?.getSource()
-      if (selectSource) {
-        queryResults.value.forEach((r: any) => {
-          try { r.set('sourceTag', 'query') } catch (_) {}
-          selectSource.addFeature(r)
-        })
-      }
-      analysisStore.setAnalysisStatus(`已高亮显示 ${queryResults.value.length} 个查询结果`)
-    } catch (_) {
-      analysisStore.setAnalysisStatus('高亮显示失败')
-    }
+    removeFeaturesByTagOrMatch('query')
+    const source = getQuerySource()
+    queryResults.value.forEach((r: any) => {
+      try { r.set('sourceTag', 'query') } catch (_) {}
+      source.addFeature(r)
+    })
+    analysisStore.setAnalysisStatus(`已高亮显示 ${queryResults.value.length} 个查询结果`)
   }
 
   const handleSelectFeature = (index: number) => {
@@ -432,8 +447,8 @@ export const useFeatureQueryStore = defineStore('featureQuery', () => {
 
   // 清除：仅清查询侧选择、查询高亮与监听
   const clearQuerySelection = () => {
-    // 清除地图上的查询高亮
     removeFeaturesByTagOrMatch('query', queryResults.value)
+    removeQueryLayer()
     
     // 清除选择存储中的查询要素（如果有的话）
     const selectionStore = useSelectionStore()
