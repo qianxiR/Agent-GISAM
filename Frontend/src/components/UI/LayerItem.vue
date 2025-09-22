@@ -87,12 +87,12 @@ const handleRightClick = (event: MouseEvent) => {
   background: var(--btn-secondary-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 6px 10px;
   cursor: pointer;
   margin-bottom: 2px;
   transition: none !important;
   animation: none !important;
-  min-height: 48px;
+  min-height: 32px;
 }
 
 .layer-item:hover {
@@ -154,9 +154,9 @@ const handleRightClick = (event: MouseEvent) => {
 
 .control-btn {
   font-size: 12px;
-  padding: 6px 8px;
-  min-width: 32px;
-  min-height: 32px;
+  padding: 4px 6px;
+  min-width: 28px;
+  min-height: 28px;
   border: none;
   border-radius: 6px;
   cursor: pointer;

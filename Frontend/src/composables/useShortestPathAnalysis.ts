@@ -233,18 +233,15 @@ export function useShortestPathAnalysis() {
     const defaultName = (() => {
       const units = state.analysisOptions.units || 'kilometers'
       const resolution = state.analysisOptions.resolution || 1000
-      const startLayerName = state.startLayerName || '起始点'
-      const endLayerName = state.endLayerName || '目标点'
-      const obstacleLayerName = state.obstacleLayerName || '无障碍'
-      return `最短路径分析_${startLayerName}_${endLayerName}_${obstacleLayerName}_${units}_${resolution}`
+      return `最短路径分析结果_units-${units}_res-${resolution}`
     })()
     const result = await saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'path')
     
-    // 保存成功后自动清空临时图层
+    // 保存成功后清除双重存储
     if (result) {
-      removeAnalysislayers()
-      shortestPathStore.clearAll()
-      analysisStore.setAnalysisStatus('最短路径分析结果已保存并清空临时图层')
+      lastFeatureCollection.value = null
+      shortestPathStore.setLastFeatureCollection(null)
+      console.log('[ShortestPathAnalysis] 保存图层成功，已清除composable变量和Store状态')
     }
     
     return result
@@ -264,7 +261,7 @@ export function useShortestPathAnalysis() {
   }
   
   // 获取CSS变量值的工具函数
-  const getCSSVariable = (variableName: string, fallback: string = '#000000'): string => {
+  const getCSSVariable = (variableName: string, fallback: string = '#4a5568'): string => {
     try {
       const value = getComputedStyle(document.documentElement).getPropertyValue(variableName).trim()
       return value || fallback
@@ -277,11 +274,11 @@ export function useShortestPathAnalysis() {
   const getAnalysislayerStyle = () => {
     return new window.ol.style.Style({
       stroke: new window.ol.style.Stroke({
-        color: '#0078D4', // 蓝色
+        color: '#FFB6C1', // 淡粉红色
         width: 4
       }),
       fill: new window.ol.style.Fill({
-        color: '#0078D44D' // 蓝色，70%透明度
+        color: '#FFB6C14D' // 淡粉红色，70%透明度
       })
     })
   }
@@ -289,8 +286,11 @@ export function useShortestPathAnalysis() {
   
   // 生成图层名称
   const generatelayerNameFromAnalysis = (): string => {
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
-    return `分析及绘制图层_${timestamp}`
+    const startLayer = state.analysislayers.startPointlayer?.get('layerName') || '起点'
+    const endLayer = state.analysislayers.endPointlayer?.get('layerName') || '终点'
+    const obstacleLayer = state.analysislayers.obstacleslayer?.get('layerName') || ''
+    const obstacleParam = obstacleLayer ? `_障碍${obstacleLayer}` : ''
+    return `最短路径分析结果_${startLayer}_到_${endLayer}${obstacleParam}`
   }
   
   // ===== 清空图层方法 =====
@@ -298,6 +298,14 @@ export function useShortestPathAnalysis() {
   const clearResults = () => {
     removeAnalysislayers()
     clearAll()
+  }
+
+  // 清理状态（工具切换时调用）
+  const clearState = () => {
+    clearResultsStore()
+    shortestPathStore.setLastFeatureCollection(null)
+    lastFeatureCollection.value = null
+    removeAnalysislayers()
   }
   
   const removePathlayersOnly = (): void => {
@@ -426,7 +434,7 @@ export function useShortestPathAnalysis() {
     })
     
     // 设置分析点样式 - 使用主题色
-    const accentColor = getCSSVariable('--accent', '#000000')
+    const accentColor = getCSSVariable('--accent', '#4a5568')
     const pointStyle = new window.ol.style.Style({
       image: new window.ol.style.Circle({
         radius: 8,
@@ -570,7 +578,8 @@ export function useShortestPathAnalysis() {
         body: JSON.stringify(requestData)
       })
       
-      if (!response.ok) {
+      // 检查HTTP状态码：200时直接返回成功，非200时返回错误
+      if (response.status !== 200) {
         const errorData = await response.json()
         throw new Error(`API请求失败: ${errorData.error?.message || '未知错误'}`)
       }
@@ -768,11 +777,19 @@ export function useShortestPathAnalysis() {
     }
   }
   
-  const setObstaclelayer = (layerName: string | null): void => {
-    if (layerName) {
-      const obstacles = convertlayerToObstacles(layerName)
+  const setObstaclelayer = (layerId: string | null): void => {
+    if (layerId) {
+      // 通过layerId查找图层信息
+      const layerInfo = mapStore.vectorlayers.find(l => l.id === layerId)
+      if (!layerInfo || !layerInfo.layer) {
+        console.warn(`[ShortestPath] 未找到图层ID: ${layerId}`)
+        updateAnalysisOptions({ obstacles: null })
+        return
+      }
+      
+      const obstacles = convertlayerToObstacles(layerInfo.name)
       updateAnalysisOptions({ obstacles })
-      console.log(`[ShortestPath] 设置障碍物图层: ${layerName}`)
+      console.log(`[ShortestPath] 设置障碍物图层: ${layerInfo.name} (ID: ${layerId})`)
     } else {
       updateAnalysisOptions({ obstacles: null })
       console.log('[ShortestPath] 清除障碍物图层')
@@ -888,6 +905,7 @@ export function useShortestPathAnalysis() {
     executePathAnalysis,
     executeShortestPathAnalysisByAgent,
     clearResults,
+    clearState,
     exportGeoJSON,
     setObstaclelayer,
     updateAnalysisOptions: updateAnalysisOptionsLocal,

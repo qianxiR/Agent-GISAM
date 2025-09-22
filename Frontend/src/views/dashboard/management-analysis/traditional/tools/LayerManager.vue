@@ -460,7 +460,7 @@ const handleRenameClose = () => {
 }
 
 .group-header {
-  padding: 4px 8px;
+  padding: 6px 10px;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -470,7 +470,7 @@ const handleRenameClose = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 20px;
+  min-height: 32px;
   margin-bottom: 4px;
   box-shadow: var(--glow);
 }

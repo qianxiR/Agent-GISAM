@@ -40,7 +40,8 @@
 
 import type TileLayer from 'ol/layer/Tile'
 import type VectorLayer from 'ol/layer/Vector'
-import type { Options as TileLayerOptions } from 'ol/layer/BaseTile'
+import type { Options } from 'ol/layer/BaseTile'
+import type TileSource from 'ol/source/Tile'
 import OLTileLayer from 'ol/layer/Tile'
 import OLVectorLayer from 'ol/layer/Vector'
 import TileWMS from 'ol/source/TileWMS'
@@ -52,7 +53,7 @@ import Style from 'ol/style/Style'
 import Fill from 'ol/style/Fill'
 import Stroke from 'ol/style/Stroke'
 import CircleStyle from 'ol/style/Circle'
-import { get as getProjection } from 'ol/proj'
+ 
 
 export interface WMSParams {
   url: string
@@ -79,6 +80,8 @@ export interface WFSParams {
   outputFormat?: string
   geometryName?: string
 }
+
+type TileLayerOptions = Options<TileSource>
 
 const readThemeColor = (varName: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
@@ -109,13 +112,13 @@ export const createWMSLayer = (params: WMSParams): TileLayer => {
       TRANSPARENT: (params.transparent ?? true) ? 'true' : 'false',
       CRS: 'EPSG:4326'
     },
-    projection: getProjection('EPSG:4326')
+    projection: 'EPSG:4326'
   })
   return new OLTileLayer({ source, ...params.tileLayerOptions })
 }
 
 export const createWMTSLayer = (params: WMTSParams): TileLayer => {
-  const projection = getProjection('EPSG:4326')
+  const projection = 'EPSG:4326'
   const matrixSet = params.matrixSet ?? 'EPSG:4326'
 
   const size = 256
