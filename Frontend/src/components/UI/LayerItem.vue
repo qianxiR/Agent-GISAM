@@ -2,6 +2,7 @@
   <div 
     class="layer-item"
     :class="{ 'layer-hidden': hidden }"
+    @contextmenu="handleRightClick"
   >
     <!-- 图层信息区域 -->
     <div class="layer-info">
@@ -13,6 +14,18 @@
     
     <!-- 图层控制区域 -->
     <div class="layer-controls">
+      <!-- 重命名按钮 -->
+      <button 
+        v-if="allowRename"
+        class="control-btn rename-btn"
+        @click="$emit('rename')"
+        title="重命名图层"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+        </svg>
+      </button>
+      
       <!-- 显示/隐藏按钮 -->
       <button 
         class="control-btn visibility-btn"
@@ -41,17 +54,29 @@ interface Props {
   layerName: string
   layerDesc?: string
   hidden?: boolean
+  allowRename?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   layerDesc: '',
-  hidden: false
+  hidden: false,
+  allowRename: true
 })
 
 // 定义事件发射器
-defineEmits<{
+const emit = defineEmits<{
   'toggle-visibility': []
+  'rename': []
 }>()
+
+// 处理右键菜单
+const handleRightClick = (event: MouseEvent) => {
+  event.preventDefault()
+  // 只有允许重命名时才触发重命名事件
+  if (props.allowRename) {
+    emit('rename')
+  }
+}
 </script>
 
 <style scoped>
@@ -183,6 +208,22 @@ defineEmits<{
 .visibility-btn.hidden:hover {
   background: var(--panel);
   color: var(--text);
+  transition: none !important;
+  animation: none !important;
+}
+
+.rename-btn {
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-color);
+  border: 1px solid var(--border);
+  transition: none !important;
+  animation: none !important;
+}
+
+.rename-btn:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
   transition: none !important;
   animation: none !important;
 }

@@ -6,11 +6,11 @@
       
       <!-- 三个独立的图层容器 -->
       <div class="layer-containers">
-        <!-- SuperMap 服务图层容器 -->
+        <!-- 服务图层容器 -->
         <div class="layer-container">
           <div class="group-header" @click="toggleGroupCollapse('supermap')">
             <div class="group-title">
-              SuperMap 服务图层
+              服务图层
               <span class="group-count">{{ getLayersBySource('supermap').length }}</span>
             </div>
           </div>
@@ -22,6 +22,7 @@
               :layer-name="item.displayName"
               :layer-desc="item.desc"
               :hidden="!item.visible"
+              :allow-rename="false"
               :class="{ 'active': selectedlayerKey === item.key }"
               @click="selectlayer(item.key)"
               @toggle-visibility="handleToggleVisibility(item)"
@@ -53,6 +54,7 @@
               :class="{ 'active': selectedlayerKey === item.key }"
               @click="selectlayer(item.key)"
               @toggle-visibility="handleToggleVisibility(item)"
+              @rename="handleRename(item)"
             >
               <template #controls>
                 <button 
@@ -93,6 +95,7 @@
               :class="{ 'active': selectedlayerKey === item.key }"
               @click="selectlayer(item.key)"
               @toggle-visibility="handleToggleVisibility(item)"
+              @rename="handleRename(item)"
             >
               <template #controls>
                 <button 
@@ -133,6 +136,7 @@
               :class="{ 'active': selectedlayerKey === item.key }"
               @click="selectlayer(item.key)"
               @toggle-visibility="handleToggleVisibility(item)"
+              @rename="handleRename(item)"
             >
               <template #controls>
                 <button 
@@ -162,11 +166,19 @@
       @cancel="handleCancelRemove"
       @close="handleCancelRemove"
     />
+    
+    <!-- 重命名对话框 -->
+    <LayerRenameModal
+      :visible="renameModal.visible"
+      :current-name="renameModal.currentName"
+      @confirm="handleRenameConfirm"
+      @close="handleRenameClose"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useMapStore } from '@/stores/mapStore'
 import { useAnalysisStore } from '@/stores/analysisStore'
 import { useLayerUIStore } from '@/stores/layerUIStore'
@@ -175,6 +187,7 @@ import { useLayerExport } from '@/composables/useLayerExport'
 import LayerItem from '@/components/UI/LayerItem.vue'
 import ConfirmDialog from '@/components/UI/ConfirmDialog.vue'
 import DownloadButton from '@/components/UI/DownloadButton.vue'
+import LayerRenameModal from '@/components/UI/LayerRenameModal.vue'
 
 interface MaplayerItem {
   key: string;
@@ -188,12 +201,19 @@ interface MaplayerItem {
 const mapStore = useMapStore()
 const analysisStore = useAnalysisStore()
 const layerUIStore = useLayerUIStore()
-const { togglelayerVisibility, removeLayer } = uselayermanager()
+const { togglelayerVisibility, removeLayer, renameLayer } = uselayermanager()
 const { exportLayersAsGeoJSON } = useLayerExport()
 
 // 使用Pinia管理的状态 - 使用computed确保响应式
 const selectedlayerKey = computed(() => layerUIStore.selectedLayerKey)
 const deleteDialog = computed(() => layerUIStore.deleteDialog)
+
+// 重命名模态框状态
+const renameModal = ref({
+  visible: false,
+  currentName: '',
+  layerId: ''
+})
 const expandedGroups = computed(() => layerUIStore.expandedGroups)
 
 // 选择图层
@@ -309,6 +329,41 @@ const handleExportGroup = async (source: string) => {
   }
   
   await exportLayersAsGeoJSON(layers, groupNames[source] || source)
+}
+
+// 处理图层重命名
+const handleRename = (item: MaplayerItem) => {
+  // 检查是否为服务图层，服务图层不允许重命名
+  if (item.source === 'supermap') {
+    console.warn('[LayerManager] 服务图层不允许重命名')
+    return
+  }
+  
+  renameModal.value = {
+    visible: true,
+    currentName: item.displayName,
+    layerId: item.key
+  }
+}
+
+// 处理重命名确认
+const handleRenameConfirm = (newName: string) => {
+  const success = renameLayer(renameModal.value.layerId, newName)
+  if (success) {
+    console.log(`[LayerManager] 图层重命名成功: ${renameModal.value.currentName} -> ${newName}`)
+  } else {
+    console.error(`[LayerManager] 图层重命名失败: ${renameModal.value.layerId}`)
+  }
+  handleRenameClose()
+}
+
+// 处理重命名关闭
+const handleRenameClose = () => {
+  renameModal.value = {
+    visible: false,
+    currentName: '',
+    layerId: ''
+  }
 }
 
  

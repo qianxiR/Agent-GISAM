@@ -25,3 +25,4 @@ Backend/agent/database/
 .venv_tmp/
 vscode/
 rag/
+Frontend/downloads

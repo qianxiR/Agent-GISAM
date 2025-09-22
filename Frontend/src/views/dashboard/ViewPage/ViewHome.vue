@@ -24,9 +24,6 @@
     <!-- 子路由视图 -->
     <router-view />
 
-    <!-- 全局窗口：个人中心 / Agent 管理 -->
-    <UserProfile v-if="globalModal.visible && globalModal.type === 'profile'" />
-    <AIManagement v-if="globalModal.visible && globalModal.type === 'agent'" />
   </div>
 </template>
 
@@ -38,8 +35,6 @@ import { useGlobalModalStore } from '@/stores/modalStore'
 import { usePageStateStore } from '@/stores/pageStateStore'
 import { safeAddEventListener, createWindowEventHandler } from '@/utils/eventUtils'
 import DashboardViewHeader from '@/views/dashboard/ViewPage/layout/DashboardViewHeader.vue'
-import UserProfile from '@/views/dashboard/management-analysis/profile/UserProfile.vue'
-import AIManagement from '@/views/dashboard/management-analysis/management/AIManagement.vue'
 import FeaturePopup from '@/components/Map/FeaturePopup.vue'
 import CoordinateDisplay from '@/components/Map/CoordinateDisplay.vue'
 import ScaleBar from '@/components/Map/ScaleBar.vue'

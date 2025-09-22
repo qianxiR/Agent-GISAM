@@ -49,59 +49,6 @@
             </IconButton>
           </div>
           
-          <!-- 用户管理下拉菜单 -->
-          <div class="user-dropdown">
-            <IconButton 
-              @click="toggleUserMenu" 
-              :title="userInfo.username"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            </IconButton>
-            
-            <!-- 下拉菜单 -->
-            <div v-if="showUserMenu" class="user-menu">
-              <div class="user-info">
-                <div class="user-details">
-                  <div class="username">{{ userInfo.username }}</div>
-                  <div class="user-email">{{ userInfo.email }}</div>
-                  <div v-if="userInfo.hasPhone" class="user-phone">{{ userInfo.phone }}</div>
-                </div>
-                <button class="copy-btn" @click="copyUserInfo" title="复制用户信息">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
-                </button>
-              </div>
-
-              <button @click="goToProfile" class="menu-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-                <span>个人中心</span>
-              </button>
-
-              <button @click="goToAIManagement" class="menu-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                </svg>
-                <span>Agent管理</span>
-              </button>
-
-              <button @click="handleLogout" class="menu-item logout-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16,17 21,12 16,7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                <span>退出登录</span>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
   </div>
@@ -114,7 +61,6 @@ import { useRouter } from 'vue-router'
 import ButtonGroup from '@/components/UI/ButtonGroup.vue'
 import IconButton from '@/components/UI/IconButton.vue'
 import { useThemeStore } from '@/stores/themeStore'
-import { useUserStore } from '@/stores/userStore'
 import { useModeStateStore } from '@/stores/modeStateStore'
 
 // 主题管理
@@ -122,80 +68,15 @@ const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
 const { toggleTheme, applySystemTheme, setupSystemThemeListener } = themeStore
 
-// 用户管理
+// 路由管理
 const router = useRouter()
-const userStore = useUserStore()
 
 // 模式状态管理
 const modeStateStore = useModeStateStore()
 
-// 用户信息计算属性
-const userInfo = computed(() => {
-  const info = userStore.userInfo
-  
-  if (!info) {
-    return {
-      username: '用户',
-      email: 'user@example.com',
-      phone: '',
-      hasPhone: false
-    }
-  }
-  
-  const result = {
-    username: info.username || '用户',
-    email: info.email || 'user@example.com',
-    phone: info.phone || '',
-    hasPhone: !!(info.phone && info.phone.trim())
-  }
-  
-  return result
-})
-
-// 用户菜单状态
-const showUserMenu = ref(false)
-
-const toggleUserMenu = () => {
-  showUserMenu.value = !showUserMenu.value
-}
-
-const copyUserInfo = async () => {
-  let userInfoText = `${userInfo.value.username}\n${userInfo.value.email}`
-  if (userInfo.value.hasPhone) {
-    userInfoText += `\n${userInfo.value.phone}`
-  }
-  
-  try {
-    await navigator.clipboard.writeText(userInfoText)
-    // 触发全局通知事件
-    window.dispatchEvent(new CustomEvent('showNotification', {
-      detail: {
-        title: '复制成功',
-        message: '用户信息已复制到剪贴板',
-        type: 'success',
-        duration: 3000
-      }
-    }))
-  } catch (err) {
-    // 触发错误通知事件
-    window.dispatchEvent(new CustomEvent('showNotification', {
-      detail: {
-        title: '复制失败',
-        message: '无法访问剪贴板，请手动复制',
-        type: 'error',
-        duration: 3000
-      }
-    }))
-  }
-}
-
+// 模态框管理
 import { useGlobalModalStore } from '@/stores/modalStore'
 const globalModal = useGlobalModalStore()
-
-const goToProfile = () => {
-  showUserMenu.value = false
-  globalModal.open('profile')
-}
 
 const goToView = () => {
   router.push('/dashboard/view/home').then(() => {
@@ -204,33 +85,6 @@ const goToView = () => {
   })
 }
 
-const goToAIManagement = () => {
-  showUserMenu.value = false
-  globalModal.open('agent')
-}
-
-const handleLogout = () => {
-  // 使用store管理登出
-  userStore.logout()
-  
-  // 跳转到登录页
-  router.push('/login')
-}
-
-// 点击外部关闭菜单
-const closeUserMenu = () => {
-  showUserMenu.value = false
-}
-
-// 监听点击外部事件
-onMounted(() => {
-  document.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement
-    if (!target.closest('.user-dropdown')) {
-      closeUserMenu()
-    }
-  })
-})
 
 // 模式管理 - 集成状态管理
 const activeMode = computed(() => {

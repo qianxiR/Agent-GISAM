@@ -450,7 +450,7 @@ export function useIntersectionAnalysis() {
       const m = mId ? mapStore.vectorlayers.find(l => l.id === mId) : null
       const tn = t ? t.name : '目标'
       const mn = m ? m.name : '掩膜'
-      return `相交分析结果_${tn}_AND_${mn}`
+      return `相交分析_${tn}_${mn}`
     })()
     return saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'intersect')
   }

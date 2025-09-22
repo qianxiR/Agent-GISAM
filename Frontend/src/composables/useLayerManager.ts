@@ -1072,6 +1072,26 @@ export function uselayermanager() {
     return false
   }
 
+  // 重命名图层
+  const renameLayer = (layerId: string, newName: string): boolean => {
+    const layerInfo = mapStore.vectorlayers.find(l => l.id === layerId)
+    if (!layerInfo) {
+      console.error(`[LayerManager] 未找到图层: ${layerId}`)
+      return false
+    }
+    
+    const oldName = layerInfo.name
+    layerInfo.name = newName
+    
+    // 更新图层对象的layerName属性
+    if (layerInfo.layer) {
+      layerInfo.layer.set('layerName', newName)
+    }
+    
+    console.log(`[LayerManager] 重命名图层: ${oldName} -> ${newName}`)
+    return true
+  }
+
   // 保留原有的被禁用的函数，以防其他地方有依赖
   const acceptDrawlayer = (_layerData: Maplayer): boolean => {
     
@@ -1624,6 +1644,7 @@ export function uselayermanager() {
     // 激活新功能
     togglelayerVisibility,
     removeLayer,
+    renameLayer,
     clearlayerSelection,
 
     // 绘制相关功能

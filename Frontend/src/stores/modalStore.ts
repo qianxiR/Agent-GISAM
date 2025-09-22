@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export type GlobalModalType = 'none' | 'profile' | 'agent'
+export type GlobalModalType = 'none'
 
 export const useGlobalModalStore = defineStore('globalModal', () => {
   const visible = ref<boolean>(false)

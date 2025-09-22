@@ -18,7 +18,7 @@
                 <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
               </svg>
             </button>
-            <span class="group-title">SuperMap 服务图层</span>
+            <span class="group-title">服务图层</span>
             <span class="group-count">{{ getLayersBySource('supermap').length }}</span>
           </div>
           
@@ -29,6 +29,7 @@
               :layer-name="layer.displayName"
               :layer-desc="layer.desc"
               :hidden="!layer.visible"
+              :allow-rename="false"
               @toggle-visibility="handleToggleVisibility(layer)"
             />
           </div>
@@ -187,7 +188,7 @@
 import { computed } from 'vue'
 import { useMapStore } from '@/stores/mapStore'
 import { useLayerUIStore } from '@/stores/layerUIStore'
-import { uselayermanager } from '@/composables/uselayermanager'
+import { uselayermanager } from '@/composables/useLayerManager'
 import { useLayerExport } from '@/composables/useLayerExport'
 import ConfirmDialog from '@/components/UI/ConfirmDialog.vue'
 import LayerItem from '@/components/UI/LayerItem.vue'

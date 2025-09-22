@@ -116,7 +116,7 @@
         
         <SecondaryButton 
           v-if="queryResults.length > 0"
-          text="另存为图层"
+          text="保存为图层"
           @click="showLayerNameModal"
         />
         <SecondaryButton 

@@ -1,9 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Login from '@/views/auth/Login.vue'
-import Register from '@/views/auth/Register.vue'
 import Dashboard from '@/views/Dashboard.vue'
-import UserProfile from '@/views/dashboard/management-analysis/profile/UserProfile.vue'
-import AIManagement from '@/views/dashboard/management-analysis/management/AIManagement.vue'
 
 /**
  * Vue Router 配置
@@ -17,53 +13,12 @@ const router = createRouter({
       path: '/',
       redirect: '/dashboard'
     },
-    // 登录页面 - 不需要认证
-    {
-      path: '/login',
-      name: 'login',
-      component: Login,
-      meta: { 
-        requiresAuth: false,  // 不需要登录即可访问
-        title: '系统登录'
-      }
-    },
-    // 注册页面 - 不需要认证
-    {
-      path: '/register',
-      name: 'register',
-      component: Register,
-      meta: { 
-        requiresAuth: false,  // 不需要登录即可访问
-        title: '用户注册'
-      }
-    },
-    // 个人中心页面 - 需要认证
-    {
-      path: '/profile',
-      name: 'profile',
-      component: UserProfile,
-      meta: { 
-        requiresAuth: true,   // 需要登录才能访问
-        title: '个人中心'
-      }
-    },
-    // Agent管理页面 - 需要认证
-    {
-      path: '/Agent-management',
-      name: 'Agent-management',
-      component: AIManagement,
-      meta: { 
-        requiresAuth: true,   // 需要登录才能访问
-        title: 'Agent管理'
-      }
-    },
-    // 仪表板页面 - 需要认证，包含模式子路由
+    // 仪表板页面，包含模式子路由
     {
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
       meta: { 
-        requiresAuth: true,   // 需要登录才能访问
         title: '地图系统'
       },
       children: [
@@ -79,7 +34,6 @@ const router = createRouter({
           name: 'view-home',
           component: () => import('@/views/dashboard/ViewPage/ViewHome.vue'),
           meta: { 
-            requiresAuth: true,
             title: '地图视图'
           },
           children: [
@@ -89,7 +43,6 @@ const router = createRouter({
               name: 'view-layer-manage',
               component: () => import('@/views/dashboard/ViewPage/ViewLayerManager.vue'),
               meta: {
-                requiresAuth: true,
                 title: '图层管理'
               }
             }
@@ -107,8 +60,7 @@ const router = createRouter({
           name: 'management-analysis',
           component: () => import('@/views/dashboard/management-analysis/ManagementAnalysis.vue'),
           meta: {
-            title: '管理分析',
-            requiresAuth: true
+            title: '管理分析'
           },
           children: [
             // 管理分析默认子路由 - 直接重定向到图层管理
@@ -124,8 +76,7 @@ const router = createRouter({
               component: () => import('@/views/dashboard/management-analysis/LLM/LLMMode.vue'),
               meta: {
                 title: 'AI助手',
-                mode: 'llm',
-                requiresAuth: true
+                mode: 'llm'
               },
               children: [
                 // LLM模式默认子路由
@@ -140,8 +91,7 @@ const router = createRouter({
                   name: 'llm-chat',
                   component: () => import('@/views/dashboard/management-analysis/LLM/ChatAssistant.vue'),
                   meta: {
-                    title: 'AI聊天',
-                    requiresAuth: true
+                    title: 'AI聊天'
                   }
                 },
                 // 历史聊天记录
@@ -151,8 +101,7 @@ const router = createRouter({
                   component: () => import('@/views/dashboard/management-analysis/LLM/ChatHistory.vue'),
                   meta: {
                     title: '历史聊天记录',
-                    mode: 'llm',
-                    requiresAuth: true
+                    mode: 'llm'
                   }
                 }
               ]
@@ -164,8 +113,7 @@ const router = createRouter({
               component: () => import('@/views/dashboard/management-analysis/traditional/TraditionalMode.vue'),
               meta: {
                 title: '传统模式',
-                mode: 'traditional',
-                requiresAuth: true
+                mode: 'traditional'
               },
               children: [
                 // 传统模式默认子路由 - 直接重定向到图层管理
@@ -181,8 +129,7 @@ const router = createRouter({
                   component: () => import('@/views/dashboard/management-analysis/traditional/tools/LayerManager.vue'),
                   meta: {
                     title: '图层管理',
-                    tool: 'layer',
-                    requiresAuth: true
+                    tool: 'layer'
                   }
                 },
                 // 按属性选择要素
@@ -192,8 +139,7 @@ const router = createRouter({
                   component: () => import('@/views/dashboard/management-analysis/traditional/tools/FeatureQueryPanel.vue'),
                   meta: {
                     title: '按属性选择要素',
-                    tool: 'query',
-                    requiresAuth: true
+                    tool: 'query'
                   }
                 },
                 // 按区域选择要素
@@ -203,8 +149,7 @@ const router = createRouter({
                   component: () => import('@/views/dashboard/management-analysis/traditional/tools/AreaSelectionTools.vue'),
                   meta: {
                     title: '按区域选择要素',
-                    tool: 'bianji',
-                    requiresAuth: true
+                    tool: 'bianji'
                   }
                 },
                 // 缓冲区分析
@@ -214,8 +159,7 @@ const router = createRouter({
                   component: () => import('@/views/dashboard/management-analysis/traditional/tools/BufferAnalysisPanel.vue'),
                   meta: {
                     title: '缓冲区分析',
-                    tool: 'buffer',
-                    requiresAuth: true
+                    tool: 'buffer'
                   }
                 },
                 // 最短路径分析
@@ -225,8 +169,7 @@ const router = createRouter({
                   component: () => import('@/views/dashboard/management-analysis/traditional/tools/ShortestPathAnalysisPanel.vue'),
                   meta: {
                     title: '最短路径分析',
-                    tool: 'distance',
-                    requiresAuth: true
+                    tool: 'distance'
                   }
                 },
                 // 相交分析
@@ -236,8 +179,7 @@ const router = createRouter({
                   component: () => import('@/views/dashboard/management-analysis/traditional/tools/IntersectionAnalysisPanel.vue'),
                   meta: {
                     title: '相交分析',
-                    tool: 'intersect',
-                    requiresAuth: true
+                    tool: 'intersect'
                   }
                 },
                 // 擦除分析
@@ -247,8 +189,7 @@ const router = createRouter({
                   component: () => import('@/views/dashboard/management-analysis/traditional/tools/EraseAnalysisPanel.vue'),
                   meta: {
                     title: '擦除分析',
-                    tool: 'erase',
-                    requiresAuth: true
+                    tool: 'erase'
                   }
                 },
                 // 数据上传
@@ -258,8 +199,7 @@ const router = createRouter({
                   component: () => import('@/views/dashboard/management-analysis/traditional/tools/DataUploadPanel.vue'),
                   meta: {
                     title: '数据上传',
-                    tool: 'upload',
-                    requiresAuth: true
+                    tool: 'upload'
                   }
                 }
               ]
@@ -272,24 +212,11 @@ const router = createRouter({
 
 /**
  * 全局路由守卫
- * 在每次路由跳转前执行，用于权限控制和页面重定向
+ * 在每次路由跳转前执行
  */
 router.beforeEach((to, _from, next) => {
-  // 检查用户是否已登录（通过localStorage中的authToken判断）
-  const isLoggedIn = localStorage.getItem('authToken')
-  
-  // 如果需要认证但用户未登录，重定向到登录页
-  if (to.meta.requiresAuth && !isLoggedIn) {
-    next('/login')
-  } 
-  // 如果已登录用户访问登录页或注册页，重定向到仪表板
-  else if ((to.path === '/login' || to.path === '/register') && isLoggedIn) {
-    next('/dashboard')
-  } 
-  // 其他情况正常跳转
-  else {
-    next()
-  }
+  // 直接跳转，无需认证检查
+  next()
 })
 
 export default router

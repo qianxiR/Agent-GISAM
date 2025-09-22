@@ -444,7 +444,7 @@ export function useBufferAnalysis() {
         const lyr = id ? mapStore.vectorlayers.find(l => l.id === id) : null
         return lyr ? lyr.name : '未命名图层'
       })()
-      return `缓冲区分析结果_${srcLayer}_r${radius}_s${steps}`
+      return `缓冲区分析_${srcLayer}_${radius}_${steps}`
     })()
 
     const result = await saveFeaturesAslayer(

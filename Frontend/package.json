@@ -23,8 +23,10 @@
     "axios": "^1.11.0",
     "default-passive-events": "^4.0.0",
     "ol": "^10.6.1",
+    "osmbuildings": "^0.2.0-b",
     "pinia": "^3.0.3",
     "splitpanes": "^4.0.4",
+    "uuid": "^13.0.0",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"
   },

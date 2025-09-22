@@ -233,7 +233,10 @@ export function useShortestPathAnalysis() {
     const defaultName = (() => {
       const units = state.analysisOptions.units || 'kilometers'
       const resolution = state.analysisOptions.resolution || 1000
-      return `最短路径分析结果_units-${units}_res-${resolution}`
+      const startLayerName = state.startLayerName || '起始点'
+      const endLayerName = state.endLayerName || '目标点'
+      const obstacleLayerName = state.obstacleLayerName || '无障碍'
+      return `最短路径分析_${startLayerName}_${endLayerName}_${obstacleLayerName}_${units}_${resolution}`
     })()
     return saveFeaturesAslayer(olFeatures as any[], layerName || defaultName, 'path')
   }
