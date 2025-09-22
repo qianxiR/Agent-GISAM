@@ -58,10 +58,11 @@ export interface Coordinate {
 export interface Maplayer {
   id: string;
   name: string;
-  layer: any; // ol.layer.Base
+  layer: any; // ol.layer.Base (WMS图层)
+  wfsLayer?: any; // WFS图层（GeoServer专用）
   visible: boolean;
   type: 'vector' | 'raster' | 'tile';
-  source?: 'supermap' | 'local' | 'external';
+  source?: 'supermap' | 'local' | 'external' | 'geoserver';
   error?: string;
   isLazyLoaded?: boolean; // 是否为懒加载图层
   isLoaded?: boolean; // 是否已加载数据

@@ -2,7 +2,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useMapStore } from '@/stores/mapStore'
 import { useAnalysisStore } from '@/stores/analysisStore'
 import { usePopupStore } from '@/stores/popupStore'
-import { uselayermanager } from '@/composables/uselayermanager'
+import { uselayermanager } from '@/composables/useLayerManager'
 
 // 生命周期配置常量
 const LIFECYCLE_CONFIG = {

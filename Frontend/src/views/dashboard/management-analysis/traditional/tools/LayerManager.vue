@@ -11,13 +11,13 @@
           <div class="group-header" @click="toggleGroupCollapse('supermap')">
             <div class="group-title">
               服务图层
-              <span class="group-count">{{ getLayersBySource('supermap').length }}</span>
+              <span class="group-count">{{ getLayersBySource('geoserver').length }}</span>
             </div>
           </div>
           
           <div class="layer-items-container" v-show="expandedGroups.supermap">
             <LayerItem
-              v-for="item in getLayersBySource('supermap')" 
+              v-for="item in getLayersBySource('geoserver')" 
               :key="item.key"
               :layer-name="item.displayName"
               :layer-desc="item.desc"

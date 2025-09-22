@@ -153,18 +153,9 @@ export function uselayermanager() {
     
     if (newVisibility) {
       // 显示图层逻辑
-      if (layerInfo.isLazyLoaded && !layerInfo.isLoaded) {
-        // 懒加载图层且未加载数据，需要先加载数据
-        
-        const loadSuccess = await loadLazyLayer(layerInfo.name)
-        if (!loadSuccess) {
-          console.error(`懒加载图层失败: ${layerInfo.name}`)
-          return
-        }
-        
-      } else {
-        // 非懒加载图层或已加载的懒加载图层，直接显示
-        layerInfo.layer.setVisible(true)
+      layerInfo.layer.setVisible(true)
+      if (layerInfo.wfsLayer && typeof layerInfo.wfsLayer.setVisible === 'function') {
+        layerInfo.wfsLayer.setVisible(true)
       }
       
       // 检查是否为建筑物图层，如果是则启用2.5D渲染
@@ -199,17 +190,9 @@ export function uselayermanager() {
       const featureQuery = useFeatureQueryStore()
       featureQuery.clearQuerySelection()
       
-      if (layerInfo.isLazyLoaded && layerInfo.isLoaded) {
-        // 懒加载图层且已加载数据，需要完全卸载数据
-        
-        const unloadSuccess = await unloadLazyLayer(layerInfo.name)
-        if (!unloadSuccess) {
-          console.error(`卸载懒加载图层失败: ${layerInfo.name}`)
-        } else {
-        }
-      } else {
-        // 非懒加载图层，只设置可见性
-        layerInfo.layer.setVisible(false)
+      layerInfo.layer.setVisible(false)
+      if (layerInfo.wfsLayer && typeof layerInfo.wfsLayer.setVisible === 'function') {
+        layerInfo.wfsLayer.setVisible(false)
       }
     }
     

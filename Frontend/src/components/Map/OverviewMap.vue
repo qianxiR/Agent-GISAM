@@ -82,21 +82,9 @@ const initOverviewMap = async () => {
       overviewMapElement.value.style.display = 'block'
     }
     
-    // 创建鹰眼的地图实例 - 使用与主地图相同的方法
-    const currentBaseMapUrl = getCurrentBaseMapUrl(themeStore.theme)
-    
-    const sourceConfig: any = {
-      url: currentBaseMapUrl,
-      serverType: 'iserver'
-    }
-    
-    if (themeStore.theme === 'light') {
-      sourceConfig.crossOrigin = 'anonymous'
-      sourceConfig.tileLoadFunction = undefined
-    }
-    
+    // 创建鹰眼的地图实例 - 使用OpenStreetMap底图
     const overviewlayer = new ol.layer.Tile({
-      source: new ol.source.TileSuperMapRest(sourceConfig),
+      source: new ol.source.OSM(),
       visible: true,
       opacity: 0.8 // 降低透明度，让视口框更明显
     })
@@ -312,21 +300,8 @@ const rebuildOverviewlayer = () => {
   
   try {
     const ol = window.ol
-    // 使用与主地图相同的方法
-    const currentBaseMapUrl = getCurrentBaseMapUrl(themeStore.theme)
-    
-    // 创建新的底图源 - 使用与主地图相同的方法
-    const sourceConfig: any = {
-      url: currentBaseMapUrl,
-      serverType: 'iserver'
-    }
-    
-    if (themeStore.theme === 'light') {
-      sourceConfig.crossOrigin = 'anonymous'
-      sourceConfig.tileLoadFunction = undefined
-    }
-    
-    const newSource = new ol.source.TileSuperMapRest(sourceConfig)
+    // 创建新的底图源 - 使用OpenStreetMap
+    const newSource = new ol.source.OSM()
     
     // 创建新图层
     const newlayer = new ol.layer.Tile({

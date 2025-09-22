@@ -25,6 +25,6 @@
       "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
     }
   ],
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/types/**/*.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/types/**/*.d.ts", "../isever/src/compotens/GeoServerMap.vue"],
   "exclude": ["node_modules", "dist", "src/components/UI/EarthIcon.vue"]
 }

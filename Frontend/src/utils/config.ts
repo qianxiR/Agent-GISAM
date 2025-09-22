@@ -1,9 +1,9 @@
 import type { APIConfig, Wuhanlayer } from '@/types/map'
 
 /**
- * SuperMap API 配置管理器
+ * GeoServer API 配置管理器
  * 
- * 功能：集中管理SuperMap iServer的所有服务配置
+ * 功能：集中管理GeoServer的所有服务配置
  * 包括：服务器地址、服务路径、图层定义、底图配置等
  * 
  * @returns {APIConfig} 完整的API配置对象
@@ -11,173 +11,100 @@ import type { APIConfig, Wuhanlayer } from '@/types/map'
 export const createAPIConfig = (): APIConfig => {
   // ===== 基础服务配置 =====
   
-  /** SuperMap iServer 服务器基础地址 */
-  const baseUrl = import.meta.env.VITE_SUPERMAP_BASE_URL 
+  /** GeoServer 服务器基础地址 */
+  const baseUrl = import.meta.env.VITE_GEOSERVER_BASE_URL || ''
   
-  /** 地图服务REST API路径 - 用于底图和地图服务 */
-  const mapService = import.meta.env.VITE_SUPERMAP_MAP_SERVICE 
+  /** WMS服务路径 - 用于瓦片地图服务 */
+  const wmsService = import.meta.env.VITE_GEOSERVER_WMS_SERVICE || 'geoserver/wms'
   
-  /** 数据服务REST API路径 - 用于矢量要素数据获取 */
-  const dataService = import.meta.env.VITE_SUPERMAP_DATA_SERVICE
+  /** WFS服务路径 - 用于矢量要素数据获取 */
+  const wfsService = import.meta.env.VITE_GEOSERVER_WFS_SERVICE || 'geoserver/wfs'
   
-  /** 数据源工作空间名称 */
-  const workspace = import.meta.env.VITE_SUPERMAP_WORKSPACE 
-  
-  /** 地图服务中的地图名称 */
-  const mapName = import.meta.env.VITE_SUPERMAP_MAP_NAME
+  /** 工作空间名称 */
+  const workspace = import.meta.env.VITE_GEOSERVER_WORKSPACE || 'czh'
   
   // ===== 地图显示配置 =====
   
   /** 地图边界和显示参数配置 */
   const mapBounds = {
-    /** 武汉地区边界范围 [minLon, minLat, maxLon, maxLat] */
-    extent: import.meta.env.VITE_SUPERMAP_MAP_EXTENT.split(',').map(Number),
+    /** 成都地区边界范围 [minLon, minLat, maxLon, maxLat] */
+    extent: [103.9, 30.4, 104.5, 31.0] as [number, number, number, number],
     /** 地图中心点坐标 [lon, lat] */
-    center: import.meta.env.VITE_SUPERMAP_MAP_CENTER.split(',').map(Number),
+    center: [104.06, 30.67] as [number, number],
     /** 初始缩放级别 */
-    zoom: Number(import.meta.env.VITE_SUPERMAP_MAP_ZOOM)
+    zoom: 8
   }
   
   return {
     baseUrl: baseUrl.replace(/\/$/, ''), // 移除末尾斜杠
-    mapService,
-    dataService,
-    datasetName: import.meta.env.VITE_SUPERMAP_DATASET_NAME,
+    mapService: wmsService,
+    dataService: wfsService,
+    datasetName: workspace,
     
     // ===== 底图服务配置 =====
     // 调用者: useMap.ts -> updateBaseMap() -> getCurrentBaseMapUrl()
-    // 服务器地址: 从环境变量获取
+    // 服务器地址: GeoServer WMS服务
     // 作用: 提供浅色和深色主题的底图瓦片服务，根据主题自动切换
     baseMaps: {
-      light: import.meta.env.VITE_SUPERMAP_BASEMAP_LIGHT,
-      dark: import.meta.env.VITE_SUPERMAP_BASEMAP_DARK
+      light: `${baseUrl}/${wmsService}`,
+      dark: `${baseUrl}/${wmsService}`
     },
     
     // ===== 备用底图服务配置 =====
     // 调用者: useMap.ts -> updateBaseMap() -> getCurrentBaseMapUrl()
-    // 服务器地址: 从环境变量获取
+    // 服务器地址: GeoServer WMS服务
     // 作用: 当主底图服务不可用时，提供备用的底图瓦片服务
     fallbackBaseMaps: {
-      light: import.meta.env.VITE_SUPERMAP_FALLBACK_BASEMAP_LIGHT,
-      dark: import.meta.env.VITE_SUPERMAP_FALLBACK_BASEMAP_DARK
+      light: `${baseUrl}/${wmsService}`,
+      dark: `${baseUrl}/${wmsService}`
     },
     
     // ===== 矢量图层配置 =====
     // 调用者: useMap.ts -> loadVectorlayers() -> loadVectorlayer()
-    // 服务器地址: ${baseUrl}/${dataService}/datasources/${workspace}/datasets/{数据集名}
-    // 作用: 定义所有矢量图层，包括县级边界、交通、水系、建筑物、基础设施等
+    // 服务器地址: GeoServer WMS/WFS服务
+    // 作用: 定义所有矢量图层，包括行政区边界、地貌类型、水文站点等
     wuhanlayers: [
-      // ===== 市县级行政区图层 =====
+      // ===== 地貌类型图层 =====
       // 调用者: useMap.ts -> loadVectorlayer()
-      // 服务器地址: ${baseUrl}/${dataService}/datasources/${workspace}/datasets/wuhan_map_县级
-      // 作用: 提供县级行政区边界数据，用于区域划分和空间分析
+      // 服务器地址: GeoServer WMS/WFS服务
+      // 作用: 提供地貌类型分类数据，用于地形分析
       { 
-        name: `武汉_县级@${workspace}@@武汉`, 
+        name: `${workspace}:成都市地貌类型_`, 
+        type: 'raster', 
+        visible: false, 
+        group: '地形数据',
+        datasetName: '成都市地貌类型_',
+        dataService: `${baseUrl}/${wmsService}`,
+        lazyLoad: true // 懒加载，点击显示时才加载
+      },
+      
+      // ===== 区县图层 =====
+      // 调用者: useMap.ts -> loadVectorlayer()
+      // 服务器地址: GeoServer WMS/WFS服务
+      // 作用: 提供区县级行政区边界数据
+      { 
+        name: `${workspace}:成都区`, 
         type: 'polygon', 
         visible: true, 
-        group: '县级行政区',
-        datasetName: 'wuhan_map_县级',
-        dataService: `${mapService}/maps/${mapName}`,
-        lazyLoad: false // 默认显示，不懒加载
+        group: '行政区划',
+        datasetName: '成都区划',
+        dataService: `${baseUrl}/${wmsService}`,
+        lazyLoad: true // 懒加载，点击显示时才加载
       },
-    
-      // ===== 交通设施图层组 =====
+      
+      // ===== 水文站点图层 =====
       // 调用者: useMap.ts -> loadVectorlayer()
-      // 服务器地址: ${baseUrl}/${dataService}/datasources/${workspace}/datasets/公路
-      // 作用: 提供公路网络数据，用于交通分析和路径规划
+      // 服务器地址: GeoServer WMS/WFS服务
+      // 作用: 提供水文监测站点数据，用于水资源分析
       { 
-        name: `公路@${workspace}@@武汉`, 
-        type: 'line', 
-        visible: false, 
-        group: '城市基本信息',
-        datasetName: '公路',
-        dataService: `${mapService}/maps/${mapName}`,
-        lazyLoad: true // 懒加载，点击显示时才加载
-      },
-      // 调用者: useMap.ts -> loadVectorlayer()
-      // 服务器地址: ${baseUrl}/${dataService}/datasources/${workspace}/datasets/铁路
-      // 作用: 提供铁路网络数据，用于交通分析和运输规划
-      { 
-        name: `铁路@${workspace}@@武汉`, 
-        type: 'line', 
-        visible: false, 
-        group: '城市基本信息',
-        datasetName: '铁路',
-        dataService: `${mapService}/maps/${mapName}`,
-        lazyLoad: true // 懒加载，点击显示时才加载
-      },
-    
-      // 城市基本信息图层组 - 水系信息
-      { 
-        name: `水系线@${workspace}@@武汉`, 
-        type: 'line', 
-        visible: false, 
-        group: '城市基本信息',
-        datasetName: '水系线',
-        dataService: `${mapService}/maps/${mapName}`,
-        lazyLoad: true // 懒加载，点击显示时才加载
-      },
-      { 
-        name: `水系面@${workspace}@@${mapName}`, 
-        type: 'polygon', 
-        visible: false, 
-        group: '城市基本信息',
-        datasetName: '水系面',
-        dataService: `${mapService}/maps/${mapName}`,
-        lazyLoad: true // 懒加载，点击显示时才加载
-      },
-      
-      // 城市基本信息图层组 - 建筑信息
-      { 
-        name: `建筑物面@${workspace}@@${mapName}`, 
-        type: 'polygon', 
-        visible: false, 
-        group: '城市基本信息',
-        datasetName: '建筑物面',
-        dataService: `${mapService}/maps/${mapName}`,
-        lazyLoad: true // 懒加载，点击显示时才加载
-      },
-      
-      // 基础设施图层组 - 居民地信息
-      { 
-        name: `居民地地名点@${workspace}@@${mapName}`, 
+        name: `${workspace}:水文站点`, 
         type: 'point', 
-        visible: false, 
+        visible: true, 
         group: '基础设施',
-        datasetName: '居民地地名点',
-        dataService: `${mapService}/maps/${mapName}`,
+        datasetName: '水文站点',
+        dataService: `${baseUrl}/${wmsService}`,
         lazyLoad: true // 懒加载，点击显示时才加载
-      },
-      
-      // 基础设施图层组 - 公共服务设施
-      { 
-        name: `学校@${workspace}@@${mapName}`, 
-        type: 'point', 
-        visible: false, 
-        group: '基础设施',
-        datasetName: '学校',
-        dataService: `${mapService}/maps/${mapName}`,
-        lazyLoad: true // 懒加载，点击显示时才加载
-      },
-      { 
-        name: `医院@${workspace}@@${mapName}`, 
-        type: 'point', 
-        visible: false, 
-        group: '基础设施',
-        datasetName: '医院',
-        dataService: `${mapService}/maps/${mapName}`,
-        lazyLoad: true // 懒加载，点击显示时才加载
-      },
-      
-      // DEM图层 - 已禁用加载，避免使用瓦片服务
-      // { 
-      //   name: `DEM_${workspace}@${workspace}@@${mapName}`, 
-      //   type: 'raster', 
-      //   visible: true, 
-      //   group: '地形数据',
-      //   datasetName: `DEM_${workspace}`,
-      //   dataService: `${mapService}/maps/${mapName}`
-      // }
+      }
     ],
     timeout: Number(import.meta.env.VITE_API_TIMEOUT),
     retryCount: Number(import.meta.env.VITE_API_RETRY_COUNT),

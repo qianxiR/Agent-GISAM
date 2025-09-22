@@ -19,12 +19,12 @@
               </svg>
             </button>
             <span class="group-title">服务图层</span>
-            <span class="group-count">{{ getLayersBySource('supermap').length }}</span>
+            <span class="group-count">{{ getLayersBySource('geoserver').length }}</span>
           </div>
           
           <div class="layer-items-container" v-show="expandedGroups.supermap">
             <LayerItem
-              v-for="layer in getLayersBySource('supermap')" 
+              v-for="layer in getLayersBySource('geoserver')" 
               :key="layer.key"
               :layer-name="layer.displayName"
               :layer-desc="layer.desc"

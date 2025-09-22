@@ -37,7 +37,7 @@ const STYLE_CONFIG = {
 /**
  * 地图样式管理 Composable
  * 
- * 功能：管理地图中所有图层的样式，包括本地图层和SuperMap服务图层
+ * 功能：管理地图中所有图层的样式，包括本地图层和 GeoServer 服务图层
  * 职责：样式创建、主题切换、底图更新等样式相关操作
  * 
  * @returns {Object} 样式管理相关的方法
@@ -58,26 +58,25 @@ export function useMapStyles() {
   }
 
   /**
-   * 创建SuperMap服务图层样式
-   * 用于从SuperMap服务器加载的矢量图层
+   * 创建 GeoServer 服务图层样式
+   * 用于从 GeoServer 加载的矢量图层
    * 
    * @param {any} layerConfig - 图层配置对象
    * @param {string} layerName - 图层名称
    * @returns {ol.style.Style} OpenLayers 样式对象
    */
-  const createSuperMapLayerStyle = (layerConfig: any, layerName: string): any => {
-    // 获取当前主题的CSS变量值
-    const css = getComputedStyle(document.documentElement);
-    const currentTheme = getCurrentTheme();
-    
-    // 获取图层特定的样式变量
-    const strokeVar = css.getPropertyValue(`--layer-stroke-${layerName}`).trim();
-    const fillVar = css.getPropertyValue(`--layer-fill-${layerName}`).trim();
-    const accentFallback = css.getPropertyValue('--accent').trim() || (currentTheme === 'dark' ? '#666666' : '#212529');
+  const createGeoServerLayerStyle = (layerConfig: any, layerName: string): any => {
+    const css = getComputedStyle(document.documentElement)
+    const currentTheme = getCurrentTheme()
+    const base = layerName ? (layerName.split(':').pop() || layerName) : layerName
+    const accent = css.getPropertyValue('--accent').trim() || (currentTheme === 'dark' ? '#666666' : '#212529')
+    const accentRgb = css.getPropertyValue('--accent-rgb').trim() || (currentTheme === 'dark' ? '102, 102, 102' : '33, 37, 41')
 
-    // 解析样式颜色，优先使用图层特定变量，回退到主题色
-    const resolvedStroke = strokeVar || accentFallback;
-    const resolvedFill = fillVar || (currentTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(33,37,41,0.1)');
+    const strokeVar = base ? css.getPropertyValue(`--layer-stroke-${base}`).trim() : ''
+    const fillVar = base ? css.getPropertyValue(`--layer-fill-${base}`).trim() : ''
+
+    const resolvedStroke = strokeVar || accent
+    const resolvedFill = fillVar || `rgba(${accentRgb}, 0.15)`
     
     /**
      * 根据图层类型和重要性获取样式参数
@@ -113,7 +112,7 @@ export function useMapStyles() {
       }
     };
     
-    const params = getStyleParams(layerConfig.type, layerName);
+    const params = getStyleParams(layerConfig.type, layerName)
     
     // 根据几何类型创建对应的OpenLayers样式
     switch (layerConfig.type) {
@@ -121,15 +120,9 @@ export function useMapStyles() {
         return new ol.style.Style({
           image: new ol.style.Circle({
             radius: params.radius,
-            stroke: new ol.style.Stroke({ 
-              color: resolvedStroke, 
-              width: params.strokeWidth 
-            }),
-            fill: new ol.style.Fill({ 
-              color: resolvedFill 
-            })
+            fill: new ol.style.Fill({ color: resolvedStroke })
           })
-        });
+        })
       case 'line':
         return new ol.style.Style({
           stroke: new ol.style.Stroke({ 
@@ -139,7 +132,7 @@ export function useMapStyles() {
             lineJoin: params.lineJoin
           }),
           fill: new ol.style.Fill({ color: 'rgba(0, 0, 0, 0)' })
-        });
+        })
       case 'polygon':
         return new ol.style.Style({
           stroke: new ol.style.Stroke({ 
@@ -149,7 +142,7 @@ export function useMapStyles() {
           fill: new ol.style.Fill({ 
             color: resolvedFill 
           })
-        });
+        })
       default:
         return new ol.style.Style({
           stroke: new ol.style.Stroke({ 
@@ -159,7 +152,7 @@ export function useMapStyles() {
           fill: new ol.style.Fill({ 
             color: resolvedFill 
           })
-        });
+        })
     }
   }
 
@@ -178,17 +171,16 @@ export function useMapStyles() {
     
     mapStore.vectorlayers.forEach(layerInfo => {
       if (layerInfo.layer) {
-        // 更新所有类型的图层，不仅仅是supermap图层
+        // 更新所有类型的图层
         const updatePromise = new Promise<void>(resolve => {
           // 使用单次requestAnimationFrame，避免多次调用
           requestAnimationFrame(() => {
             try {
-              if (layerInfo.source === 'supermap') {
-                // SuperMap服务图层
-                const layerConfig = createAPIConfig().wuhanlayers.find(config => config.name === layerInfo.id);
+              if (layerInfo.source === 'geoserver') {
+                const layerConfig = createAPIConfig().wuhanlayers.find(config => config.name === layerInfo.id)
                 if (layerConfig) {
-                  const newStyle = createSuperMapLayerStyle(layerConfig, layerInfo.name);
-                  layerInfo.layer.setStyle(newStyle);
+                  const newStyle = createGeoServerLayerStyle(layerConfig, layerInfo.name)
+                  layerInfo.layer.setStyle(newStyle)
                 }
               } else if (layerInfo.source === 'local') {
                 // 本地图层（绘制、分析、上传等）
@@ -252,19 +244,8 @@ export function useMapStyles() {
         // 使用预加载的源，避免重新加载
         newBaseMapSource = preloadedSources[theme]
       } else {
-        // 回退到动态创建
-        const currentBaseMapUrl = getCurrentBaseMapUrl(theme)
-        const sourceConfig: any = {
-          url: currentBaseMapUrl,
-          serverType: 'iserver'
-        }
-        
-        if (theme === 'light') {
-          sourceConfig.crossOrigin = 'anonymous'
-          sourceConfig.tileLoadFunction = undefined
-        }
-        
-        newBaseMapSource = new ol.source.TileSuperMapRest(sourceConfig)
+        // 回退到动态创建 - 使用OpenStreetMap作为底图
+        newBaseMapSource = new ol.source.OSM()
       }
       
       // 直接切换底图源，不使用隐藏/显示机制
@@ -321,26 +302,13 @@ export function useMapStyles() {
    */
   const preloadBaseMapData = async (): Promise<void> => {
     try {
-      const lightBaseMapUrl = getCurrentBaseMapUrl('light')
-      const darkBaseMapUrl = getCurrentBaseMapUrl('dark')
-      
-      // 预加载浅色主题底图
-      const lightSource = new ol.source.TileSuperMapRest({
-        url: lightBaseMapUrl,
-        serverType: 'iserver',
-        crossOrigin: 'anonymous'
-      })
-      
-      // 预加载深色主题底图
-      const darkSource = new ol.source.TileSuperMapRest({
-        url: darkBaseMapUrl,
-        serverType: 'iserver'
-      })
+      // 预加载OpenStreetMap底图源
+      const osmSource = new ol.source.OSM()
       
       // 将预加载的源存储到mapStore中，供主题切换时使用
       mapStore.setPreloadedBaseMapSources({
-        light: lightSource,
-        dark: darkSource
+        light: osmSource,
+        dark: osmSource
       })
       
     } catch (error) {
@@ -350,7 +318,7 @@ export function useMapStyles() {
 
   return {
     createLocalLayerStyle,
-    createLayerStyle: createSuperMapLayerStyle,
+    createLayerStyle: createGeoServerLayerStyle,
     updateLayerStyles,
     updateBaseMap,
     observeThemeChanges,

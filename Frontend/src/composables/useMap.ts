@@ -4,7 +4,7 @@ import { useThemeStore } from '@/stores/themeStore'
 import { useAnalysisStore } from '@/stores/analysisStore'
 import { useSelectionStore } from '@/stores/selectionStore'
 import { useShortestPathAnalysisStore } from '@/stores/shortestPathAnalysisStore'
-import { superMapClient } from '@/api/supermap'
+import { geoServerClient } from '@/api/geoserver'
 import { handleError, notificationManager } from '@/utils/notification'
 import { getCurrentBaseMapUrl } from '@/utils/config'
 import { useMapStyles } from './useMapStyles'
@@ -100,7 +100,7 @@ export function useMap() {
   const initMap = async (): Promise<void> => {
     try {
       if (!window.ol || !mapLifecycle.mapContainer.value) {
-        throw new Error('地图容器或SuperMap SDK未准备就绪')
+        throw new Error('地图容器或OpenLayers SDK未准备就绪')
       }
       
       loadingStore.startLoading('map-init', '正在初始化地图...')
@@ -110,9 +110,9 @@ export function useMap() {
       await clearAllStates()
       
       // ===== 1. 服务健康检查 =====
-      const healthCheck = await superMapClient.checkServiceHealth()
+      const healthCheck = await geoServerClient.checkServiceHealth()
       if (!healthCheck.success) {
-        throw new Error(`SuperMap服务不可用: ${healthCheck.error}`)
+        throw new Error(`GeoServer服务不可用: ${healthCheck.error}`)
       }
       
       // ===== 2. 预加载底图数据 =====
@@ -149,32 +149,8 @@ export function useMap() {
         map.removeInteraction(doubleClickInteraction)
       }
       
-      // ===== 4. 创建底图图层 =====
-      const currentBaseMapUrl = getCurrentBaseMapUrl(themeStore.theme)
-      
-      const sourceConfig: any = {
-        url: currentBaseMapUrl,
-        serverType: 'iserver'
-      }
-      
-      if (themeStore.theme === 'light') {
-        sourceConfig.crossOrigin = 'anonymous'
-        sourceConfig.tileLoadFunction = undefined
-      }
-      
-      const baseMapLayer = new ol.layer.Tile({
-        source: new ol.source.TileSuperMapRest(sourceConfig),
-        visible: true,
-        zIndex: MAP_CONFIG.LAYER_Z_INDEX.BASE
-      })
-      
-      map.addLayer(baseMapLayer)
-      
-      // 强制更新地图尺寸
-      setTimeout(() => {
-        map.updateSize()
-        baseMapLayer.changed()
-      }, MAP_CONFIG.UPDATE_SIZE_DELAY)
+      // ===== 4. 跳过底图创建（不加载底图） =====
+      // 不创建或添加任何底图图层
       
       // ===== 5. 加载矢量图层 =====
       loadingStore.updateLoading('map-init', '正在加载图层...')
@@ -202,7 +178,7 @@ export function useMap() {
       // ===== 7. 存储地图实例和图层引用 =====
       mapStore.setMap(map)
       mapStore.setlayers({
-        base: baseMapLayer,
+        base: null,
         hover: hoverLayer,
         select: selectLayer
       })
