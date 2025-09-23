@@ -47,8 +47,16 @@ export function useLayerExport() {
       let errorCount = 0
       const exportedFiles: string[] = []
 
+      // 生成基础时间戳，避免文件名冲突
+      const now = new Date()
+      const hh = String(now.getHours()).padStart(2, '0')
+      const mm = String(now.getMinutes()).padStart(2, '0')
+      const ss = String(now.getSeconds()).padStart(2, '0')
+      const baseTimestamp = `${hh}${mm}${ss}`
+
       // 遍历所有图层，为每个图层单独导出
-      for (const layerItem of layers) {
+      for (let i = 0; i < layers.length; i++) {
+        const layerItem = layers[i]
         try {
           // 从mapStore中查找对应的图层对象
           const mapLayer = mapStore.vectorlayers.find(vl => vl.id === layerItem.key)
@@ -91,12 +99,8 @@ export function useLayerExport() {
               }
             }
 
-            // 生成文件名并下载
-            const now = new Date()
-            const hh = String(now.getHours()).padStart(2, '0')
-            const mm = String(now.getMinutes()).padStart(2, '0')
-            const ss = String(now.getSeconds()).padStart(2, '0')
-            const fileName = `${layerItem.displayName}_导出_${hh}${mm}${ss}.geojson`
+            // 生成唯一文件名，避免冲突
+            const fileName = `${layerItem.displayName}_导出_${baseTimestamp}_${i + 1}.geojson`
 
             const blob = new Blob([JSON.stringify(layerGeoJSON, null, 2)], { 
               type: 'application/json' 
@@ -106,9 +110,13 @@ export function useLayerExport() {
             a.href = url
             a.download = fileName
             document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
+            
+            // 添加延迟，避免浏览器阻止多个同时下载
+            setTimeout(() => {
+              a.click()
+              document.body.removeChild(a)
+              URL.revokeObjectURL(url)
+            }, i * 100) // 每个文件延迟100ms
 
             exportedFiles.push(fileName)
             successCount++
@@ -188,9 +196,11 @@ export function useLayerExport() {
    */
   const exportSingleLayerAsGeoJSON = async (layerKey: string, customFileName?: string): Promise<any> => {
     try {
+      console.log(`[useLayerExport] 开始导出图层: ${layerKey}`)
       const mapLayer = mapStore.vectorlayers.find(vl => vl.id === layerKey)
       
       if (!mapLayer || !mapLayer.layer) {
+        console.error(`[useLayerExport] 图层未找到: ${layerKey}`)
         window.dispatchEvent(new CustomEvent('showNotification', {
           detail: {
             title: '导出失败',
@@ -227,24 +237,48 @@ export function useLayerExport() {
     const blob = new Blob([JSON.stringify(geoJSONData, null, 2)], { 
       type: 'application/json' 
     })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = fileName
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
-    // 显示成功通知
-    window.dispatchEvent(new CustomEvent('showNotification', {
-      detail: {
-        title: '导出成功',
-        message: `已导出图层 ${layerName}，共 ${geoJSONData.features.length} 个要素到文件 ${fileName}`,
-        type: 'success',
-        duration: 3000
-      }
-    }))
+    
+    // 执行下载
+    const downloadFile = () => {
+      console.log(`[useLayerExport] 执行下载: ${fileName}`)
+      
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      a.style.display = 'none'
+      document.body.appendChild(a)
+      
+      // 触发点击事件
+      const clickEvent = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: true
+      })
+      a.dispatchEvent(clickEvent)
+      
+      // 清理
+      setTimeout(() => {
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }, 100)
+    }
+    
+    // 添加延迟，避免浏览器阻止连续下载
+    setTimeout(downloadFile, 200)
+    
+    // 延迟显示成功通知，确保下载有机会执行
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('showNotification', {
+        detail: {
+          title: '导出成功',
+          message: `已导出图层 ${layerName}，共 ${geoJSONData.features.length} 个要素到文件 ${fileName}`,
+          type: 'success',
+          duration: 3000
+        }
+      }))
+      console.log(`[useLayerExport] 下载完成: ${fileName}`)
+    }, 1000)
 
       return {
         success: true,
@@ -355,24 +389,47 @@ export function useLayerExport() {
       const blob = new Blob([JSON.stringify(geoJSON, null, 2)], { 
         type: 'application/json' 
       })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = fullFileName
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-
-      // 显示成功通知
-      window.dispatchEvent(new CustomEvent('showNotification', {
-        detail: {
-          title: '导出成功',
-          message: `已导出 ${fileName}，共 ${flattenedFeatures.length} 个要素到文件 ${fullFileName}`,
-          type: 'success',
-          duration: 3000
-        }
-      }))
+      
+      // 执行下载
+      const downloadFile = () => {
+        console.log(`[useLayerExport] 执行下载: ${fullFileName}`)
+        
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = fullFileName
+        a.style.display = 'none'
+        document.body.appendChild(a)
+        
+        // 触发点击事件
+        const clickEvent = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        })
+        a.dispatchEvent(clickEvent)
+        
+        // 清理
+        setTimeout(() => {
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
+        }, 100)
+      }
+      
+      // 添加延迟，避免浏览器阻止连续下载
+      setTimeout(downloadFile, 200)
+      
+      // 延迟显示成功通知，确保下载有机会执行
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('showNotification', {
+          detail: {
+            title: '导出成功',
+            message: `已导出 ${fileName}，共 ${flattenedFeatures.length} 个要素到文件 ${fullFileName}`,
+            type: 'success',
+            duration: 3000
+          }
+        }))
+      }, 1000)
 
       return {
         success: true,

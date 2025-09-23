@@ -643,6 +643,15 @@ export function uselayermanager() {
             }
           })
           window.dispatchEvent(successEvent)
+
+          // 清理临时分析图层
+          if (sourceType === 'buffer') {
+            try {
+              const { useBufferAnalysis } = await import('@/composables/useBufferAnalysis')
+              const bufferAnalysis = useBufferAnalysis()
+              bufferAnalysis.clearState()
+            } catch (_) {}
+          }
         } else {
           const errorMessage = `保存图层"${finalName}"失败`
           console.error(`[Agent] ${errorMessage}`)
@@ -896,6 +905,9 @@ export function uselayermanager() {
           ? { success: true, message, layerName: layerName || '[默认命名]' }
           : { success: false, message: `保存失败：${layerName || '[默认命名]'}`, layerName: layerName || '[默认命名]' }
         window.dispatchEvent(new CustomEvent(eventName, { detail }))
+        if (ok) {
+          bufferAnalysis.clearState()
+        }
       } catch (error) {
         console.error('[Agent] 保存缓冲区分析结果失败:', error)
         window.dispatchEvent(new CustomEvent('agent:saveResult', {
@@ -939,6 +951,9 @@ export function uselayermanager() {
           ? { success: true, message, layerName: layerName || '[默认命名]' }
           : { success: false, message: `保存失败：${layerName || '[默认命名]'}`, layerName: layerName || '[默认命名]' }
         window.dispatchEvent(new CustomEvent('agent:saveResult', { detail }))
+        if (ok) {
+          intersectionAnalysis.clearState()
+        }
       } catch (error) {
         console.error('[Agent] 保存相交分析结果失败:', error)
         window.dispatchEvent(new CustomEvent('agent:saveResult', {
@@ -981,6 +996,9 @@ export function uselayermanager() {
           ? { success: true, message, layerName: layerName || '[默认命名]' }
           : { success: false, message: `保存失败：${layerName || '[默认命名]'}`, layerName: layerName || '[默认命名]' }
         window.dispatchEvent(new CustomEvent('agent:saveResult', { detail }))
+        if (ok) {
+          eraseAnalysis.clearState()
+        }
       } catch (error) {
         console.error('[Agent] 保存擦除分析结果失败:', error)
         window.dispatchEvent(new CustomEvent('agent:saveResult', {
@@ -1023,6 +1041,9 @@ export function uselayermanager() {
           ? { success: true, message, layerName: layerName || '[默认命名]' }
           : { success: false, message: `保存失败：${layerName || '[默认命名]'}`, layerName: layerName || '[默认命名]' }
         window.dispatchEvent(new CustomEvent('agent:saveResult', { detail }))
+        if (ok) {
+          shortestPathAnalysis.clearResults()
+        }
       } catch (error) {
         console.error('[Agent] 保存最短路径分析结果失败:', error)
         window.dispatchEvent(new CustomEvent('agent:saveResult', {

@@ -48,11 +48,6 @@
             </button>
             <span class="group-title">分析及绘制图层</span>
             <span class="group-count">{{ getLayersBySource('draw').length }}</span>
-            <DownloadButton
-              :title="`下载 ${getLayersBySource('draw').length} 个图层为JSON`"
-              :disabled="getLayersBySource('draw').length === 0"
-              @click="handleExportGroup('draw')"
-            />
           </div>
           
           <div class="layer-items-container" v-show="expandedGroups.draw">
@@ -65,6 +60,15 @@
               @toggle-visibility="handleToggleVisibility(layer)"
             >
               <template #controls>
+                <button 
+                  class="control-btn download-btn"
+                  @click="handleExportSingle(layer)"
+                  :title="`下载图层: ${layer.displayName}`"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,9H15V3H9V9H5L12,16L19,9M5,18V20H19V18H5Z"/>
+                  </svg>
+                </button>
                 <button 
                   class="control-btn delete-btn"
                   @click="handleRemove(layer)"
@@ -92,11 +96,6 @@
             </button>
             <span class="group-title">查询图层</span>
             <span class="group-count">{{ getLayersBySource('query').length }}</span>
-            <DownloadButton
-              :title="`下载 ${getLayersBySource('query').length} 个图层为JSON`"
-              :disabled="getLayersBySource('query').length === 0"
-              @click="handleExportGroup('query')"
-            />
           </div>
           
           <div class="layer-items-container" v-show="expandedGroups.query">
@@ -109,6 +108,15 @@
               @toggle-visibility="handleToggleVisibility(layer)"
             >
               <template #controls>
+                <button 
+                  class="control-btn download-btn"
+                  @click="handleExportSingle(layer)"
+                  :title="`下载图层: ${layer.displayName}`"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,9H15V3H9V9H5L12,16L19,9M5,18V20H19V18H5Z"/>
+                  </svg>
+                </button>
                 <button 
                   class="control-btn delete-btn"
                   @click="handleRemove(layer)"
@@ -136,11 +144,6 @@
             </button>
             <span class="group-title">上传图层</span>
             <span class="group-count">{{ getLayersBySource('upload').length }}</span>
-            <DownloadButton
-              :title="`下载 ${getLayersBySource('upload').length} 个图层为JSON`"
-              :disabled="getLayersBySource('upload').length === 0"
-              @click="handleExportGroup('upload')"
-            />
           </div>
           
           <div class="layer-items-container" v-show="expandedGroups.upload">
@@ -153,6 +156,15 @@
               @toggle-visibility="handleToggleVisibility(layer)"
             >
               <template #controls>
+                <button 
+                  class="control-btn download-btn"
+                  @click="handleExportSingle(layer)"
+                  :title="`下载图层: ${layer.displayName}`"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,9H15V3H9V9H5L12,16L19,9M5,18V20H19V18H5Z"/>
+                  </svg>
+                </button>
                 <button 
                   class="control-btn delete-btn"
                   @click="handleRemove(layer)"
@@ -185,7 +197,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useMapStore } from '@/stores/mapStore'
 import { useLayerUIStore } from '@/stores/layerUIStore'
 import { uselayermanager } from '@/composables/useLayerManager'
@@ -209,7 +221,7 @@ const props = withDefaults(defineProps<Props>(), {
 const mapStore = useMapStore()
 const layerUIStore = useLayerUIStore()
 const layerManager = uselayermanager()
-const { exportLayersAsGeoJSON } = useLayerExport()
+const { exportSingleLayerAsGeoJSON } = useLayerExport()
 
 // 使用Pinia管理的状态 - 使用computed确保响应式
 const expandedGroups = computed(() => layerUIStore.expandedGroups)
@@ -315,20 +327,33 @@ const handleCancelRemove = () => {
   layerUIStore.hideDeleteDialog()
 }
 
-// 处理图层组导出
-const handleExportGroup = async (source: string) => {
-  const layers = getLayersBySource(source)
-  if (layers.length === 0) {
+// 防重复点击的状态
+const exportingLayers = ref(new Set<string>())
+
+// 处理单个图层下载
+const handleExportSingle = async (layer: LayerItem) => {
+  // 防止重复点击
+  if (exportingLayers.value.has(layer.key)) {
+    console.warn(`[ViewLayerManager] 图层 ${layer.displayName} 正在导出中，请稍候`)
     return
   }
-  
-  const groupNames: Record<string, string> = {
-    draw: '分析及绘制图层', 
-    query: '查询图层',
-    upload: '上传图层'
+
+  try {
+    exportingLayers.value.add(layer.key)
+    console.log(`[ViewLayerManager] 开始导出图层: ${layer.displayName}`)
+    
+    await exportSingleLayerAsGeoJSON(layer.key, layer.displayName)
+    
+    console.log(`[ViewLayerManager] 图层导出完成: ${layer.displayName}`)
+  } catch (error) {
+    console.error(`[ViewLayerManager] 导出图层失败: ${layer.displayName}`, error)
+  } finally {
+    // 延迟移除状态，避免浏览器阻止连续下载
+    setTimeout(() => {
+      exportingLayers.value.delete(layer.key)
+      console.log(`[ViewLayerManager] 清理导出状态: ${layer.displayName}`)
+    }, 1500) // 增加延迟时间到1.5秒
   }
-  
-  await exportLayersAsGeoJSON(layers, groupNames[source] || source)
 }
 
 
@@ -586,6 +611,18 @@ const emit = defineEmits<{
 .export-btn:disabled:hover {
   background: transparent;
   color: var(--sub);
+}
+
+.download-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+}
+
+.download-btn:hover {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.1);
 }
 
 

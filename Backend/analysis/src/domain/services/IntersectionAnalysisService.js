@@ -45,22 +45,13 @@ class IntersectionAnalysisService {
       throw new Error('输入数据必须是FeatureCollection格式');
     }
 
-    // 使用统一的几何处理服务过滤和验证要素
-    const processedTargetData = this.geometryProcessor.filterAndValidateFeatures(targetData);
-    const processedMaskData = this.geometryProcessor.filterAndValidateFeatures(maskData);
+    // 直接使用原始要素，不进行过滤与验证
+    const targetFeatures = Array.isArray(targetData.features) ? targetData.features : [];
+    const maskFeatures = Array.isArray(maskData.features) ? maskData.features : [];
 
-    const targetFeatures = processedTargetData.features || [];
-    const maskFeatures = processedMaskData.features || [];
-
-    if (targetFeatures.length === 0 || maskFeatures.length === 0) {
-      throw new Error('目标图层或遮罩图层过滤后没有有效要素');
-    }
-
-    console.log('[IntersectionAnalysisService] 几何要素处理完成:', {
-      targetOriginal: targetData.features?.length || 0,
-      targetProcessed: targetFeatures.length,
-      maskOriginal: maskData.features?.length || 0,
-      maskProcessed: maskFeatures.length
+    console.log('[IntersectionAnalysisService] 使用原始几何要素进行计算:', {
+      targetCount: targetFeatures.length,
+      maskCount: maskFeatures.length
     });
 
     console.log('[IntersectionAnalysisService] 开始执行相交计算');
@@ -132,67 +123,8 @@ class IntersectionAnalysisService {
       ? JSON.parse(JSON.stringify(targetFeatures[0].properties)) 
       : {};
 
-    try {
-      // 第一步：合并所有遮罩要素为单个要素
-      const mergedMaskFeature = this._mergeMaskFeatures(maskFeatures);
-      
-      if (!mergedMaskFeature) {
-        console.warn('[IntersectionAnalysisService] 遮罩要素合并失败，回退到逐个处理模式');
-        return this._performIntersectionCalculationLegacy(targetFeatures, maskFeatures, options);
-      }
-
-      console.log('[IntersectionAnalysisService] 遮罩要素合并完成，开始处理目标要素');
-
-      // 第二步：对每个目标要素执行相交操作
-      for (let i = 0; i < targetFeatures.length; i += batchSize) {
-        const targetBatch = targetFeatures.slice(i, i + batchSize);
-        
-        for (const targetFeature of targetBatch) {
-          try {
-            // 执行单次相交操作
-            const intersection = executeTurfAnalysis(targetFeature, mergedMaskFeature, 'intersect');
-            
-            if (intersection && intersection.geometry) {
-              // 如果结果包含多个部分，尝试合并
-              const mergedResult = this._mergeResultGeometry(intersection);
-              
-              const resultItem = {
-                id: `intersection_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                name: `相交区域 ${results.length + 1}`,
-                geometry: mergedResult.geometry,
-                properties: {
-                  // 保留第一个目标要素的原始属性
-                  ...firstTargetProps,
-                  // 添加分析元数据
-                  analysisType: 'intersection',
-                  sourceLayer: 'target',
-                  maskLayer: 'mask',
-                  processedAt: new Date().toISOString()
-                },
-                sourceTargetLayerName: '目标图层',
-                sourceMaskLayerName: '遮罩图层',
-                createdAt: new Date().toISOString()
-              };
-              results.push(resultItem);
-            }
-          } catch (error) {
-            console.warn('[IntersectionAnalysisService] 相交计算失败:', error.message);
-          }
-        }
-        
-        // 强制垃圾回收
-        if (global.gc) {
-          global.gc();
-        }
-      }
-
-      console.log(`[IntersectionAnalysisService] 优化相交计算完成，结果数: ${results.length}`);
-      return results;
-
-    } catch (error) {
-      console.error('[IntersectionAnalysisService] 优化相交计算失败，回退到传统模式:', error);
-      return this._performIntersectionCalculationLegacy(targetFeatures, maskFeatures, options);
-    }
+    // 直接使用传统模式，不进行合并操作
+    return this._performIntersectionCalculationLegacy(targetFeatures, maskFeatures, options);
   }
 
   /**

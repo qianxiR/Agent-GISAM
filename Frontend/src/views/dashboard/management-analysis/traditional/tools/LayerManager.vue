@@ -37,11 +37,6 @@
               分析及绘制图层
               <span class="group-count">{{ getLayersBySource('draw').length }}</span>
             </div>
-            <DownloadButton
-              :title="`下载 ${getLayersBySource('draw').length} 个图层为JSON`"
-              :disabled="getLayersBySource('draw').length === 0"
-              @click="handleExportGroup('draw')"
-            />
           </div>
           
           <div class="layer-items-container" v-show="expandedGroups.draw">
@@ -57,6 +52,15 @@
               @rename="handleRename(item)"
             >
               <template #controls>
+                <button 
+                  class="control-btn download-btn"
+                  @click="handleExportSingle(item)"
+                  :title="`下载图层: ${item.displayName}`"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,9H15V3H9V9H5L12,16L19,9M5,18V20H19V18H5Z"/>
+                  </svg>
+                </button>
                 <button 
                   class="control-btn delete-btn"
                   @click="handleRemove(item)"
@@ -78,11 +82,6 @@
               查询图层
               <span class="group-count">{{ getLayersBySource('query').length }}</span>
             </div>
-            <DownloadButton
-              :title="`下载 ${getLayersBySource('query').length} 个图层为JSON`"
-              :disabled="getLayersBySource('query').length === 0"
-              @click="handleExportGroup('query')"
-            />
           </div>
           
           <div class="layer-items-container" v-show="expandedGroups.query">
@@ -98,6 +97,15 @@
               @rename="handleRename(item)"
             >
               <template #controls>
+                <button 
+                  class="control-btn download-btn"
+                  @click="handleExportSingle(item)"
+                  :title="`下载图层: ${item.displayName}`"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,9H15V3H9V9H5L12,16L19,9M5,18V20H19V18H5Z"/>
+                  </svg>
+                </button>
                 <button 
                   class="control-btn delete-btn"
                   @click="handleRemove(item)"
@@ -119,11 +127,6 @@
               上传图层
               <span class="group-count">{{ getLayersBySource('upload').length }}</span>
             </div>
-            <DownloadButton
-              :title="`下载 ${getLayersBySource('upload').length} 个图层为JSON`"
-              :disabled="getLayersBySource('upload').length === 0"
-              @click="handleExportGroup('upload')"
-            />
           </div>
           
           <div class="layer-items-container" v-show="expandedGroups.upload">
@@ -139,6 +142,15 @@
               @rename="handleRename(item)"
             >
               <template #controls>
+                <button 
+                  class="control-btn download-btn"
+                  @click="handleExportSingle(item)"
+                  :title="`下载图层: ${item.displayName}`"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,9H15V3H9V9H5L12,16L19,9M5,18V20H19V18H5Z"/>
+                  </svg>
+                </button>
                 <button 
                   class="control-btn delete-btn"
                   @click="handleRemove(item)"
@@ -202,7 +214,7 @@ const mapStore = useMapStore()
 const analysisStore = useAnalysisStore()
 const layerUIStore = useLayerUIStore()
 const { togglelayerVisibility, removeLayer, renameLayer } = uselayermanager()
-const { exportLayersAsGeoJSON } = useLayerExport()
+const { exportSingleLayerAsGeoJSON } = useLayerExport()
 
 // 使用Pinia管理的状态 - 使用computed确保响应式
 const selectedlayerKey = computed(() => layerUIStore.selectedLayerKey)
@@ -315,21 +327,6 @@ const handleCancelRemove = () => {
   layerUIStore.hideDeleteDialog()
 }
 
-// 处理图层组导出
-const handleExportGroup = async (source: string) => {
-  const layers = getLayersBySource(source)
-  if (layers.length === 0) {
-    return
-  }
-  
-  const groupNames: Record<string, string> = {
-    draw: '分析及绘制图层', 
-    query: '查询图层',
-    upload: '上传图层'
-  }
-  
-  await exportLayersAsGeoJSON(layers, groupNames[source] || source)
-}
 
 // 处理图层重命名
 const handleRename = (item: MaplayerItem) => {
@@ -363,6 +360,30 @@ const handleRenameClose = () => {
     visible: false,
     currentName: '',
     layerId: ''
+  }
+}
+
+// 防重复点击的状态
+const exportingLayers = ref(new Set<string>())
+
+// 处理单个图层下载
+const handleExportSingle = async (item: MaplayerItem) => {
+  // 防止重复点击
+  if (exportingLayers.value.has(item.key)) {
+    console.warn(`[LayerManager] 图层 ${item.displayName} 正在导出中，请稍候`)
+    return
+  }
+
+  try {
+    exportingLayers.value.add(item.key)
+    await exportSingleLayerAsGeoJSON(item.key, item.displayName)
+  } catch (error) {
+    console.error(`[LayerManager] 导出图层失败: ${item.displayName}`, error)
+  } finally {
+    // 延迟移除状态，防止快速重复点击
+    setTimeout(() => {
+      exportingLayers.value.delete(item.key)
+    }, 1000)
   }
 }
 
@@ -613,6 +634,18 @@ const handleRenameClose = () => {
 .delete-btn:hover {
   background: var(--btn-danger-hover-bg);
   color: var(--btn-danger-hover-color);
+}
+
+.download-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+}
+
+.download-btn:hover {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.1);
 }
 /* 滚动条样式 */
 .layer-list::-webkit-scrollbar,

@@ -45,22 +45,13 @@ class EraseAnalysisService {
       throw new Error('输入数据必须是FeatureCollection格式');
     }
 
-    // 使用统一的几何处理服务过滤和验证要素
-    const processedTargetData = this.geometryProcessor.filterAndValidateFeatures(targetData);
-    const processedEraseData = this.geometryProcessor.filterAndValidateFeatures(eraseData);
+    // 直接使用原始要素，不进行过滤与验证
+    const targetFeatures = Array.isArray(targetData.features) ? targetData.features : [];
+    const eraseFeatures = Array.isArray(eraseData.features) ? eraseData.features : [];
 
-    const targetFeatures = processedTargetData.features || [];
-    const eraseFeatures = processedEraseData.features || [];
-
-    if (targetFeatures.length === 0 || eraseFeatures.length === 0) {
-      throw new Error('目标图层或擦除图层过滤后没有有效要素');
-    }
-
-    console.log('[EraseAnalysisService] 几何要素处理完成:', {
-      targetOriginal: targetData.features?.length || 0,
-      targetProcessed: targetFeatures.length,
-      eraseOriginal: eraseData.features?.length || 0,
-      eraseProcessed: eraseFeatures.length
+    console.log('[EraseAnalysisService] 使用原始几何要素进行计算:', {
+      targetCount: targetFeatures.length,
+      eraseCount: eraseFeatures.length
     });
 
     console.log('[EraseAnalysisService] 开始执行擦除计算');
