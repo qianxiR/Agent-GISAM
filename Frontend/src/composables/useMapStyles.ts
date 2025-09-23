@@ -114,7 +114,50 @@ export function useMapStyles() {
     };
     
     const params = getStyleParams(layerConfig.type, layerName);
-    
+
+    // 武汉_县级：添加县级注记（NAME_1），白色黑体文字，主题蓝色描边晕渲
+    if (layerName === '武汉_县级') {
+      const textStyleFactory = (feature: any) => new ol.style.Text({
+        font: 'bold 14px "SimHei", "Microsoft YaHei", sans-serif',
+        text: String(feature.get('NAME_1') || ''),
+        fill: new ol.style.Fill({ color: '#ffffff' }),
+        stroke: new ol.style.Stroke({ color: accentFallback, width: 3 }),
+        textAlign: 'center',
+        textBaseline: 'middle',
+        overflow: true
+      });
+
+      switch (layerConfig.type) {
+        case 'polygon':
+          return (feature: any) => new ol.style.Style({
+            stroke: new ol.style.Stroke({ color: resolvedStroke, width: params.width }),
+            fill: new ol.style.Fill({ color: resolvedFill }),
+            text: textStyleFactory(feature)
+          });
+        case 'line':
+          return (feature: any) => new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              color: resolvedStroke,
+              width: params.width,
+              lineCap: params.lineCap,
+              lineJoin: params.lineJoin
+            }),
+            fill: new ol.style.Fill({ color: 'rgba(0, 0, 0, 0)' }),
+            text: textStyleFactory(feature)
+          });
+        case 'point':
+        default:
+          return (feature: any) => new ol.style.Style({
+            image: new ol.style.Circle({
+              radius: params.radius || STYLE_CONFIG.NORMAL_STYLE.POINT_RADIUS,
+              stroke: new ol.style.Stroke({ color: resolvedStroke, width: params.strokeWidth || STYLE_CONFIG.NORMAL_STYLE.STROKE_WIDTH }),
+              fill: new ol.style.Fill({ color: resolvedFill })
+            }),
+            text: textStyleFactory(feature)
+          });
+      }
+    }
+
     // 根据几何类型创建对应的OpenLayers样式
     switch (layerConfig.type) {
       case 'point':
