@@ -17,3 +17,9 @@ langgraph>=0.2.34
 langchain-tavily>=0.1.0
 tavily-python>=0.3.7
 anthropic>=0.34.2
+
+# RAG工具知识库依赖
+langchain-chroma>=1.0.0
+chromadb>=1.2.0
+unstructured>=0.18.0
+markdown>=3.9

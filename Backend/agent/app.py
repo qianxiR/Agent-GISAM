@@ -22,6 +22,15 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from langchain_tavily import TavilySearch
 
+# 添加当前目录到Python路径以便导入tools模块
+import sys
+from pathlib import Path as PathlibPath
+_AGENT_DIR = PathlibPath(__file__).parent
+if str(_AGENT_DIR) not in sys.path:
+    sys.path.insert(0, str(_AGENT_DIR))
+
+from tools.knowledge_base import get_knowledge_base
+
 # 关闭全局SSL验证以规避企业网络或中间代理引起的握手问题
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 os.environ["PYTHONHTTPSVERIFY"] = "0"
@@ -51,10 +60,31 @@ if _ENV_PATH.exists():
 settings = LLMSettings()
 os.environ.setdefault("OPENAI_API_KEY", settings.api_key)
 os.environ.setdefault("OPENAI_BASE_URL", settings.base_url)
+
+# 初始化工具知识库(单例)
+knowledge_base = get_knowledge_base(
+    persist_directory="./tools/chroma_db",
+    api_key=settings.api_key,
+    base_url=settings.base_url
+)
+
 class ChatResponse(BaseModel):
     success: bool
     data: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
+
+
+def clean_layer_name(name: str) -> str:
+    """
+    清理图层名称,去除用户输入的@符号
+    输入参数:
+      - name: string 可能包含@的图层名称
+    业务处理:
+      - 移除开头的@符号(用户引用图层的习惯)
+    输出数据格式:
+      - string: 清理后的图层名称
+    """
+    return name.lstrip('@') if name else name
 
 
 @tool
@@ -72,7 +102,7 @@ def toggle_layer_visibility(layer_name: str, action: str) -> Dict[str, Any]:
     return {
         "type": "layer_control",
         "action": f"{action}_layer",
-        "params": {"layer_name": layer_name, "action": action}
+        "params": {"layer_name": clean_layer_name(layer_name), "action": action}
     }
 
 
@@ -93,7 +123,7 @@ def query_features_by_attribute(layer_name: str, field: str, operator: str, valu
     return {
         "type": "query",
         "action": "attribute_query",
-        "params": {"layer_name": layer_name, "field": field, "operator": operator, "value": value}
+        "params": {"layer_name": clean_layer_name(layer_name), "field": field, "operator": operator, "value": value}
     }
 
 
@@ -109,7 +139,7 @@ def save_query_results_as_layer(layer_name: str) -> Dict[str, Any]:
       - { type: 'save', action: 'query.save_layer', params: { layer_name: string } }
     """
     print(f"[DEBUG] save_query_results_as_layer 被调用，参数: {layer_name}")
-    return {"type": "save", "action": "query.save_layer", "params": {"layer_name": layer_name}}
+    return {"type": "save", "action": "query.save_layer", "params": {"layer_name": clean_layer_name(layer_name)}}
 
 
 
@@ -130,7 +160,7 @@ def execute_buffer_analysis(layer_name: str, radius: float, unit: str = "meters"
     return {
         "type": "analysis",
         "action": "buffer_analysis",
-        "params": {"layer_name": layer_name, "radius": radius, "unit": unit}
+        "params": {"layer_name": clean_layer_name(layer_name), "radius": radius, "unit": unit}
     }
 
 
@@ -149,7 +179,10 @@ def execute_intersection_analysis(target_layer_name: str, mask_layer_name: str) 
     return {
         "type": "analysis",
         "action": "intersection_analysis",
-        "params": {"target_layer_name": target_layer_name, "mask_layer_name": mask_layer_name}
+        "params": {
+            "target_layer_name": clean_layer_name(target_layer_name), 
+            "mask_layer_name": clean_layer_name(mask_layer_name)
+        }
     }
 
 
@@ -168,7 +201,10 @@ def execute_erase_analysis(target_layer_name: str, erase_layer_name: str) -> Dic
     return {
         "type": "analysis",
         "action": "erase_analysis",
-        "params": {"target_layer_name": target_layer_name, "erase_layer_name": erase_layer_name}
+        "params": {
+            "target_layer_name": clean_layer_name(target_layer_name), 
+            "erase_layer_name": clean_layer_name(erase_layer_name)
+        }
     }
 
 
@@ -188,7 +224,11 @@ def execute_shortest_path_analysis(start_layer_name: str, end_layer_name: str, o
     return {
         "type": "analysis",
         "action": "shortest_path_analysis",
-        "params": {"start_layer_name": start_layer_name, "end_layer_name": end_layer_name, "obstacle_layer_name": obstacle_layer_name}
+        "params": {
+            "start_layer_name": clean_layer_name(start_layer_name), 
+            "end_layer_name": clean_layer_name(end_layer_name), 
+            "obstacle_layer_name": clean_layer_name(obstacle_layer_name) if obstacle_layer_name else ""
+        }
     }
 
 
@@ -206,7 +246,7 @@ def save_buffer_results_as_layer(layer_name: str) -> Dict[str, Any]:
       - { type: 'save', action: 'buffer.save_layer', params: { layer_name: string } }
     """
     print(f"[DEBUG] save_buffer_results_as_layer 被调用，参数: {layer_name}")
-    return {"type": "save", "action": "buffer.save_layer", "params": {"layer_name": layer_name}}
+    return {"type": "save", "action": "buffer.save_layer", "params": {"layer_name": clean_layer_name(layer_name)}}
 
 
 
@@ -222,7 +262,7 @@ def save_intersection_results_as_layer(layer_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { type: 'save', action: 'intersection.save_layer', params: { layer_name: string } }
     """
-    return {"type": "save", "action": "intersection.save_layer", "params": {"layer_name": layer_name}}
+    return {"type": "save", "action": "intersection.save_layer", "params": {"layer_name": clean_layer_name(layer_name)}}
 
 
 
@@ -238,7 +278,7 @@ def save_erase_results_as_layer(layer_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { type: 'save', action: 'erase.save_layer', params: { layer_name: string } }
     """
-    return {"type": "save", "action": "erase.save_layer", "params": {"layer_name": layer_name}}
+    return {"type": "save", "action": "erase.save_layer", "params": {"layer_name": clean_layer_name(layer_name)}}
 
 
 
@@ -254,7 +294,7 @@ def save_path_results_as_layer(layer_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { type: 'save', action: 'path.save_layer', params: { layer_name: string } }
     """
-    return {"type": "save", "action": "path.save_layer", "params": {"layer_name": layer_name}}
+    return {"type": "save", "action": "path.save_layer", "params": {"layer_name": clean_layer_name(layer_name)}}
 
 
 @tool
@@ -269,7 +309,14 @@ def rename_layer(layer_name: str, new_name: str) -> Dict[str, Any]:
     输出数据格式：
       - { type: 'layer_control', action: 'rename_layer', params: { layer_name: string, new_name: string } }
     """
-    return {"type": "layer_control", "action": "rename_layer", "params": {"layer_name": layer_name, "new_name": new_name}}
+    return {
+        "type": "layer_control", 
+        "action": "rename_layer", 
+        "params": {
+            "layer_name": clean_layer_name(layer_name), 
+            "new_name": clean_layer_name(new_name)
+        }
+    }
 
 
 
@@ -317,10 +364,108 @@ TOOL_REGISTRY = {
     "rename_layer": rename_layer,
 }
 
+# ===== 系统提示词模板 (全局变量) =====
+SYSTEM_PROMPT_BASE = """你有十二个工具，分为三组：
+
+=== 重要：上下文记忆规则 ===
+你必须记住当前对话中最近执行的分析操作类型。当用户说'保存为图层'、'导出为JSON'等操作时：
+- 如果最近执行了缓冲区分析 → 使用save_buffer_results_as_layer或export_buffer_results_as_json
+- 如果最近执行了相交分析 → 使用save_intersection_results_as_layer或export_intersection_results_as_json
+- 如果最近执行了擦除分析 → 使用save_erase_results_as_layer或export_erase_results_as_json
+- 如果最近执行了最短路径分析 → 使用save_path_results_as_layer或export_path_results_as_json
+- 如果最近执行了属性查询 → 使用save_query_results_as_layer或export_query_results_as_json
+禁止询问用户要保存哪个分析的结果，必须基于上下文自动判断。
+
+=== 第一组：图层显示与查询 ===
+1) toggle_layer_visibility(layer_name:str, action:'show'|'hide'|'toggle')
+- 当用户说'打开@图层名称'或'隐藏@图层名称'或'切换@图层名称'时调用。
+- 使用图层名称而非图层ID进行操作。
+2) query_features_by_attribute(layer_name:str, field:str, operator:str, value:str)
+- 当用户说'在@图层名称中查找字段=值'、'查询@图层名称的属性'、'筛选@图层名称'时调用。
+- 操作符映射要求: 必须使用前端支持的格式
+  * '=' 映射为 'eq'
+  * '!=' 映射为 'ne'
+  * '>' 映射为 'gt'
+  * '>=' 映射为 'gte'
+  * '<' 映射为 'lt'
+  * '<=' 映射为 'lte'
+  * 'like' 保持不变
+- 例如: 用户说'查找NAME=学校'时，operator参数必须传递'eq'而不是'='
+
+=== 第二组：空间分析 ===
+4) execute_buffer_analysis(layer_name:str, radius:float, unit:str)
+- 当用户说'对@图层名称进行缓冲区分析'、'创建@图层名称的缓冲区'、'缓冲区分析'时调用。
+- 需要指定图层名称、半径和单位（默认meters）。
+5) execute_intersection_analysis(target_layer_name:str, mask_layer_name:str)
+- 当用户说'对@图层名称进行相交分析'、'计算@图层名称与@图层名称的相交'、'相交分析'时调用。
+- 需要指定目标图层名称和掩膜图层名称。
+6) execute_erase_analysis(target_layer_name:str, erase_layer_name:str)
+- 当用户说'对@图层名称进行擦除分析'、'从@图层名称中擦除@图层名称'、'擦除分析'时调用。
+- 需要指定目标图层名称和擦除图层名称。
+7) execute_shortest_path_analysis(start_layer_name:str, end_layer_name:str, obstacle_layer_name:str)
+- 当用户说'计算@图层名称到@图层名称的最短路径'、'最短路径分析'时调用。
+- 需要指定起点图层名称、终点图层名称，障碍物图层名称可选。
+
+=== 第三组：保存为图层 ===
+8) save_query_results_as_layer(layer_name:str)
+- 当用户说'保存查询结果为图层'、'另存为图层'、'保存为新图层'时调用。
+- 图层名称可选：未指定时系统自动生成默认名称。
+9) save_buffer_results_as_layer(layer_name:str)
+- 当用户说'保存缓冲区分析结果为图层'、'另存缓冲区结果为图层'时调用。
+- 重要：只有在执行了缓冲区分析(execute_buffer_analysis)后，用户要求保存结果时才调用此工具。
+- 图层名称可选：未指定时系统自动生成默认名称。
+10) save_intersection_results_as_layer(layer_name:str)
+- 当用户说'保存相交分析结果为图层'、'另存相交结果为图层'时调用。
+- 重要：只有在执行了相交分析(execute_intersection_analysis)后，用户要求保存结果时才调用此工具。
+- 图层名称可选：未指定时系统自动生成默认名称。
+11) save_erase_results_as_layer(layer_name:str)
+- 当用户说'保存擦除分析结果为图层'、'另存擦除结果为图层'时调用。
+- 重要：只有在执行了擦除分析(execute_erase_analysis)后，用户要求保存结果时才调用此工具。
+- 图层名称可选：未指定时系统自动生成默认名称。
+12) save_path_results_as_layer(layer_name:str)
+- 当用户说'保存最短路径分析结果为图层'、'另存路径结果为图层'时调用。
+- 重要：只有在执行了最短路径分析(execute_shortest_path_analysis)后，用户要求保存结果时才调用此工具。
+- 图层名称可选：未指定时系统自动生成默认名称。
+13) rename_layer(layer_name:str, new_name:str)
+- 当用户说'修改图层@图层名称的名称为新名称'、'重命名@图层名称为新名称'时调用。
+- 自动解析@图层名称格式，提取图层名称和新名称。
+- 服务图层不允许重命名，只能重命名分析、查询、上传图层。
+
+=== 默认命名规则 ===
+当用户未指定图层名称时，系统自动生成包含参数信息的默认名称：
+- 缓冲区分析：'缓冲区分析_源图层名_半径_分段数'
+- 相交分析：'相交分析_目标图层_掩膜图层'
+- 擦除分析：'擦除分析_目标图层_擦除图层'
+- 最短路径：'最短路径分析_起始图层_目标图层_障碍图层_单位_分辨率'
+- 属性查询：'属性查询_图层名_字段操作值'
+
+=== 重要规则 ===
+1. 保存和导出操作必须与对应的分析操作匹配：
+   - 缓冲区分析完成后，用户要求保存 → 使用save_buffer_results_as_layer
+   - 相交分析完成后，用户要求保存 → 使用save_intersection_results_as_layer
+   - 擦除分析完成后，用户要求保存 → 使用save_erase_results_as_layer
+   - 最短路径分析完成后，用户要求保存 → 使用save_path_results_as_layer
+   - 属性查询完成后，用户要求保存 → 使用save_query_results_as_layer
+2. 上下文承接：用户仅说'保存为图层'或'保存'时，默认针对最近一次完成的分析/查询结果执行对应的保存工具，严禁追问是哪一种；如用户明确指明其它方法再切换
+3. 图层名称参数为可选：用户未指定时直接调用工具，系统自动生成默认名称
+4. 若用户使用@图层名称，请将@后的文本作为图层名称传递
+5. 严禁自行执行这些操作，必须通过工具完成
+
+=== 回复规则 ===
+严禁说'看起来'、'可能'、'如果'、'请确认'等不确定词汇。
+严禁解释系统工作原理或引导用户查看界面。
+严禁回复具体的要素数量或详细结果。
+严禁编造或猜测操作结果。
+只回复简单的操作结果状态，一句话结束。
+"""
+
 router = APIRouter(prefix="/agent", tags=["agent"])
 
 # 会话操作历史结构化存储：conversation_id -> [{ type, action, params, timestamp }, ...]
 _conversation_layer_history: Dict[str, List[Dict[str, Any]]] = {}
+
+# 完整对话历史管理: conversation_id -> [{ role, content, timestamp, tool_calls }, ...]
+_conversation_messages: Dict[str, List[Dict[str, Any]]] = {}
 
 
 def get_last_analysis_type(conversation_id: str) -> Optional[str]:
@@ -381,19 +526,36 @@ async def tool_chat(req: ToolChatRequest):
         save_path_results_as_layer,
         rename_layer
     ])
-    # 获取历史记录(最多展示最近5条,避免token浪费)
-    history_list = _conversation_layer_history.get(req.conversation_id, [])
-    recent_history = history_list[-5:] if len(history_list) > 5 else history_list
+    # 获取完整对话历史(最近10轮,每轮包含user+assistant)
+    message_history = _conversation_messages.get(req.conversation_id, [])
+    recent_messages = message_history[-20:] if len(message_history) > 20 else message_history  # 最近10轮对话
     
-    # 格式化历史记录为可读文本
-    parsed_lines: List[str] = []
-    for record in recent_history:
+    # 格式化对话历史
+    conversation_history_text = ""
+    if recent_messages:
+        history_lines = []
+        for msg in recent_messages:
+            role = msg.get("role", "unknown")
+            content = msg.get("content", "")
+            if role == "user":
+                history_lines.append(f"用户: {content}")
+            elif role == "assistant":
+                history_lines.append(f"助手: {content}")
+        conversation_history_text = "\n".join(history_lines)
+    
+    # 获取工具调用历史(最近5条)
+    tool_history_list = _conversation_layer_history.get(req.conversation_id, [])
+    recent_tool_history = tool_history_list[-5:] if len(tool_history_list) > 5 else tool_history_list
+    
+    # 格式化工具历史
+    tool_parsed_lines: List[str] = []
+    for record in recent_tool_history:
         if isinstance(record, dict):
             action = record.get("action", "unknown")
             params = record.get("params", {})
-            parsed_line = f"操作类型={record.get('type')}, 动作={action}, 参数={params}"
-            parsed_lines.append(parsed_line)
-    history_text = "\n".join(parsed_lines) if parsed_lines else "暂无历史操作"
+            tool_parsed_line = f"操作类型={record.get('type')}, 动作={action}, 参数={params}"
+            tool_parsed_lines.append(tool_parsed_line)
+    tool_history_text = "\n".join(tool_parsed_lines) if tool_parsed_lines else "暂无工具调用"
     
     # 获取最近一次分析类型,用于智能上下文提示
     last_analysis = get_last_analysis_type(req.conversation_id)
@@ -406,88 +568,56 @@ async def tool_chat(req: ToolChatRequest):
             "shortest_path_analysis": "最短路径分析"
         }
         context_hint = f"\n当前上下文：最近执行了【{analysis_name_map.get(last_analysis, last_analysis)}】，若用户说'保存'则默认保存该分析结果。"
+    
+    # 使用RAG检索相关工具文档(替代完整SYSTEM_PROMPT_BASE)
+    relevant_tools_prompt = knowledge_base.retrieve_relevant_tools(
+        query=req.prompt,
+        k=3  # 只检索top-3相关工具,显著降低token消耗
+    )
+    
+    # 组装精简的系统提示词(包含对话历史+工具历史)
+    system_prompt = f"""你是GIS空间分析助手,可以调用以下工具帮助用户:
+
+{relevant_tools_prompt}
+
+=== 核心规则 ===
+1. 严格按照上述工具说明调用工具
+2. 操作符映射: '='→'eq', '!='→'ne', '>'→'gt' 等
+3. 上下文承接: 用户说"保存"时根据最近分析类型自动选择保存工具
+4. 严禁询问用户"要保存哪个分析的结果",必须基于上下文自动判断
+5. 回复简洁,一句话结束,禁止使用"可能"、"看起来"等不确定词汇
+6. 根据对话历史理解用户的省略表达和代词引用
+
+=== 对话历史(最近10轮) ===
+{conversation_history_text if conversation_history_text else "暂无对话历史"}
+
+=== 工具调用历史(最近5条) ===
+{tool_history_text}{context_hint}
+"""
+    
+    # 记录用户消息到对话历史
+    user_message_entry = {
+        "role": "user",
+        "content": req.prompt,
+        "timestamp": time.time()
+    }
+    if req.conversation_id not in _conversation_messages:
+        _conversation_messages[req.conversation_id] = []
+    _conversation_messages[req.conversation_id].append(user_message_entry)
+    
     first_ai: AIMessage = llm_with_tools.invoke([
-        SystemMessage(content=(
-            "你有十二个工具，分为三组：\n\n"
-            "=== 重要：上下文记忆规则 ===\n"
-            "你必须记住当前对话中最近执行的分析操作类型。当用户说'保存为图层'、'导出为JSON'等操作时：\n"
-            "- 如果最近执行了缓冲区分析 → 使用save_buffer_results_as_layer或export_buffer_results_as_json\n"
-            "- 如果最近执行了相交分析 → 使用save_intersection_results_as_layer或export_intersection_results_as_json\n"
-            "- 如果最近执行了擦除分析 → 使用save_erase_results_as_layer或export_erase_results_as_json\n"
-            "- 如果最近执行了最短路径分析 → 使用save_path_results_as_layer或export_path_results_as_json\n"
-            "- 如果最近执行了属性查询 → 使用save_query_results_as_layer或export_query_results_as_json\n"
-            "禁止询问用户要保存哪个分析的结果，必须基于上下文自动判断。\n\n"
-            "=== 第一组：图层显示与查询 ===\n"
-            "1) toggle_layer_visibility(layer_name:str, action:'show'|'hide'|'toggle')\n"
-            "- 当用户说'打开@图层名称'或'隐藏@图层名称'或'切换@图层名称'时调用。\n"
-            "- 使用图层名称而非图层ID进行操作。\n"
-            "2) query_features_by_attribute(layer_name:str, field:str, operator:str, value:str)\n"
-            "- 当用户说'在@图层名称中查找字段=值'、'查询@图层名称的属性'、'筛选@图层名称'时调用。\n"
-            "- 操作符映射要求: 必须使用前端支持的格式\n"
-            "  * '=' 映射为 'eq'\n"
-            "  * '!=' 映射为 'ne'\n"
-            "  * '>' 映射为 'gt'\n"
-            "  * '>=' 映射为 'gte'\n"
-            "  * '<' 映射为 'lt'\n"
-            "  * '<=' 映射为 'lte'\n"
-            "  * 'like' 保持不变\n"
-            "- 例如: 用户说'查找NAME=学校'时，operator参数必须传递'eq'而不是'='\n"
-            "=== 第二组：空间分析 ===\n"
-            "4) execute_buffer_analysis(layer_name:str, radius:float, unit:str)\n"
-            "- 当用户说'对@图层名称进行缓冲区分析'、'创建@图层名称的缓冲区'、'缓冲区分析'时调用。\n"
-            "- 需要指定图层名称、半径和单位（默认meters）。\n"
-            "5) execute_intersection_analysis(target_layer_name:str, mask_layer_name:str)\n"
-            "- 当用户说'对@图层名称进行相交分析'、'计算@图层名称与@图层名称的相交'、'相交分析'时调用。\n"
-            "- 需要指定目标图层名称和掩膜图层名称。\n"
-            "6) execute_erase_analysis(target_layer_name:str, erase_layer_name:str)\n"
-            "- 当用户说'对@图层名称进行擦除分析'、'从@图层名称中擦除@图层名称'、'擦除分析'时调用。\n"
-            "- 需要指定目标图层名称和擦除图层名称。\n"
-            "7) execute_shortest_path_analysis(start_layer_name:str, end_layer_name:str, obstacle_layer_name:str)\n"
-            "- 当用户说'计算@图层名称到@图层名称的最短路径'、'最短路径分析'时调用。\n"
-            "- 需要指定起点图层名称、终点图层名称，障碍物图层名称可选。\n"
-            "=== 第二组：保存为图层 ===\n"
-            "8) save_query_results_as_layer(layer_name:str)\n"
-            "- 当用户说'保存查询结果为图层'、'另存为图层'、'保存为新图层'时调用。\n"
-            "- 图层名称可选：未指定时系统自动生成默认名称。\n"
-            "9) save_buffer_results_as_layer(layer_name:str)\n"
-            "- 当用户说'保存缓冲区分析结果为图层'、'另存缓冲区结果为图层'时调用。\n"
-            "- 重要：只有在执行了缓冲区分析(execute_buffer_analysis)后，用户要求保存结果时才调用此工具。\n"
-            "- 图层名称可选：未指定时系统自动生成默认名称。\n"
-            "10) save_intersection_results_as_layer(layer_name:str)\n"
-            "- 当用户说'保存相交分析结果为图层'、'另存相交结果为图层'时调用。\n"
-            "- 重要：只有在执行了相交分析(execute_intersection_analysis)后，用户要求保存结果时才调用此工具。\n"
-            "- 图层名称可选：未指定时系统自动生成默认名称。\n"
-            "11) save_erase_results_as_layer(layer_name:str)\n"
-            "- 当用户说'保存擦除分析结果为图层'、'另存擦除结果为图层'时调用。\n"
-            "- 重要：只有在执行了擦除分析(execute_erase_analysis)后，用户要求保存结果时才调用此工具。\n"
-            "- 图层名称可选：未指定时系统自动生成默认名称。\n"
-            "12) save_path_results_as_layer(layer_name:str)\n"
-            "- 当用户说'保存最短路径分析结果为图层'、'另存路径结果为图层'时调用。\n"
-            "- 重要：只有在执行了最短路径分析(execute_shortest_path_analysis)后，用户要求保存结果时才调用此工具。\n"
-            "- 图层名称可选：未指定时系统自动生成默认名称。\n\n"
-            "=== 默认命名规则 ===\n"
-            "当用户未指定图层名称时，系统自动生成包含参数信息的默认名称：\n"
-            "- 缓冲区分析：'缓冲区分析_源图层名_半径_分段数'\n"
-            "- 相交分析：'相交分析_目标图层_掩膜图层'\n"
-            "- 擦除分析：'擦除分析_目标图层_擦除图层'\n"
-            "- 最短路径：'最短路径分析_起始图层_目标图层_障碍图层_单位_分辨率'\n"
-            "- 属性查询：'属性查询_图层名_字段操作值'\n\n"
-            "=== 重要规则 ===\n"
-            "1. 保存和导出操作必须与对应的分析操作匹配：\n"
-            "   - 缓冲区分析完成后，用户要求保存 → 使用save_buffer_results_as_layer\n"
-            "   - 相交分析完成后，用户要求保存 → 使用save_intersection_results_as_layer\n"
-            "   - 擦除分析完成后，用户要求保存 → 使用save_erase_results_as_layer\n"
-            "   - 最短路径分析完成后，用户要求保存 → 使用save_path_results_as_layer\n"
-            "   - 属性查询完成后，用户要求保存 → 使用save_query_results_as_layer\n"
-            "2. 上下文承接：用户仅说'保存为图层'或'保存'时，默认针对最近一次完成的分析/查询结果执行对应的保存工具，严禁追问是哪一种；如用户明确指明其它方法再切换\n"
-            "3. 图层名称参数为可选：用户未指定时直接调用工具，系统自动生成默认名称\n"
-            "4. 若用户使用@图层名称，请将@后的文本作为图层名称传递\n"
-            "5. 严禁自行执行这些操作，必须通过工具完成\n\n"
-            f"历史操作(最近5条):\n{history_text}{context_hint}"
-        )),
+        SystemMessage(content=system_prompt),
         HumanMessage(content=req.prompt)
     ])
     if not first_ai.tool_calls:
+        # 无工具调用时,直接记录助手回复
+        assistant_message_entry = {
+            "role": "assistant",
+            "content": first_ai.content,
+            "timestamp": time.time(),
+            "tool_calls": None
+        }
+        _conversation_messages[req.conversation_id].append(assistant_message_entry)
         return ChatResponse(success=True, data={"first_call": {"tool_calls": []}, "tool_result": None, "final_answer": first_ai.content})
     tool_call = first_ai.tool_calls[0]
     tool_args = tool_call.get("args", {})
@@ -522,97 +652,24 @@ async def tool_chat(req: ToolChatRequest):
     else:
         _conversation_layer_history[req.conversation_id] = [history_entry]
     tool_message = ToolMessage(content=str(tool_result), tool_call_id=tool_call["id"])
+    
+    # 第二次调用复用相同的系统提示词(已包含所有规则)
     final_ai: AIMessage = llm_with_tools.invoke([
-        SystemMessage(content=(
-            "你有十二个工具，分为三组：\n\n"
-            "=== 重要：上下文记忆规则 ===\n"
-            "你必须记住当前对话中最近执行的分析操作类型。当用户说'保存为图层'、'导出为JSON'等操作时：\n"
-            "- 如果最近执行了缓冲区分析 → 使用save_buffer_results_as_layer或export_buffer_results_as_json\n"
-            "- 如果最近执行了相交分析 → 使用save_intersection_results_as_layer或export_intersection_results_as_json\n"
-            "- 如果最近执行了擦除分析 → 使用save_erase_results_as_layer或export_erase_results_as_json\n"
-            "- 如果最近执行了最短路径分析 → 使用save_path_results_as_layer或export_path_results_as_json\n"
-            "- 如果最近执行了属性查询 → 使用save_query_results_as_layer或export_query_results_as_json\n"
-            "禁止询问用户要保存哪个分析的结果，必须基于上下文自动判断。\n\n"
-            "=== 第一组：图层显示与查询 ===\n"
-            "1) toggle_layer_visibility(layer_name:str, action:'show'|'hide'|'toggle')\n"
-            "- 遇到'打开/隐藏/切换@图层名称'的请求，必须调用该工具。\n"
-            "- 使用图层名称而非图层ID进行操作。\n"
-            "2) query_features_by_attribute(layer_name:str, field:str, operator:str, value:str)\n"
-            "- 遇到'在@图层名称中查找/查询/筛选'的请求，必须调用该工具。\n"
-            "- 操作符映射要求: 必须使用前端支持的格式\n"
-            "  * '=' 映射为 'eq'\n"
-            "  * '!=' 映射为 'ne'\n"
-            "  * '>' 映射为 'gt'\n"
-            "  * '>=' 映射为 'gte'\n"
-            "  * '<' 映射为 'lt'\n"
-            "  * '<=' 映射为 'lte'\n"
-            "  * 'like' 保持不变\n"
-            "- 例如: 用户说'查找NAME=学校'时，operator参数必须传递'eq'而不是'='\n"
-            "=== 第二组：空间分析 ===\n"
-            "4) execute_buffer_analysis(layer_name:str, radius:float, unit:str)\n"
-            "- 遇到'对@图层名称进行缓冲区分析'、'创建@图层名称的缓冲区'、'缓冲区分析'的请求时调用。\n"
-            "- 需要指定图层名称、半径和单位（默认meters）。\n"
-            "5) execute_intersection_analysis(target_layer_name:str, mask_layer_name:str)\n"
-            "- 遇到'对@图层名称进行相交分析'、'计算@图层名称与@图层名称的相交'、'相交分析'的请求时调用。\n"
-            "- 需要指定目标图层名称和掩膜图层名称。\n"
-            "6) execute_erase_analysis(target_layer_name:str, erase_layer_name:str)\n"
-            "- 遇到'对@图层名称进行擦除分析'、'从@图层名称中擦除@图层名称'、'擦除分析'的请求时调用。\n"
-            "- 需要指定目标图层名称和擦除图层名称。\n"
-            "7) execute_shortest_path_analysis(start_layer_name:str, end_layer_name:str, obstacle_layer_name:str)\n"
-            "- 遇到'计算@图层名称到@图层名称的最短路径'、'最短路径分析'的请求时调用。\n"
-            "- 需要指定起点图层名称、终点图层名称，障碍物图层名称可选。\n"
-            "=== 第二组：保存为图层 ===\n"
-            "8) save_query_results_as_layer(layer_name:str)\n"
-            "- 遇到'保存查询结果为图层'、'另存为图层'、'保存为新图层'的请求时调用。\n"
-            "- 图层名称可选：未指定时系统自动生成默认名称。\n"
-            "9) save_buffer_results_as_layer(layer_name:str)\n"
-            "- 遇到'保存缓冲区分析结果为图层'、'另存缓冲区结果为图层'的请求时调用。\n"
-            "- 重要：只有在执行了缓冲区分析(execute_buffer_analysis)后，用户要求保存结果时才调用此工具。\n"
-            "- 图层名称可选：未指定时系统自动生成默认名称。\n"
-            "10) save_intersection_results_as_layer(layer_name:str)\n"
-            "- 遇到'保存相交分析结果为图层'、'另存相交结果为图层'的请求时调用。\n"
-            "- 重要：只有在执行了相交分析(execute_intersection_analysis)后，用户要求保存结果时才调用此工具。\n"
-            "- 图层名称可选：未指定时系统自动生成默认名称。\n"
-            "11) save_erase_results_as_layer(layer_name:str)\n"
-            "- 遇到'保存擦除分析结果为图层'、'另存擦除结果为图层'的请求时调用。\n"
-            "- 重要：只有在执行了擦除分析(execute_erase_analysis)后，用户要求保存结果时才调用此工具。\n"
-            "- 图层名称可选：未指定时系统自动生成默认名称。\n"
-            "12) save_path_results_as_layer(layer_name:str)\n"
-            "- 遇到'保存最短路径分析结果为图层'、'另存路径结果为图层'的请求时调用。\n"
-            "- 重要：只有在执行了最短路径分析(execute_shortest_path_analysis)后，用户要求保存结果时才调用此工具。\n"
-            "- 图层名称可选：未指定时系统自动生成默认名称。\n"
-            "13) rename_layer(layer_name:str, new_name:str)\n"
-            "- 遇到'修改图层@图层名称的名称为新名称'、'重命名@图层名称为新名称'的请求时调用。\n"
-            "- 自动解析@图层名称格式，提取图层名称和新名称。\n"
-            "- 服务图层不允许重命名，只能重命名分析、查询、上传图层。\n\n"
-            "=== 默认命名规则 ===\n"
-            "当用户未指定图层名称时，系统自动生成包含参数信息的默认名称：\n"
-            "- 缓冲区分析：'缓冲区分析_源图层名_半径_分段数'\n"
-            "- 相交分析：'相交分析_目标图层_掩膜图层'\n"
-            "- 擦除分析：'擦除分析_目标图层_擦除图层'\n"
-            "- 最短路径：'最短路径分析_起始图层_目标图层_障碍图层_单位_分辨率'\n"
-            "- 属性查询：'属性查询_图层名_字段操作值'\n\n"
-            "=== 重要规则 ===\n"
-            "1. 保存和导出操作必须与对应的分析操作匹配：\n"
-            "   - 缓冲区分析完成后，用户要求保存 → 使用save_buffer_results_as_layer\n"
-            "   - 相交分析完成后，用户要求保存 → 使用save_intersection_results_as_layer\n"
-            "   - 擦除分析完成后，用户要求保存 → 使用save_erase_results_as_layer\n"
-            "   - 最短路径分析完成后，用户要求保存 → 使用save_path_results_as_layer\n"
-            "   - 属性查询完成后，用户要求保存 → 使用save_query_results_as_layer\n"
-            "2. 图层名称参数为可选：用户未指定时直接调用工具，系统自动生成默认名称\n"
-            "3. 若用户使用@图层名称，请将@后的文本作为图层名称传递\n"
-            "4. 严禁自行执行这些操作，必须通过工具完成\n\n"
-            "=== 回复规则 ===\n"
-            "严禁说'看起来'、'可能'、'如果'、'请确认'等不确定词汇。\n"
-            "严禁解释系统工作原理或引导用户查看界面。\n"
-            "严禁回复具体的要素数量或详细结果。\n"
-            "严禁编造或猜测操作结果。\n"
-            "只回复简单的操作结果状态，一句话结束。"
-        )),
+        SystemMessage(content=system_prompt),
         HumanMessage(content=req.prompt),
         first_ai,
         tool_message,
     ])
+    
+    # 记录助手最终回复到对话历史
+    assistant_final_entry = {
+        "role": "assistant",
+        "content": final_ai.content,
+        "timestamp": time.time(),
+        "tool_calls": [{"name": tool_name, "args": tool_args, "result": tool_result}]
+    }
+    _conversation_messages[req.conversation_id].append(assistant_final_entry)
+    
     return ChatResponse(success=True, data={"first_call": {"tool_calls": first_ai.tool_calls}, "tool_result": tool_result, "final_answer": final_ai.content})
 
 app = FastAPI(

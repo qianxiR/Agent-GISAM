@@ -14,15 +14,41 @@ llm/*
 .env
 .env.development
 .env.production
+*.log
+
+# Database & Data
 database/
+*.db
+*.sqlite
+*.sqlite3
+
+# Analysis & Downloads
 analysis/downloads/
+Backend/analysis/downloads/
+Backend/agent/downloads/
+Frontend/downloads/
+
+# Node modules
 node_modules/
 analysis/node_modules/
 Backend/analysis/node_modules/
-Backend/analysis/downloads/
-Backend/agent/downloads/
-Backend/agent/database/
+
+# Virtual environments
 .venv_tmp/
+venv/
+.venv/
+
+# IDE
 vscode/
+.vscode/
+.idea/
+
+# RAG & Knowledge Base
 rag/
-Frontend/downloads
+Backend/agent/tools/chroma_db/
+Backend/agent/tools/test_chroma_db/
+Backend/agent/chroma_db/
+*.chroma
+
+# Agent temporary files
+Backend/agent/database/
