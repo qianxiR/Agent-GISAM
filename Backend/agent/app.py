@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uvicorn
 import os
+import time
 from pathlib import Path
 from dotenv import load_dotenv
 from langchain_community.chat_models.tongyi import ChatTongyi
@@ -57,7 +58,7 @@ class ChatResponse(BaseModel):
 
 
 @tool
-def toggle_layer_visibility(layer_name: str, action: str) -> str:
+def toggle_layer_visibility(layer_name: str, action: str) -> Dict[str, Any]:
     """
     切换前端图层可见性（前端执行）。
     输入参数：
@@ -66,13 +67,17 @@ def toggle_layer_visibility(layer_name: str, action: str) -> str:
     业务处理：
       - 后端不直接操作地图，仅返回动作与图层名称供前端执行
     输出数据格式：
-      - string: 格式 "action:layer_name"
+      - { type: 'layer_control', action: string, params: { layer_name: string, action: string } }
     """
-    return f"{action}:{layer_name}"
+    return {
+        "type": "layer_control",
+        "action": f"{action}_layer",
+        "params": {"layer_name": layer_name, "action": action}
+    }
 
 
 @tool
-def query_features_by_attribute(layer_name: str, field: str, operator: str, value: str) -> str:
+def query_features_by_attribute(layer_name: str, field: str, operator: str, value: str) -> Dict[str, Any]:
     """
     按属性选择要素（前端执行）。
     输入参数：
@@ -83,13 +88,17 @@ def query_features_by_attribute(layer_name: str, field: str, operator: str, valu
     业务处理：
       - 后端不直接操作地图，仅返回查询参数供前端执行
     输出数据格式：
-      - string: 格式 "query:layer_name:field:operator:value"
+      - { type: 'query', action: 'attribute_query', params: { layer_name, field, operator, value } }
     """
-    return f"query:{layer_name}:{field}:{operator}:{value}"
+    return {
+        "type": "query",
+        "action": "attribute_query",
+        "params": {"layer_name": layer_name, "field": field, "operator": operator, "value": value}
+    }
 
 
 @tool
-def save_query_results_as_layer(layer_name: str) -> str:
+def save_query_results_as_layer(layer_name: str) -> Dict[str, Any]:
     """
     保存查询结果为新图层（前端执行）。
     输入参数：
@@ -97,16 +106,16 @@ def save_query_results_as_layer(layer_name: str) -> str:
     业务处理：
       - 后端不直接操作地图，仅返回保存参数供前端执行
     输出数据格式：
-      - string: 格式 "save_layer:layer_name"
+      - { type: 'save', action: 'query.save_layer', params: { layer_name: string } }
     """
     print(f"[DEBUG] save_query_results_as_layer 被调用，参数: {layer_name}")
-    return f"保存操作已发送到前端，图层名称：{layer_name}"
+    return {"type": "save", "action": "query.save_layer", "params": {"layer_name": layer_name}}
 
 
 
 
 @tool
-def execute_buffer_analysis(layer_name: str, radius: float, unit: str = "meters") -> str:
+def execute_buffer_analysis(layer_name: str, radius: float, unit: str = "meters") -> Dict[str, Any]:
     """
     执行缓冲区分析（前端执行）。
     输入参数：
@@ -116,13 +125,17 @@ def execute_buffer_analysis(layer_name: str, radius: float, unit: str = "meters"
     业务处理：
       - 后端不直接操作地图，仅返回分析参数供前端执行
     输出数据格式：
-      - string: 格式 "buffer_analysis:layer_name:radius:unit"
+      - { type: 'analysis', action: 'buffer_analysis', params: { layer_name, radius, unit } }
     """
-    return f"缓冲区分析操作已发送到前端，图层：{layer_name}，半径：{radius}{unit}"
+    return {
+        "type": "analysis",
+        "action": "buffer_analysis",
+        "params": {"layer_name": layer_name, "radius": radius, "unit": unit}
+    }
 
 
 @tool
-def execute_intersection_analysis(target_layer_name: str, mask_layer_name: str) -> str:
+def execute_intersection_analysis(target_layer_name: str, mask_layer_name: str) -> Dict[str, Any]:
     """
     执行相交分析（前端执行）。
     输入参数：
@@ -131,13 +144,17 @@ def execute_intersection_analysis(target_layer_name: str, mask_layer_name: str) 
     业务处理：
       - 后端不直接操作地图，仅返回分析参数供前端执行
     输出数据格式：
-      - string: 格式 "intersection_analysis:target_layer_name:mask_layer_name"
+      - { type: 'analysis', action: 'intersection_analysis', params: { target_layer_name, mask_layer_name } }
     """
-    return f"相交分析操作已发送到前端，目标图层：{target_layer_name}，掩膜图层：{mask_layer_name}"
+    return {
+        "type": "analysis",
+        "action": "intersection_analysis",
+        "params": {"target_layer_name": target_layer_name, "mask_layer_name": mask_layer_name}
+    }
 
 
 @tool
-def execute_erase_analysis(target_layer_name: str, erase_layer_name: str) -> str:
+def execute_erase_analysis(target_layer_name: str, erase_layer_name: str) -> Dict[str, Any]:
     """
     执行擦除分析（前端执行）。
     输入参数：
@@ -146,13 +163,17 @@ def execute_erase_analysis(target_layer_name: str, erase_layer_name: str) -> str
     业务处理：
       - 后端不直接操作地图，仅返回分析参数供前端执行
     输出数据格式：
-      - string: 格式 "erase_analysis:target_layer_name:erase_layer_name"
+      - { type: 'analysis', action: 'erase_analysis', params: { target_layer_name, erase_layer_name } }
     """
-    return f"擦除分析操作已发送到前端，目标图层：{target_layer_name}，擦除图层：{erase_layer_name}"
+    return {
+        "type": "analysis",
+        "action": "erase_analysis",
+        "params": {"target_layer_name": target_layer_name, "erase_layer_name": erase_layer_name}
+    }
 
 
 @tool
-def execute_shortest_path_analysis(start_layer_name: str, end_layer_name: str, obstacle_layer_name: str = "") -> str:
+def execute_shortest_path_analysis(start_layer_name: str, end_layer_name: str, obstacle_layer_name: str = "") -> Dict[str, Any]:
     """
     执行最短路径分析（前端执行）。
     输入参数：
@@ -162,10 +183,13 @@ def execute_shortest_path_analysis(start_layer_name: str, end_layer_name: str, o
     业务处理：
       - 后端不直接操作地图，仅返回分析参数供前端执行
     输出数据格式：
-      - string: 格式 "shortest_path_analysis:start_layer_name:end_layer_name:obstacle_layer_name"
+      - { type: 'analysis', action: 'shortest_path_analysis', params: { start_layer_name, end_layer_name, obstacle_layer_name } }
     """
-    obstacle_info = f"，障碍物图层：{obstacle_layer_name}" if obstacle_layer_name else ""
-    return f"最短路径分析操作已发送到前端，起点图层：{start_layer_name}，终点图层：{end_layer_name}{obstacle_info}"
+    return {
+        "type": "analysis",
+        "action": "shortest_path_analysis",
+        "params": {"start_layer_name": start_layer_name, "end_layer_name": end_layer_name, "obstacle_layer_name": obstacle_layer_name}
+    }
 
 
 # ===== 4个分析功能的导出和保存工具函数 =====
@@ -179,10 +203,10 @@ def save_buffer_results_as_layer(layer_name: str) -> Dict[str, Any]:
     业务处理：
       - 后端不直接操作地图，仅返回保存参数供前端执行
     输出数据格式：
-      - { action: 'buffer.save_layer', params: { layer_name: string } }
+      - { type: 'save', action: 'buffer.save_layer', params: { layer_name: string } }
     """
     print(f"[DEBUG] save_buffer_results_as_layer 被调用，参数: {layer_name}")
-    return {"action": "buffer.save_layer", "params": {"layer_name": layer_name}}
+    return {"type": "save", "action": "buffer.save_layer", "params": {"layer_name": layer_name}}
 
 
 
@@ -196,9 +220,9 @@ def save_intersection_results_as_layer(layer_name: str) -> Dict[str, Any]:
     业务处理：
       - 后端不直接操作地图，仅返回保存参数供前端执行
     输出数据格式：
-      - { action: 'intersection.save_layer', params: { layer_name: string } }
+      - { type: 'save', action: 'intersection.save_layer', params: { layer_name: string } }
     """
-    return {"action": "intersection.save_layer", "params": {"layer_name": layer_name}}
+    return {"type": "save", "action": "intersection.save_layer", "params": {"layer_name": layer_name}}
 
 
 
@@ -212,9 +236,9 @@ def save_erase_results_as_layer(layer_name: str) -> Dict[str, Any]:
     业务处理：
       - 后端不直接操作地图，仅返回保存参数供前端执行
     输出数据格式：
-      - { action: 'erase.save_layer', params: { layer_name: string } }
+      - { type: 'save', action: 'erase.save_layer', params: { layer_name: string } }
     """
-    return {"action": "erase.save_layer", "params": {"layer_name": layer_name}}
+    return {"type": "save", "action": "erase.save_layer", "params": {"layer_name": layer_name}}
 
 
 
@@ -228,9 +252,9 @@ def save_path_results_as_layer(layer_name: str) -> Dict[str, Any]:
     业务处理：
       - 后端不直接操作地图，仅返回保存参数供前端执行
     输出数据格式：
-      - { action: 'path.save_layer', params: { layer_name: string } }
+      - { type: 'save', action: 'path.save_layer', params: { layer_name: string } }
     """
-    return {"action": "path.save_layer", "params": {"layer_name": layer_name}}
+    return {"type": "save", "action": "path.save_layer", "params": {"layer_name": layer_name}}
 
 
 @tool
@@ -243,9 +267,9 @@ def rename_layer(layer_name: str, new_name: str) -> Dict[str, Any]:
     业务处理：
       - 后端不直接操作地图，仅返回重命名参数供前端执行
     输出数据格式：
-      - { action: 'rename_layer', params: { layer_name: string, new_name: string } }
+      - { type: 'layer_control', action: 'rename_layer', params: { layer_name: string, new_name: string } }
     """
-    return {"action": "rename_layer", "params": {"layer_name": layer_name, "new_name": new_name}}
+    return {"type": "layer_control", "action": "rename_layer", "params": {"layer_name": layer_name, "new_name": new_name}}
 
 
 
@@ -277,10 +301,44 @@ def load_tools_prompt() -> str:
         return ""
 
 
+# ===== 工具注册表 (全局变量) =====
+TOOL_REGISTRY = {
+    "toggle_layer_visibility": toggle_layer_visibility,
+    "query_features_by_attribute": query_features_by_attribute,
+    "save_query_results_as_layer": save_query_results_as_layer,
+    "execute_buffer_analysis": execute_buffer_analysis,
+    "execute_intersection_analysis": execute_intersection_analysis,
+    "execute_erase_analysis": execute_erase_analysis,
+    "execute_shortest_path_analysis": execute_shortest_path_analysis,
+    "save_buffer_results_as_layer": save_buffer_results_as_layer,
+    "save_intersection_results_as_layer": save_intersection_results_as_layer,
+    "save_erase_results_as_layer": save_erase_results_as_layer,
+    "save_path_results_as_layer": save_path_results_as_layer,
+    "rename_layer": rename_layer,
+}
+
 router = APIRouter(prefix="/agent", tags=["agent"])
 
-# 会话图层操作历史：conversation_id -> ["action:layer_id", ...]
-_conversation_layer_history: Dict[str, List[str]] = {}
+# 会话操作历史结构化存储：conversation_id -> [{ type, action, params, timestamp }, ...]
+_conversation_layer_history: Dict[str, List[Dict[str, Any]]] = {}
+
+
+def get_last_analysis_type(conversation_id: str) -> Optional[str]:
+    """
+    提取最近一次分析操作类型
+    输入参数:
+      - conversation_id: string 会话ID
+    业务处理:
+      - 倒序遍历历史记录,找到第一个type='analysis'的操作
+      - 提取其action字段作为分析类型
+    输出数据格式:
+      - Optional[string]: 'buffer_analysis' | 'intersection_analysis' | 'erase_analysis' | 'shortest_path_analysis' | None
+    """
+    history = _conversation_layer_history.get(conversation_id, [])
+    for record in reversed(history):
+        if isinstance(record, dict) and record.get("type") == "analysis":
+            return record.get("action")
+    return None
 
 
 class ToolChatRequest(BaseModel):
@@ -323,19 +381,31 @@ async def tool_chat(req: ToolChatRequest):
         save_path_results_as_layer,
         rename_layer
     ])
+    # 获取历史记录(最多展示最近5条,避免token浪费)
     history_list = _conversation_layer_history.get(req.conversation_id, [])
+    recent_history = history_list[-5:] if len(history_list) > 5 else history_list
+    
+    # 格式化历史记录为可读文本
     parsed_lines: List[str] = []
-    last_action_text = ""
-    for entry in history_list:
-        if ":" in entry:
-            action, layer = entry.split(":", 1)
-            parsed_line = f"action={action}; layer={layer}"
+    for record in recent_history:
+        if isinstance(record, dict):
+            action = record.get("action", "unknown")
+            params = record.get("params", {})
+            parsed_line = f"操作类型={record.get('type')}, 动作={action}, 参数={params}"
             parsed_lines.append(parsed_line)
-            last_action_text = f"action={action}; layer={layer}"
-        else:
-            parsed_lines.append(entry)
-            last_action_text = entry
-    history_text = "\n".join(parsed_lines)
+    history_text = "\n".join(parsed_lines) if parsed_lines else "暂无历史操作"
+    
+    # 获取最近一次分析类型,用于智能上下文提示
+    last_analysis = get_last_analysis_type(req.conversation_id)
+    context_hint = ""
+    if last_analysis:
+        analysis_name_map = {
+            "buffer_analysis": "缓冲区分析",
+            "intersection_analysis": "相交分析",
+            "erase_analysis": "擦除分析",
+            "shortest_path_analysis": "最短路径分析"
+        }
+        context_hint = f"\n当前上下文：最近执行了【{analysis_name_map.get(last_analysis, last_analysis)}】，若用户说'保存'则默认保存该分析结果。"
     first_ai: AIMessage = llm_with_tools.invoke([
         SystemMessage(content=(
             "你有十二个工具，分为三组：\n\n"
@@ -413,8 +483,7 @@ async def tool_chat(req: ToolChatRequest):
             "3. 图层名称参数为可选：用户未指定时直接调用工具，系统自动生成默认名称\n"
             "4. 若用户使用@图层名称，请将@后的文本作为图层名称传递\n"
             "5. 严禁自行执行这些操作，必须通过工具完成\n\n"
-            f"历史操作(顺序, 最新在下):\n{history_text}\n"
-            f"最近一次操作: {last_action_text}。若用户问'刚才做了什么'，请直接依据最近几次操作回答。"
+            f"历史操作(最近5条):\n{history_text}{context_hint}"
         )),
         HumanMessage(content=req.prompt)
     ])
@@ -422,40 +491,32 @@ async def tool_chat(req: ToolChatRequest):
         return ChatResponse(success=True, data={"first_call": {"tool_calls": []}, "tool_result": None, "final_answer": first_ai.content})
     tool_call = first_ai.tool_calls[0]
     tool_args = tool_call.get("args", {})
-    
-    # 根据工具名称执行相应的工具
     tool_name = tool_call.get("name", "")
-    if tool_name == "toggle_layer_visibility":
-        tool_result = toggle_layer_visibility.invoke(tool_args)
-    elif tool_name == "query_features_by_attribute":
-        tool_result = query_features_by_attribute.invoke(tool_args)
-    elif tool_name == "save_query_results_as_layer":
-        tool_result = save_query_results_as_layer.invoke(tool_args)
-    elif tool_name == "execute_buffer_analysis":
-        tool_result = execute_buffer_analysis.invoke(tool_args)
-    elif tool_name == "execute_intersection_analysis":
-        tool_result = execute_intersection_analysis.invoke(tool_args)
-    elif tool_name == "execute_erase_analysis":
-        tool_result = execute_erase_analysis.invoke(tool_args)
-    elif tool_name == "execute_shortest_path_analysis":
-        tool_result = execute_shortest_path_analysis.invoke(tool_args)
-    elif tool_name == "save_buffer_results_as_layer":
-        tool_result = save_buffer_results_as_layer.invoke(tool_args)
-    elif tool_name == "save_intersection_results_as_layer":
-        tool_result = save_intersection_results_as_layer.invoke(tool_args)
-    elif tool_name == "save_erase_results_as_layer":
-        tool_result = save_erase_results_as_layer.invoke(tool_args)
-    elif tool_name == "save_path_results_as_layer":
-        tool_result = save_path_results_as_layer.invoke(tool_args)
-    elif tool_name == "rename_layer":
-        tool_result = rename_layer.invoke(tool_args)
+    
+    # 使用工具注册表动态调用(优化1:替代if-elif链)
+    tool_func = TOOL_REGISTRY.get(tool_name)
+    if tool_func:
+        tool_result = tool_func.invoke(tool_args)
     else:
-        tool_result = f"未知工具: {tool_name}"
-    # 记录历史：优先记录action；若保存/导出操作，按分析类型归档
-    if isinstance(tool_result, dict) and "action" in tool_result:
-        history_entry = tool_result.get("action")
+        tool_result = {"type": "error", "action": "unknown_tool", "params": {"tool_name": tool_name}}
+    
+    # 结构化记录历史(优化3:改为Dict格式存储)
+    if isinstance(tool_result, dict):
+        history_entry = {
+            "type": tool_result.get("type", "unknown"),
+            "action": tool_result.get("action", "unknown"),
+            "params": tool_result.get("params", {}),
+            "timestamp": time.time()
+        }
     else:
-        history_entry = tool_result if isinstance(tool_result, str) else str(tool_result)
+        # 兼容旧格式(字符串返回值)
+        history_entry = {
+            "type": "legacy",
+            "action": "string_result",
+            "params": {"result": str(tool_result)},
+            "timestamp": time.time()
+        }
+    
     if req.conversation_id in _conversation_layer_history:
         _conversation_layer_history[req.conversation_id].append(history_entry)
     else:
