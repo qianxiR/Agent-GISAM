@@ -49,6 +49,8 @@ Backend/agent/tools/chroma_db/
 Backend/agent/tools/test_chroma_db/
 Backend/agent/chroma_db/
 *.chroma
-
-# Agent temporary files
+Backend/agent/tools/docs/
 Backend/agent/database/
+Frontend/downloads
+agent/tools/chroma_db/
+agent/tools/docs/
