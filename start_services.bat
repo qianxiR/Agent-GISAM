@@ -33,13 +33,6 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8089') do (
     taskkill /f /pid %%a >nul 2>&1
 )
 
-::::::: 关闭 User 端口 (8088)
-echo 检查端口 8088...
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8088') do (
-    echo 终止进程 %%a (端口 8088)
-    taskkill /f /pid %%a >nul 2>&1
-)
-
 ::::::: 关闭 Analysis 端口 (8087)
 echo 检查端口 8087...
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8087') do (
@@ -61,23 +54,15 @@ goto FAST_START
 
 :FAST_START
 ::::::: 启动 Analysis 服务 (Node.js)
-echo [1/4] 启动 Analysis 服务 (Node.js)...
+echo [1/3] 启动 Analysis 服务 (Node.js)...
 echo 路径: %~dp0Backend\analysis
 start "Analysis Service" cmd /k "cd /d %~dp0Backend\analysis && echo 启动 Analysis 服务... && echo 当前目录: %CD% && npm run dev"
 
 ::::::: 等待2秒
 timeout /t 2 /nobreak >nul
 
-::::::: 启动 User 服务 (Python FastAPI)
-echo [2/4] 启动 User 服务 (Python FastAPI)...
-echo 路径: %~dp0Backend\user
-start "User Service" cmd /k "cd /d %~dp0Backend\user && echo 激活 conda py310 环境... && conda activate py310 && echo 启动 User 服务... && echo 当前目录: %CD% && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8088"
-
-::::::: 等待2秒
-timeout /t 2 /nobreak >nul
-
 ::::::: 启动 Agent 服务 (Python FastAPI)
-echo [3/4] 启动 Agent 服务 (Python FastAPI)...
+echo [2/3] 启动 Agent 服务 (Python FastAPI)...
 echo 路径: %~dp0Backend
 start "Agent Service" cmd /k "cd /d %~dp0Backend && echo 激活 conda py310 环境... && conda activate py310 && echo 启动 Agent 服务... && echo 当前目录: %CD% && python -m uvicorn agent.app:app --reload --host 0.0.0.0 --port 8089"
 
@@ -85,7 +70,7 @@ start "Agent Service" cmd /k "cd /d %~dp0Backend && echo 激活 conda py310 环�
 timeout /t 2 /nobreak >nul
 
 ::::::: 启动 Frontend 服务 (Vue.js)
-echo [4/4] 启动 Frontend 服务 (Vue.js)...
+echo [3/3] 启动 Frontend 服务 (Vue.js)...
 echo 路径: %~dp0Frontend
 start "Frontend Service" cmd /k "cd /d %~dp0Frontend && echo 启动 Frontend 服务... && echo 当前目录: %CD% && npm run dev -- --port 5173 --strictPort --host"
 
@@ -95,7 +80,6 @@ echo     服务启动完成！
 echo ========================================
 echo.
 echo Analysis 服务: 运行在独立窗口 (http://localhost:8087)
-echo User 服务: 运行在独立窗口 (http://localhost:8088)
 echo Agent 服务: 运行在独立窗口 (http://localhost:8089)
 echo Frontend 服务: 运行在独立窗口 (http://localhost:5173)
 echo.
