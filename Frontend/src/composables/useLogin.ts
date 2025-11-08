@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
-import { getUserServiceConfig } from '@/api/config'
+// 已移除后端API调用，不再需要getUserServiceConfig
 
 // 接口定义
 interface UserLoginRequest {
@@ -38,84 +38,38 @@ export function useLogin() {
     }
   }
   
-  // 登录API实现
+  // 登录API实现 - 已移除，改为本地模拟登录
   const login = async (loginData: UserLoginRequest): Promise<ApiResponse> => {
-    try {
-      const baseUrl = getUserServiceConfig().baseUrl
-      const response = await fetch(`${baseUrl}/user/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(loginData),
-      })
-
-      const result = await response.json()
-      
-      if (!response.ok) {
-        // 优先使用后端的 detail 字段，然后是 message 字段
-        const errorMessage = result.detail || result.message || '登录失败'
-        const error = new Error(errorMessage)
-        ;(error as any).status = response.status
-        ;(error as any).statusText = response.statusText
-        ;(error as any).response = result
-        ;(error as any).detail = result.detail  // 保存后端的详细错误信息
-        throw error
+    // 模拟登录成功，不再调用后端API
+    return {
+      success: true,
+      message: '登录成功',
+      token: 'local-token-' + Date.now(),
+      data: {
+        username: loginData.login_identifier
       }
-
-      return result
-    } catch (error) {
-      console.error('登录API调用失败:', error)
-      throw error
     }
   }
 
-  // 获取当前用户信息API
+  // 获取当前用户信息API - 已移除
   const getCurrentUser = async (token: string): Promise<ApiResponse> => {
-    try {
-      const baseUrl = getUserServiceConfig().baseUrl
-      const response = await fetch(`${baseUrl}/user/me`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      const result = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(result.detail || '获取当前用户信息失败')
-      }
-
-      return result
-    } catch (error) {
-      console.error('获取当前用户信息API调用失败:', error)
-      throw error
+    // 不再调用后端API，返回本地数据
+    const userInfo = localStorage.getItem('userInfo')
+    return {
+      success: true,
+      message: '获取用户信息成功',
+      data: userInfo ? JSON.parse(userInfo) : null
     }
   }
 
-  // 同步用户信息API
+  // 同步用户信息API - 已移除后端调用
   const syncUserInfoAfterLogin = async (token: string, userData?: any): Promise<boolean> => {
-    try {
-      // 先保存本地数据到localStorage
-      if (userData) {
-        localStorage.setItem('userInfo', JSON.stringify(userData))
-        localStorage.setItem('authToken', token)
-      }
-      
-      // 从后端获取完整的用户信息
-      const response = await getCurrentUser(token)
-      if (response.success && response.data) {
-        // 更新本地存储
-        localStorage.setItem('userInfo', JSON.stringify(response.data))
-        localStorage.setItem('userInfoLastUpdate', new Date().toISOString())
-      }
-      return response.success
-    } catch (error) {
-      console.warn('获取用户信息失败，使用本地数据:', error)
-      return false
+    // 只保存本地数据，不再调用后端API
+    if (userData) {
+      localStorage.setItem('userInfo', JSON.stringify(userData))
+      localStorage.setItem('authToken', token)
     }
+    return true
   }
 
   // 处理登录
@@ -136,7 +90,7 @@ export function useLogin() {
         return false
       }
       
-      // 调用后端登录API
+      // 本地模拟登录，不再调用后端API
       const loginData = {
         login_identifier: account.value,
         password: password.value
@@ -169,14 +123,10 @@ export function useLogin() {
         // 使用store管理登录状态
         userStore.login(userData, response.token)
         
-        // 从后端获取完整的用户信息
-        try {
-          await syncUserInfoAfterLogin(response.token, userData)
-          // 更新store状态
-          userStore.syncUserInfoFromStorage()
-        } catch (error) {
-          console.warn('获取用户信息失败，使用本地数据:', error)
-        }
+        // 同步用户信息到本地存储（不再调用后端）
+        await syncUserInfoAfterLogin(response.token, userData)
+        // 更新store状态
+        userStore.syncUserInfoFromStorage()
         
         // 记住密码功能
         if (rememberPassword.value) {

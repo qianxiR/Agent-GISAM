@@ -167,5 +167,27 @@ class PostgreSQLUserRepository(UserRepository):
             "active_users": int(active or 0),
             "new_users_today": int(new_today or 0),
         }
+    
+    async def change_password_hashed(self, user_id: UUID, hashed_password: str) -> Optional[UserEntity]:
+        """修改用户密码（使用已哈希的密码）"""
+        stmt = (
+            update(UserModel)
+            .where(UserModel.id == user_id)
+            .values(hashed_password=hashed_password, updated_at=func.now())
+            .returning(UserModel)
+        )
+        result = await self.session.execute(stmt)
+        model = result.scalar_one_or_none()
+        return _model_to_entity(model) if model else None
+    
+    async def update_user_superuser_status(self, user_id: UUID, is_superuser: bool) -> bool:
+        """更新用户超级用户状态"""
+        stmt = (
+            update(UserModel)
+            .where(UserModel.id == user_id)
+            .values(is_superuser=is_superuser, updated_at=func.now())
+        )
+        result = await self.session.execute(stmt)
+        return result.rowcount > 0
 
 

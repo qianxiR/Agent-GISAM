@@ -5,6 +5,7 @@ import { usePopupStore } from '@/stores/popupStore'
 import { useAnalysisStore } from '@/stores/analysisStore'
 import { useLayerDataStore } from '@/stores/layerDataStore'
 import { useMonitoringPlatformStore } from '@/stores/monitoringPlatformStore'
+import { ensureStringID } from '@/utils/stringIdGenerator'
 import type { Maplayer, DrawlayerSaveType, Polygon, Feature, FeatureCollection } from '@/types/map';
 
 // 获取CSS变量的辅助函数
@@ -261,14 +262,37 @@ export function uselayermanager() {
         // 获取当前打开的图层列表
         const openLayers = mapStore.vectorlayers
           .filter(layer => layer.visible)
-          .map(layer => ({
-            id: layer.id,
-            name: layer.name,
-            type: layer.type,
-            source: layer.source,
-            isLazyLoaded: layer.isLazyLoaded,
-            isLoaded: layer.isLoaded
-          }))
+          .map(layer => {
+            const layerData: any = {
+              id: layer.id,
+              name: layer.name,
+              type: layer.type,
+              source: layer.source,
+              isLazyLoaded: layer.isLazyLoaded,
+              isLoaded: layer.isLoaded
+            }
+            
+            // 如果图层有字段信息，添加到返回数据中
+            if (layer.layer) {
+              const source = layer.layer.getSource()
+              if (source) {
+                const features = source.getFeatures()
+                if (features.length > 0) {
+                  // 从第一个要素中提取字段名和字段值
+                  const firstFeature = features[0]
+                  const properties = firstFeature.getProperties()
+                  const fieldNames = Object.keys(properties).filter(key => key !== 'geometry')
+                  const fieldValues = fieldNames.map(name => properties[name])
+                  
+                  layerData.fieldNames = fieldNames
+                  layerData.fieldValues = fieldValues
+                }
+              }
+            }
+            
+            // 确保 stringID 存在
+            return ensureStringID(layerData)
+          })
         
         const totalCount = openLayers.length
         const layerNames = openLayers.map(l => l.name).join('、')

@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
-import { getUserServiceConfig } from '@/api/config'
+// 已移除后端API调用，不再需要getUserServiceConfig
 
 // 接口定义
 interface UserRegisterRequest {
@@ -83,102 +83,40 @@ export function useRegister() {
     }
   }
   
-  // 注册API实现
+  // 注册API实现 - 已移除，改为本地模拟注册
   const register = async (userData: UserRegisterRequest): Promise<ApiResponse> => {
-    try {
-      const baseUrl = getUserServiceConfig().baseUrl
-      const response = await fetch(`${baseUrl}/user/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      })
-
-      const result = await response.json()
-      
-      if (!response.ok) {
-        // 优先使用后端的 detail 字段，然后是 message 字段
-        const errorMessage = result.detail || result.message || '注册失败'
-        const error = new Error(errorMessage)
-        ;(error as any).status = response.status
-        ;(error as any).statusText = response.statusText
-        ;(error as any).response = result
-        ;(error as any).detail = result.detail  // 保存后端的详细错误信息
-        throw error
+    // 模拟注册成功，不再调用后端API
+    return {
+      success: true,
+      message: '注册成功',
+      data: {
+        username: userData.username,
+        email: userData.email
       }
-
-      return result
-    } catch (error) {
-      console.error('注册API调用失败:', error)
-      throw error
     }
   }
 
-  // 登录API实现
+  // 登录API实现 - 已移除，改为本地模拟登录
   const login = async (loginData: UserLoginRequest): Promise<ApiResponse> => {
-    try {
-      const baseUrl = getUserServiceConfig().baseUrl
-      const response = await fetch(`${baseUrl}/user/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(loginData),
-      })
-
-      const result = await response.json()
-      
-      if (!response.ok) {
-        const error = new Error(result.detail || result.message || '登录失败')
-        ;(error as any).status = response.status
-        ;(error as any).statusText = response.statusText
-        ;(error as any).response = result
-        throw error
+    // 模拟登录成功，不再调用后端API
+    return {
+      success: true,
+      message: '登录成功',
+      token: 'local-token-' + Date.now(),
+      data: {
+        username: loginData.login_identifier
       }
-
-      return result
-    } catch (error) {
-      console.error('登录API调用失败:', error)
-      throw error
     }
   }
 
-  // 同步用户信息API
+  // 同步用户信息API - 已移除后端调用
   const syncUserInfoAfterRegister = async (token: string, userData?: any): Promise<boolean> => {
-    try {
-      // 先保存本地数据到localStorage
-      if (userData) {
-        localStorage.setItem('userInfo', JSON.stringify(userData))
-        localStorage.setItem('authToken', token)
-      }
-      
-      // 从后端获取完整的用户信息
-      const baseUrl = getUserServiceConfig().baseUrl
-      const response = await fetch(`${baseUrl}/user/me`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      const result = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(result.detail || '获取当前用户信息失败')
-      }
-
-      if (result.success && result.data) {
-        // 更新本地存储
-        localStorage.setItem('userInfo', JSON.stringify(result.data))
-        localStorage.setItem('userInfoLastUpdate', new Date().toISOString())
-      }
-      return result.success
-    } catch (error) {
-      console.warn('获取用户信息失败，使用本地数据:', error)
-      return false
+    // 只保存本地数据，不再调用后端API
+    if (userData) {
+      localStorage.setItem('userInfo', JSON.stringify(userData))
+      localStorage.setItem('authToken', token)
     }
+    return true
   }
 
   // 处理注册
@@ -200,7 +138,7 @@ export function useRegister() {
         return false
       }
       
-      // 调用后端注册API
+      // 本地模拟注册，不再调用后端API
       const registerData = {
         username: username.value.trim(),
         email: email.value.trim(),
@@ -212,7 +150,7 @@ export function useRegister() {
       const response = await register(registerData)
       
       if (response.success) {
-        // 注册成功后自动登录
+        // 注册成功后自动登录（本地模拟）
         const loginData = {
           login_identifier: username.value.trim(),
           password: password.value
@@ -233,14 +171,10 @@ export function useRegister() {
           // 使用store管理登录状态
           userStore.login(userData, loginResponse.token)
           
-          // 从后端获取完整的用户信息
-          try {
-            await syncUserInfoAfterRegister(loginResponse.token, userData)
-            // 更新store状态
-            userStore.syncUserInfoFromStorage()
-          } catch (error) {
-            console.warn('获取用户信息失败，使用本地数据:', error)
-          }
+          // 同步用户信息到本地存储（不再调用后端）
+          await syncUserInfoAfterRegister(loginResponse.token, userData)
+          // 更新store状态
+          userStore.syncUserInfoFromStorage()
           
           // 异步显示注册成功通知
           setTimeout(() => {

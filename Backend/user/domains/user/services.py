@@ -170,7 +170,13 @@ class UserService:
 
     async def change_password_hashed(self, user_id: UUID, hashed_new_password: str) -> UserEntity:
         """直接以哈希后的新密码更新用户密码。"""
-        updated = await self.user_repository.update(user_id, {"hashed_password": hashed_new_password})
+        # 检查仓储是否有change_password_hashed方法
+        if hasattr(self.user_repository, 'change_password_hashed'):
+            updated = await self.user_repository.change_password_hashed(user_id, hashed_new_password)
+        else:
+            # 降级使用update方法
+            updated = await self.user_repository.update(user_id, {"hashed_password": hashed_new_password})
+        
         if not updated:
             raise ValueError("密码修改失败")
         return updated
