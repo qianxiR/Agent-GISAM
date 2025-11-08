@@ -18,6 +18,8 @@ export interface APIConfig {
   baseUrl: string
   mapService: string
   dataService: string
+  mapName: string // 地图服务中的地图名称
+  workspace: string // 数据源工作空间名称
   datasetName: string
   wuhanlayers: Wuhanlayer[]
   baseMaps: BaseMapConfig // 新增底图配置

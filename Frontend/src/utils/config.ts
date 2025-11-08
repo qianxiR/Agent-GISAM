@@ -42,6 +42,8 @@ export const createAPIConfig = (): APIConfig => {
     baseUrl: baseUrl.replace(/\/$/, ''), // 移除末尾斜杠
     mapService,
     dataService,
+    mapName, // 地图服务中的地图名称
+    workspace, // 数据源工作空间名称
     datasetName: import.meta.env.VITE_SUPERMAP_DATASET_NAME,
     
     // ===== 底图服务配置 =====
@@ -71,14 +73,14 @@ export const createAPIConfig = (): APIConfig => {
     wuhanlayers: [
       // ===== 市县级行政区图层 =====
       // 调用者: useMap.ts -> loadVectorlayer()
-      // 服务器地址: ${baseUrl}/${dataService}/datasources/${workspace}/datasets/wuhan_map_县级
+      // 服务器地址: ${baseUrl}/${dataService}/datasources/${workspace}/datasets/武汉_县级
       // 作用: 提供县级行政区边界数据，用于区域划分和空间分析
       { 
         name: `武汉_县级@${workspace}@@武汉`, 
         type: 'polygon', 
         visible: true, // 系统启动时默认显示
         group: '县级行政区',
-        datasetName: 'wuhan_map_县级',
+        datasetName: '武汉_县级', // 正确的数据集名称
         dataService: `${dataService}/datasources/${workspace}`,
         lazyLoad: false // 启动时加载，缓存在内存中
       },
@@ -95,85 +97,7 @@ export const createAPIConfig = (): APIConfig => {
         datasetName: 'wuhan_map_市级',
         dataService: `${dataService}/datasources/${workspace}`,
         lazyLoad: false // 启动时加载，缓存在内存中
-      },
-    
-      // ===== 交通水系一体化图层组 =====
-      // 调用者: useMap.ts -> loadVectorlayer()
-      // 服务器地址: ${baseUrl}/${dataService}/datasources/${workspace}/datasets/公路
-      // 作用: 提供公路网络数据，用于交通分析和路径规划
-      { 
-        name: `公路@${workspace}@@${mapName}`, 
-        type: 'line', 
-        visible: false, // 启动时加载但隐藏，用户可手动显示
-        group: '城市基本信息',
-        datasetName: '公路',
-        dataService: `${dataService}/datasources/${workspace}`,
-        lazyLoad: false // 启动时加载，缓存在内存中
-      },
-      // 调用者: useMap.ts -> loadVectorlayer()
-      // 服务器地址: ${baseUrl}/${dataService}/datasources/${workspace}/datasets/铁路
-      // 作用: 提供铁路网络数据，用于交通分析和运输规划
-      { 
-        name: `铁路@${workspace}@@${mapName}`, 
-        type: 'line', 
-        visible: false, // 启动时加载但隐藏，用户可手动显示
-        group: '城市基本信息',
-        datasetName: '铁路',
-        dataService: `${dataService}/datasources/${workspace}`,
-        lazyLoad: false // 启动时加载，缓存在内存中
-      },
-    
-      // 城市基本信息图层组 - 水系信息
-      { 
-        name: `水系线@${workspace}@@${mapName}`, 
-        type: 'line', 
-        visible: false, // 启动时加载但隐藏，用户可手动显示
-        group: '城市基本信息',
-        datasetName: '水系线',
-        dataService: `${dataService}/datasources/${workspace}`,
-        lazyLoad: false // 启动时加载，缓存在内存中
-      },
-      { 
-        name: `水系面@${workspace}@@${mapName}`, 
-        type: 'polygon', 
-        visible: false, // 启动时加载但隐藏，用户可手动显示
-        group: '城市基本信息',
-        datasetName: '水系面',
-        dataService: `${dataService}/datasources/${workspace}`,
-        lazyLoad: false // 启动时加载，缓存在内存中
-      },
-      
-      
-      // 基础设施图层组 - 居民地信息
-      { 
-        name: `居民地地名点@${workspace}@@${mapName}`, 
-        type: 'point', 
-        visible: false, // 启动时加载但隐藏，用户可手动显示
-        group: '基础设施',
-        datasetName: '居民地地名点',
-        dataService: `${dataService}/datasources/${workspace}`,
-        lazyLoad: false // 启动时加载，缓存在内存中
-      },
-      
-      // 基础设施图层组 - 公共服务设施
-      { 
-        name: `学校@${workspace}@@${mapName}`, 
-        type: 'point', 
-        visible: false, // 启动时加载但隐藏，用户可手动显示
-        group: '基础设施',
-        datasetName: '学校',
-        dataService: `${dataService}/datasources/${workspace}`,
-        lazyLoad: false // 启动时加载，缓存在内存中
-      },
-      { 
-        name: `医院@${workspace}@@${mapName}`, 
-        type: 'point', 
-        visible: false, // 启动时加载但隐藏，用户可手动显示
-        group: '基础设施',
-        datasetName: '医院',
-        dataService: `${dataService}/datasources/${workspace}`,
-        lazyLoad: false // 启动时加载，缓存在内存中
-      },
+      }
       
 
     ],

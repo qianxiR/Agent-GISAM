@@ -4,6 +4,8 @@ import { useLayerDataStore } from '@/stores/layerDataStore'
 import { createAPIConfig } from '@/utils/config'
 import { notificationManager } from '@/utils/notification'
 import { useMapStyles } from './useMapStyles'
+import { superMapClient } from '@/api/supermap'
+import { uselayermanager } from './useLayerManager'
 
 const ol = window.ol;
 
@@ -34,12 +36,71 @@ export function useMapData() {
   const loadingStore = useLoadingStore()
   const layerDataStore = useLayerDataStore()
   const { createLayerStyle } = useMapStyles()
+  const { saveFeaturesAslayer } = uselayermanager()
 
   /**
-   * 加载矢量图层 - 连接SuperMap iServer数据服务获取地理要素数据
+   * 加载矢量图层 - 使用SuperMap数据服务按属性方式加载
    * 调用者: useMapData() -> loadVectorLayers() -> loadVectorLayer()
-   * 作用: 从SuperMap服务器加载指定图层的矢量要素数据并渲染到地图上
+   * 作用: 从SuperMap数据服务获取要素数据，转换为矢量图层并渲染到地图上
+   * 
+   * 入参:
+   * - map (ol.Map): OpenLayers地图实例
+   * - layerConfig (Object): 图层配置对象，包含图层名称、类型、可见性等
+   * - visibleOverride (boolean, 可选): 覆盖配置中的可见性设置
+   * 
+   * 方法:
+   * - 使用SuperMap数据服务API获取要素数据
+   * - 将SuperMap要素数据转换为GeoJSON格式
+   * - 使用OpenLayers GeoJSON格式器创建Feature对象
+   * - 创建矢量图层并添加到地图
+   * 
+   * 出参:
+   * - Promise<void>: 图层加载完成的Promise
    */
+  /**
+   * 修复GeoJSON坐标格式：将 {x, y} 对象转换为 [x, y] 数组
+   */
+  const fixGeoJSONCoordinates = (geojson: any): any => {
+    if (!geojson || typeof geojson !== 'object') {
+      return geojson
+    }
+    
+    // 如果是坐标对象 {x, y}，转换为数组 [x, y]
+    if (geojson.x !== undefined && geojson.y !== undefined) {
+      return [geojson.x, geojson.y]
+    }
+    
+    // 如果是数组，递归处理每个元素
+    if (Array.isArray(geojson)) {
+      return geojson.map(item => fixGeoJSONCoordinates(item))
+    }
+    
+    // 如果是对象，递归处理每个属性
+    if (geojson.type === 'FeatureCollection') {
+      return {
+        ...geojson,
+        features: geojson.features?.map((feature: any) => fixGeoJSONCoordinates(feature)) || []
+      }
+    }
+    
+    if (geojson.type === 'Feature') {
+      return {
+        ...geojson,
+        geometry: fixGeoJSONCoordinates(geojson.geometry),
+        properties: geojson.properties
+      }
+    }
+    
+    if (geojson.type && ['Point', 'LineString', 'Polygon', 'MultiPoint', 'MultiLineString', 'MultiPolygon'].includes(geojson.type)) {
+      return {
+        ...geojson,
+        coordinates: fixGeoJSONCoordinates(geojson.coordinates)
+      }
+    }
+    
+    return geojson
+  }
+
   const loadVectorLayer = async (map: any, layerConfig: any, visibleOverride?: boolean): Promise<void> => {
     // 改进图层名称解析逻辑
     let layerName = layerConfig.name
@@ -51,345 +112,480 @@ export function useMapData() {
       }
     } 
     
-    // ===== 从服务器加载数据 =====
-    const apiConfig = createAPIConfig()
-    console.log(`[${layerName}] 从服务器加载数据`)
-    
-      // 创建新的图层容器
-      const style = createLayerStyle(layerConfig, layerName);
+    // ===== 如果是武汉_县级图层，直接从本地文件加载 =====
+    if (layerName === '武汉_县级') {
+      console.log(`[${layerName}] 从本地GeoJSON文件加载图层`)
       
-      // 创建Openlayers矢量图层容器，图层创建和渲染：
-      // 1. 创建图层容器
-      // 2. 创建图层源
-      // 3. 创建图层样式
-      // 4. 创建图层
-      // 5. 添加图层到地图
-      // 6. 渲染图层
-      // 7. 更新图层样式
-    const vectorlayer = new ol.layer.Vector({
-        source: new ol.source.Vector({}),
-        style: style
-      });
-    
-    // ===== 连接SuperMap iServer数据服务 =====
-    // 调用者: loadVectorLayer()
-    // 服务器地址: ${baseUrl}/${dataService} (来自 src/utils/config.ts 配置)
-    // 作用: 创建SuperMap要素服务客户端，用于获取矢量数据
-    const dataServiceUrl = `${apiConfig.baseUrl}/${apiConfig.dataService}`
-    const featureService = new ol.supermap.FeatureService(dataServiceUrl);
-    
-    // 解析图层名称获取数据集和数据源信息
-    const parts = layerConfig.name.split('@');
-    const dataset = parts[0];    // 数据集名称，如: '武汉_县级'
-    const datasource = parts[1]; // 数据源名称，如: 'wuhan'
-    const datasetNames = [`${datasource}:${dataset}`];
-
-    // ===== 第一次服务器调用：获取图层要素总数 =====
-    // 调用者: loadVectorLayer()
-    // 服务器地址: ${baseUrl}/${dataService}/datasources/${datasource}/datasets/${dataset}/features.json
-    // 作用: 获取图层的要素总数(featureCount)，用于计算分页
-    const featuresUrl = `${apiConfig.baseUrl}/${apiConfig.dataService}/datasources/${datasource}/datasets/${encodeURIComponent(dataset)}/features.json`;
-    
-    // 调试日志：显示实际访问的URL
-    console.log(`[${layerName}] 访问要素总数URL:`, featuresUrl);
-    
-    // 添加错误处理，检查响应是否为JSON
-    let featuresJson;
-    try {
-      const response = await fetch(featuresUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const responseText = await response.text();
-        throw new Error(`服务器返回非JSON数据: ${responseText.substring(0, 200)}...`);
-      }
-      featuresJson = await response.json();
-    } catch (error) {
-      console.error(`获取图层要素总数失败 [${layerName}]:`, error);
-      console.error(`请求URL: ${featuresUrl}`);
-      throw error;
-    }
-    
-    // 获取要素总数
-    let featureCountBounds: number = (featuresJson && typeof featuresJson.featureCount === 'number') ? featuresJson.featureCount : 15;
-    
-    // 如果图层配置了maxFeatures，则限制要素数量
-    if (layerConfig.maxFeatures && layerConfig.maxFeatures > 0) {
-      featureCountBounds = Math.min(featureCountBounds, layerConfig.maxFeatures);
-    }
-    
-    // 计算总页数：featureCount / 20，有余数则页数加一
-    const totalPages = Math.ceil(featureCountBounds / DATA_CONFIG.PAGE_SIZE);
-    
-    // 打印分页加载参数信息
-    console.log(`[${layerName}] 分页加载参数:`, {
-      要素总数: featureCountBounds,
-      每页大小: DATA_CONFIG.PAGE_SIZE,
-      总页数: totalPages,
-      要素总数响应: featuresJson
-    });
-
-    // ===== 从配置中获取地图边界范围 =====
-    // 调用者: loadVectorLayer()
-    // 配置来源: createAPIConfig().mapBounds.extent
-    const mapExtent = apiConfig.mapBounds.extent
-    const mapBounds = new ol.geom.Polygon([[
-      [mapExtent[0], mapExtent[1]], // 左下角 [minLon, minLat]
-      [mapExtent[2], mapExtent[1]], // 右下角 [maxLon, minLat]
-      [mapExtent[2], mapExtent[3]], // 右上角 [maxLon, maxLat]
-      [mapExtent[0], mapExtent[3]], // 左上角 [minLon, maxLat]
-      [mapExtent[0], mapExtent[1]]  // 闭合 [minLon, minLat]
-    ]]);
-
-    // ===== 根据正确的API接口实现分页加载逻辑 =====
-    // 1. 获取featureCount总数
-    // 2. 计算总页数：featureCount / 15，有余数则页数加一
-    // 3. 使用正确的API接口循环加载每页数据
-    
-    const pageSize = DATA_CONFIG.PAGE_SIZE; // 20个要素/页
-    
-    // 存储所有要素数据的数组
-    let allFeatures: any[] = [];
-    
-    // 定义分页加载函数 - 只获取数据，不渲染
-    const loadPage = (pageIndex: number): Promise<any[]> => new Promise(resolve => {
-      const fromIndex = pageIndex * pageSize;
-      const toIndex = Math.min(fromIndex + pageSize - 1, featureCountBounds - 1);
-      
-      console.log(`[${layerName}] 加载第${pageIndex + 1}页，索引范围: ${fromIndex}-${toIndex}`);
-      
-      // 使用正确的API接口格式获取分页数据
-      const pageUrl = `${apiConfig.baseUrl}/${apiConfig.dataService}/datasources/${datasource}/datasets/${encodeURIComponent(dataset)}/features.json?fromIndex=${fromIndex}&toIndex=${toIndex}`;
-      
-      console.log(`[${layerName}] 分页请求URL:`, pageUrl);
-      
-      fetch(pageUrl)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-          return response.json();
-        })
-        .then(async (data) => {
-          if (data && data.childUriList && Array.isArray(data.childUriList)) {
-            console.log(`[${layerName}] 第${pageIndex + 1}页获取到${data.childUriList.length}个要素链接`);
-            
-            // 并行获取所有childUriList中的geometry数据
-            const geometryPromises = data.childUriList.map(async (uri: string, index: number) => {
-              // 确保URI以.json结尾
-              const geometryUrl = uri.endsWith('.json') ? uri : `${uri}.json`;
-              
-              try {
-                console.log(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} 获取geometry:`, geometryUrl);
-                
-                const geometryResponse = await fetch(geometryUrl);
-                if (!geometryResponse.ok) {
-                  throw new Error(`HTTP ${geometryResponse.status}: ${geometryResponse.statusText}`);
-                }
-                
-                // 检查响应内容类型
-                const contentType = geometryResponse.headers.get('content-type');
-                console.log(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} 响应类型:`, contentType);
-                
-                if (!contentType || !contentType.includes('application/json')) {
-                  // 如果不是JSON，打印响应内容的前200个字符
-                  const responseText = await geometryResponse.text();
-                  console.error(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} 非JSON响应:`, responseText.substring(0, 200));
-                  throw new Error(`服务器返回非JSON数据: ${responseText.substring(0, 100)}...`);
-                }
-                
-                const geometryData = await geometryResponse.json();
-                console.log(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} geometry数据:`, geometryData);
-                return geometryData;
-              } catch (error) {
-                console.error(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} geometry获取失败:`, error);
-                console.error(`[${layerName}] 失败的URL:`, geometryUrl);
-                return null;
-              }
-            });
-            
-            // 等待所有geometry数据加载完成
-            const geometryResults = await Promise.all(geometryPromises);
-            
-            // 过滤掉失败的请求，只处理成功获取的geometry数据
-            const validGeometries = geometryResults.filter(result => result !== null);
-            
-            if (validGeometries.length > 0) {
-              // 将SuperMap格式的geometry数据转换为OpenLayers要素
-              const features: any[] = [];
-              
-              validGeometries.forEach((geometryData: any, index: number) => {
-                try {
-                  // 解析SuperMap格式的geometry数据
-                  if (geometryData.geometry && geometryData.geometry.type === 'REGION') {
-                    // 处理面要素（REGION）
-                    const coordinates = geometryData.geometry.points.map((point: any) => [point.x, point.y]);
-                    // 闭合多边形（首尾坐标相同）
-                    if (coordinates.length > 0 && (coordinates[0][0] !== coordinates[coordinates.length - 1][0] || coordinates[0][1] !== coordinates[coordinates.length - 1][1])) {
-                      coordinates.push([coordinates[0][0], coordinates[0][1]]);
-                    }
-                    
-                    const polygon = new ol.geom.Polygon([coordinates]);
-                    const feature = new ol.Feature({
-                      geometry: polygon,
-                      properties: {
-                        id: geometryData.ID,
-                        name: geometryData.fieldValues ? geometryData.fieldValues[5] : '', // NAME字段
-                        area: geometryData.fieldValues ? geometryData.fieldValues[2] : '', // SMAREA字段
-                        height: geometryData.fieldValues ? geometryData.fieldValues[8] : '', // HEIGHT字段
-                        ...geometryData
-                      }
-                    });
-                    features.push(feature);
-                  } else if (geometryData.geometry && geometryData.geometry.type === 'LINE') {
-                    // 处理线要素（LINE）
-                    const coordinates = geometryData.geometry.points.map((point: any) => [point.x, point.y]);
-                    const lineString = new ol.geom.LineString(coordinates);
-                    const feature = new ol.Feature({
-                      geometry: lineString,
-                      properties: {
-                        id: geometryData.ID,
-                        name: geometryData.fieldValues ? geometryData.fieldValues[5] : '',
-                        ...geometryData
-                      }
-                    });
-                    features.push(feature);
-                  } else if (geometryData.geometry && geometryData.geometry.type === 'POINT') {
-                    // 处理点要素（POINT）
-                    const point = geometryData.geometry.points[0];
-                    const pointGeom = new ol.geom.Point([point.x, point.y]);
-                    const feature = new ol.Feature({
-                      geometry: pointGeom,
-                      properties: {
-                        id: geometryData.ID,
-                        name: geometryData.fieldValues ? geometryData.fieldValues[5] : '',
-                        ...geometryData
-                      }
-                    });
-                    features.push(feature);
-                  }
-                } catch (error) {
-                  console.error(`[${layerName}] 第${pageIndex + 1}页-要素${index + 1} geometry解析失败:`, error);
-                }
-              });
-              
-              // 返回转换后的要素，不直接渲染
-              console.log(`[${layerName}] 第${pageIndex + 1}页数据转换完成，获得${features.length}个要素`);
-              resolve(features);
-            } else {
-              console.warn(`[${layerName}] 第${pageIndex + 1}页没有成功获取到任何geometry数据`);
-              resolve([]);
-            }
-          } else {
-            console.warn(`[${layerName}] 第${pageIndex + 1}页响应中没有childUriList字段或格式不正确`);
-            resolve([]);
-          }
-        })
-        .catch(error => {
-          console.error(`[${layerName}] 第${pageIndex + 1}页加载失败:`, error);
-          resolve([]); // 返回空数组
-        });
-    });
-
-    // ===== 批量加载和渲染流程 =====
-    // 1. 先批量保存所有要素数据（1000个一批）
-    // 2. 保存完成后，分批渲染到地图（10000个一批）
-    const batchSaveSize = 100; // 每批保存1000个要素
-    const batchRenderSize = 100; // 每批渲染10000个要素
-    
-        setTimeout(() => {
-          (async () => {
-            try {
-          console.log(`[${layerName}] 开始批量加载，共${totalPages}页`);
-          
-          // 第一阶段：批量加载所有数据
-          for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-            const pageFeatures = await loadPage(pageIndex);
-            allFeatures = allFeatures.concat(pageFeatures);
-            
-            // 每1000个要素打印一次进度
-            if (allFeatures.length % batchSaveSize === 0 || pageIndex === totalPages - 1) {
-              console.log(`[${layerName}] 已保存${allFeatures.length}个要素数据`);
-            }
-            
-            // 每页之间添加小延迟，避免服务器压力过大
-            if (pageIndex < totalPages - 1) {
-              await new Promise(resolve => setTimeout(resolve, 50));
-            }
-          }
-          
-          console.log(`[${layerName}] 数据加载完成，共获得${allFeatures.length}个要素`);
-          
-          // 第二阶段：分批渲染到地图
-          console.log(`[${layerName}] 开始分批渲染到地图，每批${batchRenderSize}个要素`);
-          
-          for (let i = 0; i < allFeatures.length; i += batchRenderSize) {
-            const batchFeatures = allFeatures.slice(i, i + batchRenderSize);
-            vectorlayer.getSource().addFeatures(batchFeatures);
-            
-            const batchNumber = Math.floor(i / batchRenderSize) + 1;
-            const totalBatches = Math.ceil(allFeatures.length / batchRenderSize);
-            console.log(`[${layerName}] 渲染第${batchNumber}/${totalBatches}批，${batchFeatures.length}个要素`);
-            
-            // 每批渲染之间添加延迟，避免界面卡顿
-            if (i + batchRenderSize < allFeatures.length) {
-              await new Promise(resolve => setTimeout(resolve, 100));
-            }
-          }
-          
-          console.log(`[${layerName}] 批量加载和渲染完成，共渲染${allFeatures.length}个要素`);
-          
-          // 更新图层状态管理中的要素数量信息
-          const layerIndex = mapStore.vectorlayers.findIndex(l => l.name === layerName);
-          if (layerIndex > -1) {
-            mapStore.vectorlayers[layerIndex] = {
-              ...mapStore.vectorlayers[layerIndex],
-              featureCount: allFeatures.length,
-              isLoaded: true
-            };
-          }
-          
-            } catch (error) {
-          console.error(`[${layerName}] 批量加载错误:`, error);
-            }
-          })();
-        }, DATA_CONFIG.PAGINATION_DELAY);
+      try {
+        loadingStore.updateLoading('map-init', `正在加载图层数据: ${layerName}...`)
         
-    // ===== 加载完成通知 =====
-        // 调用者: loadVectorLayer()
-    // 作用: 显示图层加载完成的统计信息
+        // 使用fetch加载本地GeoJSON文件（与长江面/长江线相同的方式）
+        const response = await fetch('/src/views/dashboard/ViewPage/武汉_县级.geojson')
+        if (!response.ok) {
+          throw new Error(`加载GeoJSON文件失败: HTTP ${response.status}`)
+        }
+        
+        let geojsonData = await response.json()
+        
+        // 修复坐标格式：将 {x, y} 转换为 [x, y]
+        geojsonData = fixGeoJSONCoordinates(geojsonData)
+        
+        console.log(`[${layerName}] 成功加载GeoJSON文件，要素数量: ${geojsonData.features?.length || 0}`)
+        
+        // 使用OpenLayers GeoJSON格式器读取要素（与长江面/长江线相同的方式）
+        const geoJsonFormat = new ol.format.GeoJSON()
+        const features = geoJsonFormat.readFeatures(geojsonData, {
+          featureProjection: map.getView().getProjection()
+        })
+        
+        console.log(`[${layerName}] 成功创建 ${features.length} 个OpenLayers要素`)
+        
+        // 为每个要素设置属性
+        features.forEach((feature: any, index: number) => {
+          const properties = feature.getProperties()
+          
+          // 解析fieldNames和fieldValues数组，组合成实际的属性对象
+          let parsedProperties: any = {}
+          
+          // 如果存在fieldNames和fieldValues数组，将它们组合成键值对
+          if (properties.fieldNames && properties.fieldValues && 
+              Array.isArray(properties.fieldNames) && Array.isArray(properties.fieldValues)) {
+            properties.fieldNames.forEach((fieldName: string, i: number) => {
+              if (i < properties.fieldValues.length) {
+                parsedProperties[fieldName] = properties.fieldValues[i]
+              }
+            })
+          } else {
+            // 如果没有fieldNames/fieldValues，直接使用原始属性
+            parsedProperties = { ...properties }
+          }
+          
+          // 只保留指定的字段：NAME_1、PAC_FIRST_1、FIELD_SMPERIMETER
+          const allowedFields = ['NAME_1', 'PAC_FIRST_1', 'FIELD_SMPERIMETER']
+          const filteredProperties: any = {}
+          allowedFields.forEach(field => {
+            if (parsedProperties[field] !== undefined) {
+              filteredProperties[field] = parsedProperties[field]
+            }
+          })
+          
+          // 调试：打印第一个要素的属性
+          if (index === 0) {
+            console.log(`[${layerName}] 第一个要素保留的属性:`, filteredProperties)
+            console.log(`[${layerName}] NAME_1值:`, filteredProperties.NAME_1)
+          }
+          
+          // 设置要素属性
+          feature.set('id', `wuhan-county-${index}`)
+          feature.set('layer_name', layerName)
+          feature.set('geometry_type', feature.getGeometry()?.getType() || 'Polygon')
+          feature.set('data_source', '本地文件')
+          feature.set('last_update', new Date().toISOString())
+          
+          // 只设置过滤后的属性
+          Object.keys(filteredProperties).forEach(key => {
+            feature.set(key, filteredProperties[key])
+          })
+          
+          // 清理不需要的属性（fieldNames、fieldValues等）
+          const propertiesToRemove = ['fieldNames', 'fieldValues', 'stringID']
+          propertiesToRemove.forEach(key => {
+            if (feature.get(key) !== undefined) {
+              feature.unset(key)
+            }
+          })
+          
+          // 保留ID（如果需要的话）
+          if (properties.ID !== undefined) {
+            feature.set('ID', properties.ID)
+          }
+        })
+        
+        // 创建武汉县级图层的样式函数（带动态注记显示NAME_1）
+        const createWuhanCountyStyle = (feature: any) => {
+          const css = getComputedStyle(document.documentElement)
+          const strokeColor = css.getPropertyValue('--layer-stroke-武汉_县级').trim() || '#0078D4'
+          const fillColor = css.getPropertyValue('--layer-fill-武汉_县级').trim() || 'rgba(0, 120, 212, 0.1)'
+          
+          // 获取NAME_1属性作为注记文本
+          const nameText = feature.get('NAME_1') || ''
+          
+          return new ol.style.Style({
+            fill: new ol.style.Fill({
+              color: fillColor
+            }),
+            stroke: new ol.style.Stroke({
+              color: strokeColor,
+              width: 2
+            }),
+            text: new ol.style.Text({
+              text: nameText, // 动态显示NAME_1
+              font: 'bold 14px Arial', // 加粗字体，参考长江面样式
+              fill: new ol.style.Fill({
+                color: '#000000' // 黑色文字
+              }),
+              stroke: new ol.style.Stroke({
+                color: '#ffffff', // 白色描边
+                width: 3 // 加粗描边
+              }),
+              offsetY: 0,
+              textAlign: 'center'
+            })
+          })
+        }
+        
+        // 直接创建图层并添加到地图（与长江面/长江线相同的方式）
+        // 创建矢量源
+        const vectorSource = new ol.source.Vector({
+          features: features
+        })
+        
+        // 创建矢量图层（使用样式函数以支持动态注记）
+        const vectorLayer = new ol.layer.Vector({
+          source: vectorSource,
+          style: createWuhanCountyStyle, // 使用样式函数而不是固定样式
+          visible: visibleOverride !== undefined ? visibleOverride : layerConfig.visible !== false,
+          zIndex: 100
+        })
+        
+        // 设置图层属性
+        vectorLayer.set('layerName', layerName)
+        vectorLayer.set('layerType', 'vector')
+        vectorLayer.set('sourceType', 'upload') // 设置为upload类型，显示在上传图层分组中
+        vectorLayer.set('description', `本地文件 - ${layerName}`)
+        
+        // 添加到地图
+        map.addLayer(vectorLayer)
+        
+        // 添加到图层管理列表
+        const layerInfo = {
+          id: `wuhan-county-${Date.now()}`,
+          name: layerName,
+          layer: vectorLayer,
+          visible: visibleOverride !== undefined ? visibleOverride : layerConfig.visible !== false,
+          type: 'vector' as const,
+          source: 'local' as const
+        }
+        
+        mapStore.vectorlayers.push(layerInfo)
+        mapStore.vectorlayers = [...mapStore.vectorlayers] // 强制触发响应式更新
+        
+        // 保存属性数据到layerDataStore（只保留指定字段）
+        const allowedFields = ['NAME_1', 'PAC_FIRST_1', 'FIELD_SMPERIMETER']
+        const featuresData = features.map((feature: any, index: number) => {
+          const allProperties = feature.getProperties()
+          const filteredProps: any = {}
+          
+          // 只保留允许的字段
+          allowedFields.forEach(field => {
+            if (allProperties[field] !== undefined) {
+              filteredProps[field] = allProperties[field]
+            }
+          })
+          
+          return {
+            id: feature.getId() || `${layerName}_${Date.now()}_${index}`,
+            properties: filteredProps
+          }
+        })
+        layerDataStore.setLayerAttributes(layerName, featuresData)
+        
+        console.log(`[${layerName}] 图层已加载完成`)
         notificationManager.info(
-      `图层 ${layerName} 开始加载`,
-      `要素总数: ${featureCountBounds}\n总页数: ${totalPages}\n每页大小: ${pageSize}\n数据来源: SuperMap iServer\n服务器地址: ${apiConfig.baseUrl}\n✅ 使用标准分页加载`
-        );
-    
-    const resolvedVisible = typeof visibleOverride === 'boolean' ? visibleOverride : !!layerConfig.visible
-    vectorlayer.setVisible(resolvedVisible);
-    let zIndex;
-    if (layerName === '武汉_市级') {
-      zIndex = DATA_CONFIG.Z_INDEX.CITY_BOUNDARY; // 武汉_市级图层使用最低Z-index
-    } else if (layerName === '武汉_县级') {
-      zIndex = DATA_CONFIG.Z_INDEX.COUNTY_BOUNDARY; // 武汉_县级图层使用中等Z-index
-    } else {
-      zIndex = DATA_CONFIG.Z_INDEX.DEFAULT_OFFSET + mapStore.vectorlayers.length; // 其他图层使用默认Z-index
+          `图层 ${layerName} 已加载`,
+          `从本地GeoJSON文件加载\n✅ 共 ${features.length} 个要素`
+        )
+        
+        return
+      } catch (error) {
+        console.error(`[${layerName}] 加载本地GeoJSON文件失败:`, error)
+        notificationManager.error(
+          `图层 ${layerName} 加载失败`,
+          error instanceof Error ? error.message : '未知错误'
+        )
+        throw error
+      }
     }
-    vectorlayer.setZIndex(zIndex);
     
-    // 添加图层到地图和状态管理
-      map.addLayer(vectorlayer);
+    // ===== 其他图层使用数据服务加载矢量图层 =====
+    const apiConfig = createAPIConfig()
+    console.log(`[${layerName}] 使用数据服务加载矢量图层`)
+    
+    try {
+      // 获取数据集名称
+      const datasetName = layerConfig.datasetName || layerName
       
-      mapStore.vectorlayers.push({
-        id: layerConfig.name,
-        name: layerName,
-        layer: vectorlayer,
-        visible: resolvedVisible,
-      type: 'vector',
-      source: 'supermap',
-      isLazyLoaded: false, // 明确设置为非懒加载
-      isLoaded: true       // 明确设置为已加载
-    });
+      // 从SuperMap数据服务获取所有要素
+      loadingStore.updateLoading('map-init', `正在加载图层数据: ${layerName}...`)
+      const featuresResult = await superMapClient.getAllFeatures(
+        datasetName,
+        10000, // 批次大小
+        (loaded: number, total: number) => {
+          loadingStore.updateLoading('map-init', `正在加载图层数据: ${layerName}... (${loaded}/${total})`)
+        }
+      )
+      
+      if (!featuresResult.success || !featuresResult.data || featuresResult.data.length === 0) {
+        throw new Error(featuresResult.error || `未获取到图层 ${layerName} 的数据`)
+      }
+      
+      console.log(`[${layerName}] 获取到 ${featuresResult.data.length} 个要素`)
+      
+      // 将SuperMap要素数据转换为GeoJSON格式
+      const geoJsonFeatures = featuresResult.data.map((feature: any, index: number) => {
+        try {
+          console.log(`[${layerName}] 处理要素 ${index}:`, feature)
+          console.log(`[${layerName}] 要素 ${index} geometry对象:`, feature.geometry)
+          
+          // SuperMap返回的要素格式包含Point2D X和Y坐标
+          // 需要提取这些坐标并转换为GeoJSON格式
+          let geometry: any = null
+          
+          // 方法1: 如果已经有geometry字段，检查并转换
+          if (feature.geometry && typeof feature.geometry === 'object') {
+            const geomType = feature.geometry.type
+            console.log(`[${layerName}] 要素 ${index} geometry类型: ${geomType}, geometry对象键:`, Object.keys(feature.geometry))
+            
+            // 如果geometry类型是REGION，需要转换为Polygon
+            if (geomType === 'REGION' || geomType === 'POLYGON') {
+              // 尝试从geometry对象中提取坐标
+              if (feature.geometry.coordinates) {
+                // 如果coordinates已经是数组格式，直接使用
+                const coords = feature.geometry.coordinates
+                // 确保coordinates格式正确（Polygon需要是三维数组）
+                if (Array.isArray(coords) && coords.length > 0) {
+                  if (Array.isArray(coords[0])) {
+                    // 已经是正确的格式
+                    geometry = {
+                      type: 'Polygon',
+                      coordinates: coords
+                    }
+                  } else {
+                    // 需要包装一层
+                    geometry = {
+                      type: 'Polygon',
+                      coordinates: [coords]
+                    }
+                  }
+                } else {
+                  console.log(`[${layerName}] geometry.coordinates格式不正确:`, coords)
+                  geometry = null
+                }
+              } else if (feature.geometry.points) {
+                // 如果有points数组，转换为coordinates
+                const points = Array.isArray(feature.geometry.points) ? feature.geometry.points : []
+                // 确保多边形闭合
+                if (points.length > 0) {
+                  const first = points[0]
+                  const last = points[points.length - 1]
+                  if (first[0] !== last[0] || first[1] !== last[1]) {
+                    points.push([...first])
+                  }
+                }
+                geometry = {
+                  type: 'Polygon',
+                  coordinates: [points]
+                }
+              } else {
+                // 如果geometry中没有坐标，需要从feature的其他字段提取
+                console.log(`[${layerName}] geometry是${geomType}但没有坐标，尝试从feature提取`)
+                geometry = null // 继续到方法2
+              }
+            } 
+            // 如果是标准GeoJSON类型，直接使用
+            else if (['Point', 'LineString', 'Polygon', 'MultiPoint', 'MultiLineString', 'MultiPolygon'].includes(geomType)) {
+              geometry = feature.geometry
+            }
+            // 其他情况，尝试转换或提取
+            else {
+              console.log(`[${layerName}] geometry类型 ${geomType} 不是标准GeoJSON类型，尝试提取坐标`)
+              geometry = null // 继续到方法2
+            }
+          }
+          
+          // 方法2: 从SuperMap的Point2D格式提取坐标（如果方法1没有成功）
+          if (!geometry) {
+            // 提取所有Point2D X和Y坐标
+            const coordinates: number[][] = []
+            const keys = Object.keys(feature)
+            
+            // 查找所有Point2D X和Y字段，按顺序配对
+            const xKeys: string[] = []
+            const yKeys: string[] = []
+            
+            for (const key of keys) {
+              if (key.trim() === 'Point2D X' || key.startsWith('Point2D X')) {
+                xKeys.push(key)
+              } else if (key.trim() === 'Point2D Y' || key.startsWith('Point2D Y')) {
+                yKeys.push(key)
+              }
+            }
+            
+            // 按顺序配对X和Y坐标
+            const maxPairs = Math.max(xKeys.length, yKeys.length)
+            for (let i = 0; i < maxPairs; i++) {
+              const xKey = xKeys[i]
+              const yKey = yKeys[i]
+              
+              if (xKey && yKey) {
+                const x = parseFloat(feature[xKey])
+                const y = parseFloat(feature[yKey])
+                
+                if (!isNaN(x) && !isNaN(y)) {
+                  coordinates.push([x, y])
+                }
+              }
+            }
+            
+            console.log(`[${layerName}] 要素 ${index} 提取到 ${coordinates.length} 个坐标点 (X键: ${xKeys.length}, Y键: ${yKeys.length})`)
+            
+            // 如果提取到了坐标，构建GeoJSON几何
+            if (coordinates.length > 0) {
+              const geometryType = feature.geometryType || 'REGION'
+              
+              if (geometryType === 'REGION' || geometryType === 'POLYGON') {
+                // 确保多边形是闭合的（首尾坐标相同）
+                if (coordinates.length > 0) {
+                  const first = coordinates[0]
+                  const last = coordinates[coordinates.length - 1]
+                  if (first[0] !== last[0] || first[1] !== last[1]) {
+                    coordinates.push([...first])
+                  }
+                }
+                geometry = {
+                  type: 'Polygon',
+                  coordinates: [coordinates]
+                }
+              } else if (geometryType === 'LINE' || geometryType === 'POLYLINE') {
+                geometry = {
+                  type: 'LineString',
+                  coordinates: coordinates
+                }
+              } else if (geometryType === 'POINT') {
+                geometry = {
+                  type: 'Point',
+                  coordinates: coordinates[0] || [0, 0]
+                }
+              }
+              
+              console.log(`[${layerName}] 要素 ${index} 提取到 ${coordinates.length} 个坐标点，几何类型: ${geometryType}`)
+            }
+          }
+          
+          if (!geometry) {
+            console.warn(`[${layerName}] 要素${index}无法提取几何信息`)
+            return null
+          }
+          
+          // 获取属性数据（排除几何相关字段）
+          const properties: any = {}
+          const excludeKeys = ['geometry', 'geometryType', 'geometryID', 'PartIndex']
+          for (const key of Object.keys(feature)) {
+            if (!excludeKeys.includes(key) && !key.startsWith('Point2D')) {
+              properties[key] = feature[key]
+            }
+          }
+          
+          // 构建GeoJSON Feature格式
+          return {
+            type: 'Feature',
+            geometry: geometry,
+            properties: properties
+          }
+        } catch (error) {
+          console.warn(`[${layerName}] 处理要素${index}失败:`, error)
+          return null
+        }
+      }).filter((f: any) => f !== null && f.geometry) // 过滤掉解析失败或没有geometry的要素
+      
+      if (geoJsonFeatures.length === 0) {
+        throw new Error(`图层 ${layerName} 没有有效的要素数据`)
+      }
+      
+      // 创建GeoJSON FeatureCollection
+      const geoJsonData = {
+        type: 'FeatureCollection',
+        features: geoJsonFeatures
+      }
+      
+      console.log(`[${layerName}] GeoJSON数据已准备，要素数量: ${geoJsonData.features.length}`)
+      
+      // ===== 保存GeoJSON数据到本地文件 =====
+      const saveGeoJSONToFile = (data: any, fileName: string) => {
+        try {
+          const jsonString = JSON.stringify(data, null, 2)
+          const blob = new Blob([jsonString], { type: 'application/json' })
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = fileName
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+          console.log(`[${layerName}] GeoJSON文件已保存: ${fileName}`)
+        } catch (error) {
+          console.error(`[${layerName}] 保存GeoJSON文件失败:`, error)
+        }
+      }
+      
+      // 保存GeoJSON数据
+      const fileName = `${layerName}_${new Date().getTime()}.geojson`
+      saveGeoJSONToFile(geoJsonData, fileName)
+      
+      // ===== 使用和本地上传数据相同的方式加载图层 =====
+      // 使用OpenLayers GeoJSON格式器读取要素
+      const geoJsonFormat = new ol.format.GeoJSON()
+      const features = geoJsonFormat.readFeatures(geoJsonData, {
+        featureProjection: map.getView().getProjection()
+      })
+      
+      console.log(`[${layerName}] 成功创建 ${features.length} 个OpenLayers要素`)
+      
+      // 验证要素是否有几何信息
+      features.forEach((feature: any, index: number) => {
+        const geometry = feature.getGeometry()
+        if (!geometry) {
+          console.warn(`[${layerName}] 要素 ${index} 没有几何信息`)
+        } else {
+          const geomType = geometry.getType()
+          const coords = geometry.getCoordinates()
+          console.log(`[${layerName}] 要素 ${index} 几何类型: ${geomType}, 坐标维度: ${Array.isArray(coords[0]) ? (Array.isArray(coords[0][0]) ? '3D' : '2D') : '1D'}`)
+        }
+      })
+      
+      // 使用saveFeaturesAslayer加载图层（和本地上传数据相同的方式）
+      if (!mapStore.map) {
+        throw new Error('地图实例未初始化')
+      }
+      
+      const success = await saveFeaturesAslayer(features, layerName, 'upload')
+      
+      if (!success) {
+        throw new Error('保存图层失败')
+      }
+      
+      // 保存属性数据到layerDataStore
+      const featuresData = features.map((feature: any, index: number) => ({
+        id: feature.getId() || `${layerName}_${Date.now()}_${index}`,
+        properties: feature.getProperties()
+      }))
+      layerDataStore.setLayerAttributes(layerName, featuresData)
+      
+      console.log(`[${layerName}] 图层已使用saveFeaturesAslayer加载完成`)
+      notificationManager.info(
+        `图层 ${layerName} 已加载`,
+        `使用数据服务加载: ${datasetName}\n数据来源: SuperMap iServer 数据服务\n✅ 共 ${features.length} 个要素\n已保存为GeoJSON文件: ${fileName}`
+      )
+      
+    } catch (error) {
+      console.error(`[${layerName}] 加载矢量图层失败:`, error)
+      notificationManager.error(
+        `图层 ${layerName} 加载失败`,
+        error instanceof Error ? error.message : '未知错误'
+      )
+      throw error
+    }
   }
 
 
@@ -442,8 +638,9 @@ export function useMapData() {
   /**
    * 加载所有矢量图层
    * 在加载前彻底清空所有图层，避免重复添加
+   * 仅加载武汉县级图层，使用矢量数据服务方式加载
    * @param map 地图实例
-   * @param visibleLayers 指定要显示的图层名称数组，如果不提供则使用默认配置
+   * @param visibleLayers 指定要显示的图层名称数组，如果不提供则只加载武汉县级图层
    */
   const loadVectorLayers = async (map: any, visibleLayers?: string[]): Promise<void> => {
     // ===== 首先清空所有现有图层 =====
@@ -451,31 +648,24 @@ export function useMapData() {
     
     const apiConfig = createAPIConfig()
     
-    
+    // ===== 只加载武汉县级图层 =====
+    const targetLayerName = '武汉_县级'
     const loadTasks: Promise<void>[] = []
     
-    for (const layerConfig of apiConfig.wuhanlayers) {
-      const layerName = layerConfig.name.split('@')[0] || layerConfig.name
-      
-      if (layerConfig.type === 'raster') {
-        continue;
-      }
-      
-      // 所有图层都立即加载，但根据配置和参数控制可见性
-      let shouldBeVisible = true
-      
-      if (visibleLayers && visibleLayers.length > 0) {
-        // 如果指定了可见图层列表，则只有指定的图层可见
-        shouldBeVisible = visibleLayers.includes(layerName)
-      } else {
-        // 如果没有指定，则使用配置中的默认可见性设置
-        shouldBeVisible = !!layerConfig.visible
-      }
-      
-      // 所有图层都加载，但控制可见性
-        loadingStore.updateLoading('map-init', `正在加载图层: ${layerName}`)
-      loadTasks.push(loadVectorLayer(map, layerConfig, shouldBeVisible))
+    // 查找武汉县级图层配置
+    const countyLayerConfig = apiConfig.wuhanlayers.find(layer => {
+      const layerName = layer.name.split('@')[0] || layer.name
+      return layerName === targetLayerName
+    })
+    
+    if (!countyLayerConfig) {
+      console.warn(`未找到图层配置: ${targetLayerName}`)
+      return
     }
+    
+    // 只加载武汉县级图层
+    loadingStore.updateLoading('map-init', `正在加载图层: ${targetLayerName}`)
+    loadTasks.push(loadVectorLayer(map, countyLayerConfig, true))
     
     await Promise.allSettled(loadTasks)
   }

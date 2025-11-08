@@ -156,6 +156,13 @@ export function useMap() {
       
       // ===== 4. 创建底图图层 =====
       const currentBaseMapUrl = getCurrentBaseMapUrl(themeStore.theme)
+      console.log(`[底图加载] 当前主题: ${themeStore.theme}`)
+      console.log(`[底图加载] 底图URL: ${currentBaseMapUrl}`)
+      
+      // 验证底图URL是否有效
+      if (!currentBaseMapUrl || currentBaseMapUrl === 'undefined') {
+        throw new Error(`底图URL无效: ${currentBaseMapUrl}`)
+      }
       
       const sourceConfig: any = {
         url: currentBaseMapUrl,
@@ -167,13 +174,30 @@ export function useMap() {
         sourceConfig.tileLoadFunction = undefined
       }
       
+      // 添加底图加载错误处理
+      const baseMapSource = new ol.source.TileSuperMapRest(sourceConfig)
+      
+      // 监听底图加载错误
+      baseMapSource.on('tileloaderror', (event: any) => {
+        console.error('[底图加载] 瓦片加载失败:', {
+          url: event.tile?.src_ || '未知URL',
+          error: event
+        })
+      })
+      
+      // 监听底图加载成功
+      baseMapSource.on('tileloadend', () => {
+        console.log('[底图加载] 瓦片加载成功')
+      })
+      
       const baseMapLayer = new ol.layer.Tile({
-        source: new ol.source.TileSuperMapRest(sourceConfig),
+        source: baseMapSource,
         visible: true,
         zIndex: MAP_CONFIG.LAYER_Z_INDEX.BASE
       })
       
       map.addLayer(baseMapLayer)
+      console.log('[底图加载] 底图图层已添加到地图')
       
       // 强制更新地图尺寸
       setTimeout(() => {
@@ -183,8 +207,8 @@ export function useMap() {
       
       // ===== 5. 加载矢量图层 =====
       loadingStore.updateLoading('map-init', '正在加载图层...')
-      // 设置默认可见图层：仅显示武汉县级和武汉市级图层
-      const defaultVisibleLayers = visibleLayers || ['武汉_县级', '武汉_市级']
+      // 设置默认可见图层：仅显示武汉县级图层（使用矢量数据服务方式加载）
+      const defaultVisibleLayers = visibleLayers || ['武汉_县级']
       await mapData.loadVectorLayers(map, defaultVisibleLayers)
       
       // ===== 6. 创建交互图层 =====
