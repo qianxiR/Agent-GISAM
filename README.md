@@ -1092,8 +1092,8 @@ npm test
 
 ## 📞 联系方式
 
-- **项目地址**: [GitHub Repository](https://github.com/qianxic/SuperMap)
-- **问题反馈**: [GitHub Issues](https://github.com/qianxic/SuperMap/issues)
+- **项目地址**: [GitHub Repository](https://github.com/qianxiR/Agent-GISAM)
+- **问题反馈**: [GitHub Issues](https://github.com/qianxiR/Agent-GISAM/issues)
 - **文档**: 查看项目 `docs/` 目录获取详细文档
 
 ---
