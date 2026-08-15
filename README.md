@@ -25,7 +25,7 @@
 
 ## 🎯 项目概述
 
-SuperMap 智能地理信息分析系统是一个基于微服务架构的现代化 WebGIS 全栈应用，采用前后端分离设计，集成了传统 GIS 分析功能与 AI 智能助手。系统提供完整的用户管理、空间分析和智能交互功能。
+基于EDA-Agent的武汉市长江流域地理空间实时势态感知的智能决策分析监测预警一体化平台（Agent-GISAM）是一个基于微服务架构的现代化 WebGIS 全栈应用，采用前后端分离设计，集成了传统 GIS 分析功能与 AI 智能助手。系统提供完整的用户管理、空间分析和智能交互功能。
 
 ### 系统架构
 
@@ -851,7 +851,7 @@ analysis/                       # Node.js + Express + DDD
 
 #### 基础环境
 - **Node.js**: >= 20.19.0 或 >= 22.12.0
-- **Python**: >= 3.11
+- **Python**: >= 3.10（推荐使用 conda `py310` 环境）
 - **PostgreSQL**: >= 15
 - **Git**: 最新版本
 
@@ -861,30 +861,42 @@ analysis/                       # Node.js + Express + DDD
 - **API测试**: Postman 或 Insomnia
 
 ### 一键启动（推荐）
-#### 1.安装后端依赖
 
+#### 1. 安装依赖
 
-cd 到根目录
-conda create -n py310 python = 3.10
-完成安装后执行
+在仓库根目录创建并激活 conda 环境（环境名称必须是 `py310`），安装 Python 依赖：
+
+```powershell
+conda create -n py310 python=3.10
 conda activate py310
-pip install -r requirements.txt安装相关包
-或者激活临时环境，.venv_tmp
+pip install -r requirements.txt
+```
 
+或者使用仓库内虚拟环境 `.venv_tmp`：
+
+```powershell
 .\.venv_tmp\Scripts\Activate.ps1
+```
 
+安装前端与分析服务依赖：
+
+```powershell
+cd Frontend
+npm install
+cd ..\Backend\analysis
+npm install
+```
 
 #### 2. 启动所有服务
 
-**G:\1代码\开发\SuperMap\start_services.bat**
-或
-**G:\1代码\开发\SuperMap\start_services_venv_tmp**
+在仓库根目录双击或执行启动脚本：
 
-在根目录下一键启动即可打开所有服务！
+| 脚本 | Python 环境 | 启动的服务 |
+|------|------------|-----------|
+| `start_services.bat`（推荐） | conda `py310` | Analysis + Agent + Frontend（不启动 User） |
+| `start_services_venv_tmp.bat` | `.venv_tmp` | Analysis + User + Agent + Frontend（全部四个） |
 
-conda环境名称必须是py310
-
-```
+脚本会先自动释放 5173/8087/8088/8089 端口，再依次拉起各服务。
 
 ### 服务访问地址
 
@@ -894,8 +906,9 @@ conda环境名称必须是py310
 |------|------|------|
 | 🌐 前端应用 | http://localhost:5173 | 主应用界面 |
 | 🤖 EDA Agent服务 | http://localhost:8089/docs | FastAPI Swagger 文档 |
-| 👤 用户服务 API | http://localhost:8089/docs | FastAPI Swagger 文档 |
-| 🗺️ 分析服务 API | http://localhost:3001/docs | 空间分析 API 文档 |
+| 👤 用户服务 API | http://localhost:8088/docs | FastAPI Swagger 文档 |
+| 🗺️ 分析服务 API | http://localhost:8087/docs | 空间分析 API 文档 |
+| 🗺️ SuperMap iServer | http://localhost:8090 | 独立部署的地图服务 |
 
 
 
@@ -945,12 +958,12 @@ DASHSCOPE_MAX_TOKENS=3000
    - 检查 PostgreSQL 数据库连接
    - 确认数据库配置正确
    - 检查 Python 环境和依赖
-   - 查看端口 8000 是否被占用
+   - 查看端口 8088 是否被占用
 
 2. **分析服务启动失败**
    - 检查 Node.js 版本 (需要 18.0+)
    - 确认 npm 依赖安装完整
-   - 查看端口 3001 是否被占用
+   - 查看端口 8087 是否被占用
    - 检查 DDD 架构模块加载
 
 3. **API 请求失败**
@@ -988,13 +1001,31 @@ DASHSCOPE_MAX_TOKENS=3000
 - **分析服务日志**: Winston 日志文件
 - **数据库日志**: PostgreSQL 日志文件
 
+### 调试模式
+
+```powershell
+# 启用详细日志
+npm run dev -- --debug
+```
+
+查看网络请求：打开浏览器开发者工具 -> Network 标签
+
 ## 🧪 测试
 
+```powershell
+# Frontend：路由测试 + 构建测试
+cd Frontend
+npm run test:all
+
+# Analysis：单元测试（jest）
+cd ..\Backend\analysis
+npm test
+```
 
 ## 📚 使用指南
 
 ### 快速上手
-0. **启动服务**：双击启动G:\1代码\开发\SuperMap\start_services.bat
+0. **启动服务**：双击启动仓库根目录的 `start_services.bat`
 1. **启动应用**: 访问 `http://localhost:5173`
 2. **选择模式**: 在顶部导航栏选择 LLM 模式或传统 GIS 模式
 3. **地图操作**: 执行各类功能的实现（基础地图查看、查询、分析、知识库查询、查看可视化大屏等等）
@@ -1022,36 +1053,6 @@ DASHSCOPE_MAX_TOKENS=3000
 - **要素查询**: 按属性条件查询要素
 - **空间分析**: 执行缓冲区分析、最短路径分析
 - **编辑工具**: 创建、修改、删除地图要素
-
-## 🔧 故障排除
-
-### 常见问题
-
-1. **地图无法加载**
-   - 检查 SuperMap 服务器连接
-   - 确认网络连接正常
-   - 查看浏览器控制台错误信息
-
-2. **分析功能异常**
-   - 确认已选择正确的图层
-   - 检查输入参数是否有效
-   - 查看后端服务状态
-
-3. **主题切换问题**
-   - 清除浏览器缓存
-   - 检查 CSS 变量定义
-
-### 调试模式
-
-```bash
-# 启用详细日志
-npm run dev -- --debug
-
-# 查看网络请求
-# 打开浏览器开发者工具 -> Network 标签
-```
-
-
 
 ## 📜 许可证
 
@@ -1091,12 +1092,12 @@ npm run dev -- --debug
 
 ## 📞 联系方式
 
-- **项目地址**: [GitHub Repository](https://github.com/your-repo/supermap-gis)
-- **问题反馈**: [GitHub Issues](https://github.com/your-repo/supermap-gis/issues)
+- **项目地址**: [GitHub Repository](https://github.com/qianxic/SuperMap)
+- **问题反馈**: [GitHub Issues](https://github.com/qianxic/SuperMap/issues)
 - **文档**: 查看项目 `docs/` 目录获取详细文档
 
 ---
 
 *本项目持续维护和更新中，欢迎关注和贡献！*
 
-**最后更新**: 2025.9.15
+**最后更新**: 2026.8.16
